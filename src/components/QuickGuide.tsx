@@ -94,11 +94,6 @@ export default function QuickGuide({
             <X size={18} />
           </button>
         </div>
-        <p className="guide-intro">
-          This is the combined Melbourne NetLogo model, running in your browser.
-          Every button, slider, switch and chooser from the desktop version is
-          here. One tick is one simulated second.
-        </p>
         <ol className="guide-steps">
           {steps.map(([title, text]) => (
             <li key={title}>
