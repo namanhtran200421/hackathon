@@ -224,8 +224,6 @@ export default function TrafficLab() {
             <a href="#workbench" className="active">
               Simulator
             </a>
-            <a href="#compare">Compare</a>
-            <a href="#output">Output</a>
             <button onClick={() => setGuideOpen(true)}>Quick guide</button>
           </nav>
         </div>
