@@ -1,0 +1,2075 @@
+<?xml version="1.0" encoding="utf-8"?>
+<model version="NetLogo 7.0.4" snapToGrid="false">
+  <code><![CDATA[;; =====================================================================
+;;  HODDLE GRID TRAFFIC MODEL  -  prototype v0.1
+;;  Melbourne CBD road network, origin-destination demand, signals,
+;;  hook turns, dynamic re-routing and road-closure scenarios.
+;;
+;;  Units: 1 tick = 1 second, 1 patch = 10 metres.
+;;  Internally all distances are metres and speeds are metres/second.
+;;
+;;  Everything marked  [VERIFY]  is a placeholder assumption that should
+;;  be replaced with real data (OSM / City of Melbourne / DTP SCATS).
+;; =====================================================================
+
+extensions [ table ]
+
+breed [ nodes node ]            ;; intersections, entry/exit gates, car parks
+breed [ cars car ]
+directed-link-breed [ roads road ]   ;; one directed link = one direction of one block
+
+globals [
+  ;; ---- physical constants ----
+  M-PER-PATCH        ;; metres per patch
+  BLOCK-W            ;; centre-line distance between north-south streets (m)
+  ROW-H              ;; centre-line distance between east-west streets incl. little streets (m)
+  VEH-LEN            ;; vehicle length + standstill gap (m)
+  ACCEL DECEL        ;; m/s^2
+  INTERGREEN         ;; amber + all-red (s) between signal phases
+  BIG                ;; "infinity"
+  LITTLE-ST-KMH      ;; speed on little streets / laneways (km/h)   [VERIFY]
+  GIVE-WAY-DELAY     ;; expected wait when giving way at an unsignalised junction (s)
+  vmax               ;; speed limit (m/s)
+
+  ;; ---- network configuration ----
+  ew-config ns-config carpark-config no-car-segments
+  node-grid          ;; node-grid: item col -> item row -> node
+  dests              ;; list of destination nodes; index = dest-id
+  gates carparks signals
+  gate-weight-sum
+
+  ;; ---- scenario state ----
+  closure-applied? closure-desc
+  baseline           ;; table link-key -> veh/h, survives SETUP so runs can be compared
+
+  ;; ---- statistics (measurement window only) ----
+  trips-done trip-time-sum delay-sum veh-seconds stranded-count
+  recent-delays
+  mouse-was-down?
+]
+
+nodes-own [
+  node-kind          ;; "grid" "gate" "carpark"
+  col row            ;; grid indices, -1 for non-grid nodes
+  signalised?
+  cycle-offset
+  green-axis         ;; "EW" "NS" or "none" (intergreen)
+  last-green
+  dest-id            ;; index in DESTS, -1 if not a destination
+  weight             ;; demand weight for gates and car parks
+  gate-queue         ;; vehicles waiting to enter the CBD: list of [tick dest]
+  hook-box           ;; cars waiting in the intersection to complete a hook turn
+  dist-live dist-free dist-base   ;; travel time (s) from this node to every destination
+  tmp-dist tmp-done?
+]
+
+roads-own [
+  street axis        ;; street name, "EW" / "NS" / "access"
+  road-kind          ;; "main" "little" "gate" "access"
+  rank               ;; priority at unsignalised junctions (higher = priority)
+  trams?
+  cars-allowed?
+  seg                ;; block number along the street, 1..8 (0 for gate/access links)
+  len                ;; metres
+  lanes lanes-open closed?
+  free-tt            ;; free-flow travel time incl. average signal delay (s)
+  cost-live          ;; current estimated travel time (s)
+  tt-ema             ;; smoothed observed travel time (s)
+  lane-cars          ;; list (one per lane, 0 = kerbside) of lists of cars, front car first
+  win-count          ;; vehicles that left this link during the measurement window
+  base-count         ;; baseline veh/h for this link (from SAVE-BASELINE)
+  partner            ;; the opposite-direction link, if any
+]
+
+cars-own [
+  cur-link next-link lane pos speed
+  dest informed?
+  t-start t-link ff-time
+  moved-at
+  hooking            ;; node whose hook-box this car is waiting in, else nobody
+  plan-next plan-for plan-lane
+]
+
+;; =====================================================================
+;;  SETUP
+;; =====================================================================
+
+to setup
+  ;; not CLEAR-ALL: the baseline table must survive between runs
+  clear-ticks clear-turtles clear-patches clear-drawing clear-all-plots clear-output
+  if fixed-seed? [ random-seed seed ]
+  setup-constants
+  set gates no-turtles
+  set carparks no-turtles
+  set signals no-turtles
+  reset-ticks
+  if baseline = 0 [ set baseline table:make ]
+  set trips-done 0 set trip-time-sum 0 set delay-sum 0 set veh-seconds 0 set stranded-count 0
+  set recent-delays []
+  set mouse-was-down? false
+  set closure-applied? false
+  set closure-desc "none"
+  setup-config
+  draw-background
+  build-network
+  setup-signals
+  setup-routing
+  ask roads [ set base-count ifelse-value table:has-key? baseline link-key [ table:get baseline link-key ] [ 0 ] ]
+  if closure-street != "none" and closure-start-min = 0 [ apply-scenario-closure ]
+  update-link-colors
+  output-print "Hoddle Grid prototype ready."
+  output-print (word "Closure: " closure-desc)
+end
+
+to setup-constants
+  set M-PER-PATCH 10
+  set BLOCK-W 201.2
+  set ROW-H 100.6
+  set VEH-LEN 7
+  set ACCEL 1.5
+  set DECEL 3.5
+  set INTERGREEN 6
+  set BIG 1000000000
+  set LITTLE-ST-KMH 20
+  set GIVE-WAY-DELAY 6
+  set vmax speed-limit-kmh / 3.6
+end
+
+to setup-config
+  ;; East-west streets, south (row 0) to north (row 8).
+  ;; [ name  main?  direction  trams?  lanes-per-direction  entry-weight ]
+  ;; [VERIFY] little-street directions, lane counts and entry weights.
+  set ew-config [
+    [ "Flinders St"        true  "two-way" true  2 3   ]
+    [ "Flinders Ln"        false "east"    false 1 0   ]
+    [ "Collins St"         true  "two-way" true  1 1.5 ]
+    [ "Little Collins St"  false "west"    false 1 0   ]
+    [ "Bourke St"          true  "two-way" true  1 1   ]
+    [ "Little Bourke St"   false "east"    false 1 0   ]
+    [ "Lonsdale St"        true  "two-way" false 2 2   ]
+    [ "Little Lonsdale St" false "west"    false 1 0   ]
+    [ "La Trobe St"        true  "two-way" true  2 3   ]
+  ]
+  ;; North-south streets, west (col 0) to east (col 8).
+  ;; [ name  direction  trams?  lanes-per-direction  entry-weight ]
+  ;; Swanston St is modelled as closed to general traffic (trams, bikes, pedestrians).
+  set ns-config [
+    [ "Spencer St"    "two-way" true  2 3   ]
+    [ "King St"       "two-way" false 2 3   ]
+    [ "William St"    "two-way" true  2 2.5 ]
+    [ "Queen St"      "two-way" false 1 1   ]
+    [ "Elizabeth St"  "two-way" true  1 2   ]
+    [ "Swanston St"   "no-cars" true  1 0   ]
+    [ "Russell St"    "two-way" false 2 1.5 ]
+    [ "Exhibition St" "two-way" false 2 2.5 ]
+    [ "Spring St"     "two-way" true  2 2   ]
+  ]
+  ;; Blocks with no general traffic: Bourke St Mall (Elizabeth - Swanston).
+  set no-car-segments [ [ "Bourke St" 5 ] ]
+  ;; Car parks: [ col row weight ]; attached to little-street intersections.
+  ;; [VERIFY] illustrative locations - replace with real car parks and capacities.
+  set carpark-config [
+    [ 1 1 2 ] [ 2 3 1.5 ] [ 2 5 2 ] [ 3 3 1.5 ] [ 3 7 2 ]
+    [ 4 5 1 ] [ 6 3 3 ] [ 6 7 2 ] [ 7 1 2 ] [ 7 5 2.5 ]
+  ]
+end
+
+to draw-background
+  ask patches [ set pcolor 9.4 ]
+  ask patches with [ pxcor >= -1 and pxcor <= 162 and pycor >= -1 and pycor <= 81 ] [ set pcolor 8.4 ]
+  ask patches with [ pycor <= -12 ] [ set pcolor 97 ]
+  ask patch 40 -13 [ set plabel "Yarra River" set plabel-color 94 ]
+  foreach range 9 [ r ->
+    ask patch -10 round (r * ROW-H / M-PER-PATCH) [
+      set plabel short-name item 0 item r ew-config
+      set plabel-color 2
+    ]
+  ]
+  foreach range 9 [ c ->
+    ask patch (round (c * BLOCK-W / M-PER-PATCH) + 5) 91 [
+      set plabel item 0 item c ns-config
+      set plabel-color 2
+    ]
+  ]
+end
+
+to-report short-name [nm]
+  if nm = "Little Collins St" [ report "Lt Collins" ]
+  if nm = "Little Bourke St" [ report "Lt Bourke" ]
+  if nm = "Little Lonsdale St" [ report "Lt Lonsdale" ]
+  report nm
+end
+
+;; ---------------------------------------------------------------------
+;;  network construction
+;; ---------------------------------------------------------------------
+
+to build-network
+  set node-grid []
+  foreach range 9 [ c ->
+    let column []
+    foreach range 9 [ r ->
+      create-nodes 1 [
+        init-node "grid"
+        setxy (c * BLOCK-W / M-PER-PATCH) (r * ROW-H / M-PER-PATCH)
+        set col c
+        set row r
+        set signalised? (r mod 2 = 0)   ;; main street x main street
+        hide-turtle
+        set column lput self column
+      ]
+    ]
+    set node-grid lput column node-grid
+  ]
+
+  ;; east-west blocks
+  foreach range 9 [ r ->
+    let cfg item r ew-config
+    let nm item 0 cfg
+    let kind ifelse-value item 1 cfg [ "main" ] [ "little" ]
+    let dir item 2 cfg
+    foreach range 8 [ c ->
+      let a node-at c r
+      let b node-at (c + 1) r
+      let ok? not member? (list nm (c + 1)) no-car-segments
+      if dir = "two-way" or dir = "east" [ make-road a b nm "EW" kind (item 3 cfg) (item 4 cfg) ok? (c + 1) ]
+      if dir = "two-way" or dir = "west" [ make-road b a nm "EW" kind (item 3 cfg) (item 4 cfg) ok? (c + 1) ]
+    ]
+  ]
+
+  ;; north-south blocks
+  foreach range 9 [ c ->
+    let cfg item c ns-config
+    let nm item 0 cfg
+    let dir item 1 cfg
+    foreach range 8 [ r ->
+      let a node-at c r
+      let b node-at c (r + 1)
+      let ok? (dir != "no-cars") and not member? (list nm (r + 1)) no-car-segments
+      if dir = "two-way" or dir = "north" or dir = "no-cars" [ make-road a b nm "NS" "main" (item 2 cfg) (item 3 cfg) ok? (r + 1) ]
+      if dir = "two-way" or dir = "south" or dir = "no-cars" [ make-road b a nm "NS" "main" (item 2 cfg) (item 3 cfg) ok? (r + 1) ]
+    ]
+  ]
+
+  ;; entry / exit gates at the edge of the grid
+  foreach range 9 [ r ->
+    let cfg item r ew-config
+    if item 1 cfg and item 5 cfg > 0 [
+      make-gate (node-at 0 r) -8 0 (item 0 cfg) "EW" (item 3 cfg) (item 4 cfg) (item 5 cfg)
+      make-gate (node-at 8 r) 8 0 (item 0 cfg) "EW" (item 3 cfg) (item 4 cfg) (item 5 cfg)
+    ]
+  ]
+  foreach range 9 [ c ->
+    let cfg item c ns-config
+    if item 1 cfg != "no-cars" and item 4 cfg > 0 [
+      make-gate (node-at c 0) 0 -8 (item 0 cfg) "NS" (item 2 cfg) (item 3 cfg) (item 4 cfg)
+      make-gate (node-at c 8) 0 8 (item 0 cfg) "NS" (item 2 cfg) (item 3 cfg) (item 4 cfg)
+    ]
+  ]
+
+  ;; car parks
+  foreach carpark-config [ cpk ->
+    let n node-at (item 0 cpk) (item 1 cpk)
+    let p nobody
+    create-nodes 1 [
+      init-node "carpark"
+      setxy ([xcor] of n + 4) ([ycor] of n + 3.5)
+      set weight item 2 cpk
+      set shape "square" set size 2.4 set color 104
+      set label "P" set label-color white
+      set p self
+    ]
+    make-road p n "car park access" "access" "access" false 1 true 0
+    make-road n p "car park access" "access" "access" false 1 true 0
+  ]
+
+  set gates nodes with [ node-kind = "gate" ]
+  set carparks nodes with [ node-kind = "carpark" ]
+  set gate-weight-sum sum [ weight ] of gates
+  set dests sort (turtle-set gates carparks)
+  foreach range length dests [ k -> ask item k dests [ set dest-id k ] ]
+
+  ask roads [
+    set partner road [who] of end2 [who] of end1
+    ;; draw two-way streets once: hide the westbound / southbound twin
+    if partner != nobody and link-heading > 135 and link-heading < 315 [ hide-link ]
+  ]
+end
+
+to init-node [kind]
+  set node-kind kind
+  set col -1 set row -1
+  set signalised? false
+  set green-axis "none" set last-green "none"
+  set dest-id -1 set weight 0
+  set gate-queue [] set hook-box []
+  set cycle-offset 0
+  set shape "circle" set size 1 set color gray
+  set label ""
+end
+
+to-report node-at [c r]
+  report item r (item c node-grid)
+end
+
+to make-road [a b nm ax kind tr? nl ok? sg]
+  ask a [
+    create-road-to b [
+      set street nm
+      set axis ax
+      set road-kind kind
+      set rank (ifelse-value kind = "little" [ 1 ] kind = "access" [ 0 ] [ 2 ])
+      set trams? tr?
+      set cars-allowed? ok?
+      set seg sg
+      set len link-length * M-PER-PATCH
+      set lanes nl
+      set lanes-open nl
+      set closed? false
+      set lane-cars n-values nl [ [] ]
+      set win-count 0
+      set base-count 0
+      set partner nobody
+      set thickness base-thickness
+      set color gray
+    ]
+  ]
+end
+
+to make-gate [n ddx ddy nm ax tr? nl w]
+  let g nobody
+  create-nodes 1 [
+    init-node "gate"
+    setxy ([xcor] of n + ddx) ([ycor] of n + ddy)
+    set weight w
+    set shape "square" set size 2 set color 3
+    set g self
+  ]
+  make-road g n nm ax "gate" tr? nl true 0
+  make-road n g nm ax "gate" tr? nl true 0
+end
+
+to-report base-thickness  ;; link reporter
+  report (ifelse-value road-kind = "main" or road-kind = "gate" [ 0.7 ] road-kind = "little" [ 0.35 ] [ 0.2 ])
+end
+
+;; ---------------------------------------------------------------------
+;;  signals
+;; ---------------------------------------------------------------------
+
+to setup-signals
+  set signals nodes with [ signalised? ]
+  ask signals [
+    set cycle-offset ifelse-value signal-coordination = "green wave (east-west)"
+      [ (cycle-length * 100 - round (col * BLOCK-W / vmax)) mod cycle-length ]
+      [ random cycle-length ]
+  ]
+  update-signals
+  ask roads [
+    set free-tt compute-free-tt
+    set tt-ema free-tt
+    set cost-live free-tt
+  ]
+end
+
+to-report green-time-for [ax]
+  let g-ew (cycle-length - 2 * INTERGREEN) * ew-green-share / 100
+  report ifelse-value ax = "EW" [ g-ew ] [ cycle-length - 2 * INTERGREEN - g-ew ]
+end
+
+to-report compute-free-tt  ;; link reporter
+  let t len / link-vmax
+  if [signalised?] of end2 and axis != "access" [
+    let red-frac 1 - green-time-for axis / cycle-length
+    set t t + red-frac * red-frac * cycle-length / 2   ;; uniform-arrival delay (Webster, 1st term)
+  ]
+  let r rank
+  if not [signalised?] of end2 and any? ([my-in-roads] of end2) with [ rank > r ] [
+    set t t + GIVE-WAY-DELAY                            ;; expected wait to find a gap
+  ]
+  report t
+end
+
+to-report link-vmax  ;; link reporter
+  report (ifelse-value
+    road-kind = "access" [ 15 / 3.6 ]
+    road-kind = "little" [ min list vmax (LITTLE-ST-KMH / 3.6) ]
+    [ vmax ])
+end
+
+to update-signals
+  let g-ew green-time-for "EW"
+  let g-ns green-time-for "NS"
+  ask signals [
+    let t (ticks + cycle-offset) mod cycle-length
+    set green-axis (ifelse-value
+      t < g-ew [ "EW" ]
+      t < g-ew + INTERGREEN [ "none" ]
+      t < g-ew + INTERGREEN + g-ns [ "NS" ]
+      [ "none" ])
+    if green-axis != "none" [ set last-green green-axis ]
+  ]
+end
+
+;; ---------------------------------------------------------------------
+;;  routing: shortest travel time from every node to every destination
+;; ---------------------------------------------------------------------
+
+to setup-routing
+  let D length dests
+  ask nodes [
+    set dist-live n-values D [ BIG ]
+    set dist-free n-values D [ BIG ]
+    set dist-base n-values D [ BIG ]
+  ]
+  compute-distances "base"   ;; network as built, no closures: reference for delay
+  compute-distances "free"
+  compute-distances "live"
+end
+
+;; mode: "base" ignores closures, "free" uses free-flow times, "live" uses current travel times
+to compute-distances [mode]
+  foreach range length dests [ k ->
+    let target item k dests
+    ask nodes [ set tmp-dist BIG set tmp-done? false ]
+    ask target [ set tmp-dist 0 ]
+    let open-set (turtle-set target)
+    while [ any? open-set ] [
+      let u min-one-of open-set [ tmp-dist ]
+      set open-set open-set with [ self != u ]
+      ask u [ set tmp-done? true ]
+      ;; never route THROUGH a gate or a car park
+      if u = target or [node-kind] of u = "grid" [
+        let du [tmp-dist] of u
+        ask [my-in-roads] of u [
+          if mode-usable? mode [
+            let v end1
+            let nd du + (ifelse-value mode = "live" [ cost-live ] [ free-tt ])
+            if not [tmp-done?] of v and nd < [tmp-dist] of v [
+              ask v [ set tmp-dist nd ]
+              set open-set (turtle-set open-set v)
+            ]
+          ]
+        ]
+      ]
+    ]
+    (ifelse
+      mode = "live" [ ask nodes [ set dist-live replace-item k dist-live tmp-dist ] ]
+      mode = "free" [ ask nodes [ set dist-free replace-item k dist-free tmp-dist ] ]
+      [ ask nodes [ set dist-base replace-item k dist-base tmp-dist ] ])
+  ]
+end
+
+to-report mode-usable? [mode]  ;; link reporter
+  if mode = "base" [ report cars-allowed? ]
+  report usable?
+end
+
+to-report usable?  ;; link reporter
+  report cars-allowed? and not closed? and lanes-open > 0
+end
+
+to update-live-costs
+  ask roads [
+    let q 0
+    foreach lane-cars [ lst -> set q q + length filter [ c -> [speed] of c < 1 ] lst ]
+    let queue-delay 2.0 * q / max list 1 lanes-open
+    set cost-live free-tt + max (list 0 (tt-ema - free-tt) queue-delay)
+  ]
+end
+
+;; car reporter: best link to take at the downstream end of IN-L (nobody if IN-L ends at my destination)
+to-report choose-from [in-l]
+  let n [end2] of in-l
+  if n = dest [ report nobody ]
+  let d dest
+  let k [dest-id] of dest
+  let back-node [end1] of in-l
+  let cands ([my-out-roads] of n) with [ usable? and ([node-kind] of end2 = "grid" or end2 = d) ]
+  if any? cands with [ end2 != back-node ] [ set cands cands with [ end2 != back-node ] ]   ;; no U-turns unless forced
+  if not any? cands [ report nobody ]
+  let live? informed?
+  let best min-one-of cands [ choice-cost in-l live? k ]
+  let dd ifelse-value live? [ item k [dist-live] of [end2] of best ] [ item k [dist-free] of [end2] of best ]
+  if dd >= BIG [ report nobody ]
+  report best
+end
+
+to-report choice-cost [in-l live? k]  ;; link reporter
+  let c ifelse-value live? [ cost-live ] [ free-tt ]
+  let d ifelse-value live? [ item k [dist-live] of end2 ] [ item k [dist-free] of end2 ]
+  report (c + d + turn-penalty in-l self) * (1 + random-float route-noise)
+end
+
+to-report turn-type [in-l out-l]
+  if in-l = nobody or out-l = nobody [ report "straight" ]
+  let a subtract-headings ([link-heading] of out-l) ([link-heading] of in-l)
+  if abs a < 30 [ report "straight" ]
+  if abs a > 150 [ report "uturn" ]
+  report ifelse-value a > 0 [ "right" ] [ "left" ]
+end
+
+to-report is-hook? [in-l out-l]
+  if not hook-turns? or out-l = nobody [ report false ]
+  report [trams?] of in-l and [signalised?] of [end2] of in-l and turn-type in-l out-l = "right"
+end
+
+to-report turn-penalty [in-l out-l]
+  let tt turn-type in-l out-l
+  if tt = "straight" [ report 0 ]
+  if tt = "left" [ report 3 ]
+  if tt = "uturn" [ report 90 ]
+  report ifelse-value is-hook? in-l out-l [ 25 ] [ 10 ]
+end
+
+;; =====================================================================
+;;  GO
+;; =====================================================================
+
+to go
+  if ticks >= warm-up-s + measure-s [ final-report stop ]
+  if not closure-applied? and closure-street != "none" and ticks >= closure-start-min * 60 [
+    apply-scenario-closure
+  ]
+  if ticks mod reroute-interval = 0 [
+    update-live-costs
+    compute-distances "live"
+  ]
+  update-signals
+  generate-demand
+  ask roads [ process-link ]
+  process-hook-boxes
+  if measuring? [ set veh-seconds veh-seconds + count cars + queued-at-gates ]
+  if ticks mod 5 = 0 [ update-link-colors ]
+  tick
+end
+
+to-report measuring?
+  report ticks >= warm-up-s and ticks < warm-up-s + measure-s
+end
+
+to-report measured-seconds
+  report max list 0 (min list (ticks - warm-up-s) measure-s)
+end
+
+;; ---------------------------------------------------------------------
+;;  demand
+;; ---------------------------------------------------------------------
+
+to generate-demand
+  let rate demand-veh-per-hour / 3600
+  ask gates [
+    let n random-poisson (rate * weight / gate-weight-sum)
+    repeat n [
+      let d pick-dest self
+      ifelse d = nobody
+        [ set stranded-count stranded-count + 1 ]
+        [ set gate-queue lput (list ticks d) gate-queue ]
+    ]
+    if not empty? gate-queue [ try-release ]
+  ]
+end
+
+to-report pick-dest [g]
+  repeat 5 [
+    let d ifelse-value random-float 100 < through-traffic-%
+      [ weighted-pick gates with [ self != g ] ]
+      [ weighted-pick carparks ]
+    if item ([dest-id] of d) ([dist-free] of g) < BIG [ report d ]
+  ]
+  report nobody
+end
+
+to-report weighted-pick [agset]
+  let r random-float sum [ weight ] of agset
+  let chosen nobody
+  foreach sort agset [ a ->
+    if chosen = nobody [
+      set r r - [weight] of a
+      if r < 0 [ set chosen a ]
+    ]
+  ]
+  if chosen = nobody [ set chosen one-of agset ]
+  report chosen
+end
+
+to try-release  ;; gate procedure
+  let out one-of my-out-roads
+  if not [any-lane-room?] of out [ stop ]
+  let entry first gate-queue
+  set gate-queue but-first gate-queue
+  let g self
+  hatch-cars 1 [
+    init-car g (item 1 entry) (item 0 entry)
+    set next-link choose-from out
+    ifelse next-link = nobody [
+      set stranded-count stranded-count + 1
+      die
+    ] [
+      let li entry-lane out next-link
+      put-on-link out (max list 0 li) 0
+    ]
+  ]
+end
+
+to init-car [g d t0]
+  set dest d
+  set informed? random-float 100 < informed-drivers-%
+  set t-start t0
+  set ff-time item ([dest-id] of d) ([dist-base] of g)
+  if ff-time >= BIG [ set ff-time item ([dest-id] of d) ([dist-free] of g) ]
+  set moved-at ticks
+  set hooking nobody
+  set plan-for nobody
+  set plan-next nobody
+  set plan-lane 0
+  set speed vmax * 0.6
+  set shape "default"
+  set size 1.3
+  set label ""
+  show-turtle
+end
+
+;; ---------------------------------------------------------------------
+;;  vehicle movement
+;; ---------------------------------------------------------------------
+
+to process-link  ;; link procedure: move cars front-to-back in every lane
+  let L self
+  foreach lane-cars [ lst ->
+    let leader nobody
+    foreach lst [ c ->
+      if c != nobody [
+        if [moved-at] of c != ticks [ ask c [ step-car leader ] ]
+        set leader c
+      ]
+    ]
+  ]
+end
+
+to step-car [leader]  ;; car procedure
+  set moved-at ticks
+  let L cur-link
+  let Llen [len] of L
+  if leader != nobody [ if [cur-link] of leader != L [ set leader nobody ] ]
+  let limit BIG
+  let can-go? false
+  let turn-cap BIG
+  ifelse leader != nobody [
+    set limit [pos] of leader - pos - VEH-LEN
+  ] [
+    let d-end Llen - pos
+    if d-end < speed + 40 [
+      ifelse may-pass? [
+        set can-go? true
+        if next-link != nobody and turn-type L next-link != "straight" [
+          set turn-cap sqrt (36 + 2 * DECEL * d-end)   ;; slow to ~6 m/s for turns
+        ]
+      ] [
+        set limit d-end - 0.5
+      ]
+    ]
+  ]
+  let v min (list (speed + ACCEL) ([link-vmax] of L) turn-cap)
+  if limit < BIG [ set v min (list v (sqrt (2 * DECEL * max list 0 limit)) (max list 0 limit)) ]
+  set speed max list 0 v
+  set pos pos + speed
+  ifelse pos >= Llen [
+    ifelse can-go? [ do-transfer (pos - Llen) ] [ hold-at-line ]
+  ] [
+    place-car
+  ]
+end
+
+;; car reporter: may I cross the stop line at the end of my current link?
+to-report may-pass?
+  let L cur-link
+  let n [end2] of L
+  if next-link = nobody [ report true ]            ;; arriving (or stranded - handled on transfer)
+  if not [usable?] of next-link [                  ;; road closed ahead: pick another way
+    set next-link choose-from L
+    set plan-for nobody
+    if next-link = nobody [ report true ]
+  ]
+  let tt turn-type L next-link
+  let hook? is-hook? L next-link
+  let d-end [len] of L - pos
+
+  ;; traffic signals
+  if [signalised?] of n [
+    let g [green-axis] of n
+    let my-axis [axis] of L
+    if g != my-axis [
+      let committed? g = "none" and [last-green] of n = my-axis and d-end < (speed * speed) / (2 * DECEL)
+      let clearing-right? g = "none" and [last-green] of n = my-axis and tt = "right" and not hook? and d-end < 3
+      if not (committed? or clearing-right?) [ report false ]
+    ]
+  ]
+  ;; give way at unsignalised junctions
+  if not [signalised?] of n [
+    let r [rank] of L
+    if any? ([my-in-roads] of n) with [ rank > r and self != L and approaching-within 30 ] [ report false ]
+  ]
+  ;; right turns (non-hook) give way to oncoming traffic
+  if tt = "right" and not hook? [
+    let h [link-heading] of L
+    let opp one-of ([my-in-roads] of n) with [ abs subtract-headings link-heading ((h + 180) mod 360) < 30 ]
+    if opp != nobody [ if [approaching-within 40] of opp [ report false ] ]
+  ]
+  ;; space downstream (don't block the intersection)
+  if hook? [ report length [hook-box] of n < 3 ]
+  if plan-for != next-link [
+    set plan-next choose-from next-link
+    set plan-for next-link
+  ]
+  set plan-lane entry-lane next-link plan-next
+  report plan-lane >= 0
+end
+
+to-report approaching-within [d]  ;; link reporter: is a moving car within D metres of the end?
+  let result false
+  foreach lane-cars [ lst ->
+    if not empty? lst [
+      let c first lst
+      if c != nobody [
+        if (len - [pos] of c) < d and [speed] of c > 1 [ set result true ]
+      ]
+    ]
+  ]
+  report result
+end
+
+to do-transfer [ov]  ;; car procedure
+  let L cur-link
+  if next-link = nobody [
+    let arrived? [end2] of L = dest
+    leave-current
+    finish-trip arrived?
+    stop
+  ]
+  let n [end2] of L
+  ifelse is-hook? L next-link [
+    if length [hook-box] of n >= 3 [ hold-at-line stop ]
+    leave-current
+    set hooking n
+    ask n [ set hook-box lput myself hook-box ]
+    set speed 0
+    let h [link-heading] of next-link
+    move-to n
+    set heading h
+    setxy (xcor + 1.2 * sin (h - 90)) (ycor + 1.2 * cos (h - 90))
+    set color 15
+  ] [
+    let li entry-lane next-link plan-next
+    if li < 0 [ hold-at-line stop ]
+    leave-current
+    enter-link next-link li ov
+  ]
+end
+
+to hold-at-line
+  set pos [len] of cur-link - 0.01
+  set speed 0
+  place-car
+end
+
+to leave-current  ;; car procedure
+  let L cur-link
+  let li lane
+  let me self
+  let tt ticks - t-link
+  let m? measuring?
+  ask L [
+    set lane-cars replace-item li lane-cars (remove me (item li lane-cars))
+    set tt-ema 0.8 * tt-ema + 0.2 * tt
+    if m? [ set win-count win-count + 1 ]
+  ]
+  set cur-link nobody
+end
+
+to enter-link [L2 li p]  ;; car procedure
+  let nxt ifelse-value plan-for = L2 [ plan-next ] [ choose-from L2 ]
+  put-on-link L2 li p
+  set next-link nxt
+  set plan-for nobody
+  set plan-next nobody
+end
+
+to put-on-link [L li p]  ;; car procedure
+  set cur-link L
+  set lane li
+  set t-link ticks
+  let g entry-gap L li
+  set pos max list 0 (min list p g)
+  ask L [ set lane-cars replace-item li lane-cars (lput myself (item li lane-cars)) ]
+  place-car
+end
+
+to finish-trip [arrived?]
+  ifelse arrived? [
+    if measuring? [
+      let tt ticks - t-start
+      set trips-done trips-done + 1
+      set trip-time-sum trip-time-sum + tt
+      set delay-sum delay-sum + (tt - ff-time)
+      set recent-delays lput (tt - ff-time) recent-delays
+      if length recent-delays > 100 [ set recent-delays but-first recent-delays ]
+    ]
+  ] [
+    set stranded-count stranded-count + 1
+  ]
+  die
+end
+
+;; ---- lanes ----
+
+to-report entry-gap [L li]
+  let lst item li [lane-cars] of L
+  if empty? lst [ report BIG ]
+  report [pos] of last lst - VEH-LEN
+end
+
+to-report lane-room? [L li]
+  report entry-gap L li >= 0
+end
+
+to-report any-lane-room?  ;; link reporter
+  let L self
+  report reduce [ [a b] -> a or b ] (fput false map [ i -> lane-room? L i ] range lanes-open)
+end
+
+;; lane on link L for a car whose next move is N; -1 if no lane has room
+to-report entry-lane [L N]
+  let nl [lanes-open] of L
+  if nl < 1 [ report -1 ]
+  let pref 0
+  if nl > 1 [
+    let tt turn-type L N
+    (ifelse
+      tt = "left" or is-hook? L N [ set pref 0 ]
+      tt = "right" [ set pref nl - 1 ]
+      [ let counts map [ i -> length item i [lane-cars] of L ] range nl
+        set pref position (min counts) counts ])
+  ]
+  if lane-room? L pref [ report pref ]
+  foreach range nl [ i -> if lane-room? L i [ report i ] ]
+  report -1
+end
+
+;; ---- hook turns: wait in the intersection, go when the cross street gets green ----
+
+to process-hook-boxes
+  ask signals with [ not empty? hook-box ] [
+    let n self
+    let c first hook-box
+    ifelse c = nobody [
+      set hook-box but-first hook-box
+    ] [
+      let out [next-link] of c
+      if green-axis = [axis] of out [
+        ask c [
+          ifelse not [usable?] of out [
+            ask n [ set hook-box but-first hook-box ]
+            finish-trip false
+          ] [
+            set plan-next choose-from out
+            set plan-for out
+            let li entry-lane out plan-next
+            if li >= 0 [
+              ask n [ set hook-box but-first hook-box ]
+              set hooking nobody
+              enter-link out li 0
+              set speed 3
+            ]
+          ]
+        ]
+      ]
+    ]
+  ]
+end
+
+to place-car  ;; car procedure: draw the car in its lane (Australia: drive on the left)
+  let L cur-link
+  let a [end1] of L
+  let b [end2] of L
+  let f pos / [len] of L
+  let h [link-heading] of L
+  let off 0.35 + lane * 0.35
+  setxy ([xcor] of a + f * ([xcor] of b - [xcor] of a) + off * sin (h - 90))
+        ([ycor] of a + f * ([ycor] of b - [ycor] of a) + off * cos (h - 90))
+  set heading h
+  set color (ifelse-value speed < 0.5 [ 15 ] speed < vmax * 0.5 [ 25 ] [ 103 ])
+end
+
+;; =====================================================================
+;;  ROAD CLOSURES
+;; =====================================================================
+
+to apply-scenario-closure
+  set closure-applied? true
+  let Ls roads with [ street = closure-street and seg = closure-block and road-kind != "gate" ]
+  if not any? Ls [ set closure-desc "none (no such block)" stop ]
+  (ifelse
+    closure-type = "Full closure (both directions)" [
+      ask Ls [ set closed? true ]
+    ]
+    closure-type = "Full closure (eastbound / northbound only)" [
+      ask Ls with [ abs subtract-headings link-heading 90 < 1 or abs subtract-headings link-heading 0 < 1 ] [ set closed? true ]
+    ]
+    [ ;; one lane closed in each direction
+      ask Ls [
+        set lanes-open lanes - 1
+        if lanes-open < 1 [ set closed? true ]
+      ]
+    ])
+  set closure-desc (word closure-street ", block " closure-block " (" block-description closure-street closure-block ") - " closure-type)
+  output-print (word "t=" ticks "s  closure applied: " closure-desc)
+  network-changed
+end
+
+to-report block-description [nm b]
+  let ew-names map [ x -> item 0 x ] ew-config
+  let ns-names map [ x -> item 0 x ] ns-config
+  if member? nm ew-names [ report (word item (b - 1) ns-names " to " item b ns-names) ]
+  if member? nm ns-names [ report (word item (b - 1) ew-names " to " item b ew-names) ]
+  report "?"
+end
+
+to network-changed
+  compute-distances "free"
+  update-live-costs
+  compute-distances "live"
+  ask cars [ set plan-for nobody ]
+  update-link-colors
+end
+
+;; forever button: click a road to close / reopen that block (both directions)
+to click-to-close
+  ifelse mouse-down? [
+    if not mouse-was-down? [
+      let mx mouse-xcor
+      let yy mouse-ycor
+      let L min-one-of roads with [ road-kind = "main" or road-kind = "little" ] [ seg-distance mx yy ]
+      if L != nobody [
+        if [seg-distance mx yy] of L < 2.5 [ toggle-closure L ]
+      ]
+    ]
+    set mouse-was-down? true
+  ] [
+    set mouse-was-down? false
+  ]
+end
+
+to toggle-closure [L]
+  let new-state not [closed?] of L
+  ask L [ set closed? new-state ]
+  if [partner] of L != nobody [ ask [partner] of L [ set closed? new-state ] ]
+  set closure-desc (word "manual: " [street] of L ", block " [seg] of L (ifelse-value new-state [ " CLOSED" ] [ " reopened" ]))
+  output-print (word "t=" ticks "s  " closure-desc)
+  network-changed
+  display
+end
+
+to-report seg-distance [px py]  ;; link reporter
+  let x1 [xcor] of end1
+  let y1 [ycor] of end1
+  let ddx [xcor] of end2 - x1
+  let ddy [ycor] of end2 - y1
+  let l2 ddx * ddx + ddy * ddy
+  let t ifelse-value l2 = 0 [ 0 ] [ ((px - x1) * ddx + (py - y1) * ddy) / l2 ]
+  set t max list 0 (min list 1 t)
+  report sqrt ((px - x1 - t * ddx) ^ 2 + (py - y1 - t * ddy) ^ 2)
+end
+
+;; =====================================================================
+;;  OUTPUT, BASELINE COMPARISON, DISPLAY
+;; =====================================================================
+
+to save-baseline
+  if measured-seconds < 60 [
+    user-message "Run past the warm-up period first (at least 1 minute of measurement)."
+    stop
+  ]
+  set baseline table:make
+  let hrs measured-seconds / 3600
+  ask roads [
+    table:put baseline link-key (win-count / hrs)
+    set base-count win-count / hrs
+  ]
+  output-print (word "Baseline saved from this run (" closure-desc ").")
+  output-print "Now set a closure, press SETUP and GO, then choose view-mode 'change vs baseline'."
+end
+
+to-report link-key  ;; link reporter
+  report (word [who] of end1 "-" [who] of end2)
+end
+
+to update-link-colors
+  let hrs max list (1 / 60) (measured-seconds / 3600)
+  ask roads with [ not hidden? ] [
+    set thickness base-thickness
+    let p partner
+    (ifelse
+      not cars-allowed? [ set color 117 ]
+      closed? or (p != nobody and [closed?] of p) [ set color 0 set thickness 1.4 ]
+      lanes-open < lanes or (p != nobody and [lanes-open < lanes] of p) [ set color 125 set thickness 1.2 ]
+      road-kind = "access" [ set color 6 ]
+      view-mode = "congestion" [
+        let occ link-occupancy
+        if p != nobody [ set occ max list occ [link-occupancy] of p ]
+        set color (ifelse-value occ < 0.1 [ 55 ] occ < 0.3 [ 44 ] occ < 0.6 [ 25 ] [ 14 ])
+      ]
+      view-mode = "volume" [
+        let vol win-count + ifelse-value p != nobody [ [win-count] of p ] [ 0 ]
+        set vol vol / hrs
+        set color scale-color red vol 1800 0
+        set thickness base-thickness + min list 1.5 (vol / 800)
+      ]
+      [ ;; change vs baseline
+        let vol win-count + ifelse-value p != nobody [ [win-count] of p ] [ 0 ]
+        let base base-count + ifelse-value p != nobody [ [base-count] of p ] [ 0 ]
+        let diff vol / hrs - base
+        set color (ifelse-value diff > 25 [ 15 ] diff < -25 [ 105 ] [ 5 ])
+        set thickness base-thickness + min list 2 (abs diff / 250)
+      ])
+  ]
+end
+
+to-report link-occupancy  ;; link reporter: share of storage space in use
+  let n sum map length lane-cars
+  report n / max list 1 (len * lanes-open / VEH-LEN)
+end
+
+to final-report
+  output-print "------------------------------------------"
+  output-print (word "Run finished. Closure: " closure-desc)
+  output-print (word "Trips completed in window: " trips-done)
+  output-print (word "Mean trip time (min): " precision mean-trip-time-min 2)
+  output-print (word "Mean delay vs free flow (min): " precision mean-delay-min 2)
+  output-print (word "Vehicle-hours in system: " precision vehicle-hours 1)
+  output-print (word "Still waiting to enter: " queued-at-gates)
+  output-print (word "Stranded / unroutable: " stranded-count)
+end
+
+to export-link-results
+  let fname "hoddle-link-results.csv"
+  carefully [ file-delete fname ] [ ]
+  file-open fname
+  file-print "street,direction,block,from,to,lanes,lanes_open,closed,veh_per_hour,baseline_veh_per_hour,change_veh_per_hour,mean_travel_time_s"
+  let hrs max list (1 / 3600) (measured-seconds / 3600)
+  foreach sort roads [ L ->
+    ask L [
+      if cars-allowed? and road-kind != "access" [
+        file-print (word "\"" street "\"," direction-name "," seg ",\"" node-name end1 "\",\"" node-name end2 "\"," lanes "," lanes-open "," closed? ","
+          precision (win-count / hrs) 1 "," precision base-count 1 "," precision (win-count / hrs - base-count) 1 "," precision tt-ema 1)
+      ]
+    ]
+  ]
+  file-close
+  output-print (word "Link results written to " fname " (in the model's folder).")
+end
+
+to-report direction-name  ;; link reporter
+  let h link-heading
+  report (ifelse-value abs subtract-headings h 90 < 45 [ "EB" ] abs subtract-headings h 270 < 45 [ "WB" ] abs subtract-headings h 0 < 45 [ "NB" ] [ "SB" ])
+end
+
+to-report node-name [n]
+  if [node-kind] of n = "grid" [
+    report (word (item 0 (item [col] of n ns-config)) " / " (item 0 (item [row] of n ew-config)))
+  ]
+  report [node-kind] of n
+end
+
+;; ---- reporters for monitors and BehaviorSpace ----
+
+to-report mean-trip-time-min
+  report ifelse-value trips-done > 0 [ trip-time-sum / trips-done / 60 ] [ 0 ]
+end
+
+to-report mean-delay-min
+  report ifelse-value trips-done > 0 [ delay-sum / trips-done / 60 ] [ 0 ]
+end
+
+to-report vehicle-hours
+  report veh-seconds / 3600
+end
+
+to-report queued-at-gates
+  report sum [ length gate-queue ] of gates
+end
+
+to-report sim-clock
+  let s ticks
+  report (word floor (s / 60) " min " (s mod 60) " s")
+end
+
+;; average vehicles per hour through one block of street NM (both directions)
+to-report street-flow [nm]
+  let Ls roads with [ street = nm and road-kind != "gate" and cars-allowed? ]
+  if not any? Ls or measured-seconds = 0 [ report 0 ]
+  let nsegs length remove-duplicates [ seg ] of Ls
+  report (sum [ win-count ] of Ls) / nsegs / (measured-seconds / 3600)
+end
+]]></code>
+  <widgets>
+    <view x="330" wrappingAllowedX="false" y="10" frameRate="30.0" minPycor="-14" height="440" showTickCounter="true" patchSize="4.0" fontSize="9" wrappingAllowedY="false" width="816" tickCounterLabel="seconds" maxPycor="94" updateMode="1" maxPxcor="172" minPxcor="-30"></view>
+    <button x="10" y="10" height="35" disableUntilTicks="false" forever="false" kind="Observer" width="100" display="Setup">setup</button>
+    <button x="115" y="10" height="35" disableUntilTicks="true" forever="true" kind="Observer" width="100" display="Go">go</button>
+    <button x="220" y="10" height="35" disableUntilTicks="true" forever="false" kind="Observer" width="100" display="Step 1 s">go</button>
+    <note x="10" y="52" backgroundDark="0" fontSize="11" width="310" markdown="false" height="18" textColorDark="-1" textColorLight="-16777216" backgroundLight="0">DEMAND</note>
+    <slider x="10" step="250" y="70" max="12000" width="310" display="demand-veh-per-hour" height="50" min="500" direction="Horizontal" default="7000.0" variable="demand-veh-per-hour" units="veh/h"></slider>
+    <slider x="10" step="5" y="122" max="100" width="310" display="through-traffic-%" height="50" min="0" direction="Horizontal" default="35.0" variable="through-traffic-%" units="%"></slider>
+    <slider x="10" step="5" y="174" max="100" width="310" display="informed-drivers-%" height="50" min="0" direction="Horizontal" default="50.0" variable="informed-drivers-%" units="%"></slider>
+    <note x="10" y="228" backgroundDark="0" fontSize="11" width="310" markdown="false" height="18" textColorDark="-1" textColorLight="-16777216" backgroundLight="0">ROADS AND SIGNALS</note>
+    <slider x="10" step="5" y="246" max="60" width="310" display="speed-limit-kmh" height="50" min="20" direction="Horizontal" default="40.0" variable="speed-limit-kmh" units="km/h"></slider>
+    <slider x="10" step="5" y="298" max="150" width="310" display="cycle-length" height="50" min="40" direction="Horizontal" default="80.0" variable="cycle-length" units="s"></slider>
+    <slider x="10" step="5" y="350" max="80" width="310" display="ew-green-share" height="50" min="20" direction="Horizontal" default="50.0" variable="ew-green-share" units="%"></slider>
+    <chooser x="10" y="402" height="60" variable="signal-coordination" current="0" width="310" display="signal-coordination">
+      <choice type="string" value="random offsets"></choice>
+      <choice type="string" value="green wave (east-west)"></choice>
+    </chooser>
+    <switch x="10" y="466" height="40" on="true" variable="hook-turns?" width="150" display="hook-turns?"></switch>
+    <switch x="170" y="466" height="40" on="true" variable="fixed-seed?" width="150" display="fixed-seed?"></switch>
+    <slider x="10" step="1" y="510" max="100" width="150" display="seed" height="50" min="1" direction="Horizontal" default="1.0" variable="seed"></slider>
+    <slider x="170" step="0.05" y="510" max="0.5" width="150" display="route-noise" height="50" min="0" direction="Horizontal" default="0.1" variable="route-noise"></slider>
+    <slider x="10" step="10" y="562" max="300" width="310" display="reroute-interval" height="50" min="10" direction="Horizontal" default="60.0" variable="reroute-interval" units="s"></slider>
+    <note x="10" y="616" backgroundDark="0" fontSize="11" width="310" markdown="false" height="18" textColorDark="-1" textColorLight="-16777216" backgroundLight="0">MEASUREMENT</note>
+    <slider x="10" step="60" y="634" max="3600" width="310" display="warm-up-s" height="50" min="0" direction="Horizontal" default="900.0" variable="warm-up-s" units="s"></slider>
+    <slider x="10" step="300" y="686" max="7200" width="310" display="measure-s" height="50" min="600" direction="Horizontal" default="3600.0" variable="measure-s" units="s"></slider>
+    <note x="330" y="460" backgroundDark="0" fontSize="11" width="280" markdown="false" height="18" textColorDark="-1" textColorLight="-16777216" backgroundLight="0">ROAD CLOSURE SCENARIO</note>
+    <chooser x="330" y="478" height="60" variable="closure-street" current="0" width="280" display="closure-street">
+      <choice type="string" value="none"></choice>
+      <choice type="string" value="Flinders St"></choice>
+      <choice type="string" value="Flinders Ln"></choice>
+      <choice type="string" value="Collins St"></choice>
+      <choice type="string" value="Little Collins St"></choice>
+      <choice type="string" value="Bourke St"></choice>
+      <choice type="string" value="Little Bourke St"></choice>
+      <choice type="string" value="Lonsdale St"></choice>
+      <choice type="string" value="Little Lonsdale St"></choice>
+      <choice type="string" value="La Trobe St"></choice>
+      <choice type="string" value="Spencer St"></choice>
+      <choice type="string" value="King St"></choice>
+      <choice type="string" value="William St"></choice>
+      <choice type="string" value="Queen St"></choice>
+      <choice type="string" value="Elizabeth St"></choice>
+      <choice type="string" value="Swanston St"></choice>
+      <choice type="string" value="Russell St"></choice>
+      <choice type="string" value="Exhibition St"></choice>
+      <choice type="string" value="Spring St"></choice>
+    </chooser>
+    <slider x="330" step="1" y="542" max="8" width="280" display="closure-block" height="50" min="1" direction="Horizontal" default="4.0" variable="closure-block"></slider>
+    <chooser x="330" y="596" height="60" variable="closure-type" current="0" width="280" display="closure-type">
+      <choice type="string" value="Full closure (both directions)"></choice>
+      <choice type="string" value="Full closure (eastbound / northbound only)"></choice>
+      <choice type="string" value="One lane closed (each direction)"></choice>
+    </chooser>
+    <slider x="330" step="1" y="660" max="60" width="280" display="closure-start-min" height="50" min="0" direction="Horizontal" default="0.0" variable="closure-start-min" units="min"></slider>
+    <button x="330" y="716" height="35" disableUntilTicks="true" forever="true" kind="Observer" width="280" display="Click a road to close / reopen">click-to-close</button>
+    <monitor x="330" precision="0" y="757" height="50" fontSize="11" width="280" display="Closure">closure-desc</monitor>
+    <note x="620" y="460" backgroundDark="0" fontSize="11" width="250" markdown="false" height="18" textColorDark="-1" textColorLight="-16777216" backgroundLight="0">COMPARE AND EXPORT</note>
+    <chooser x="620" y="478" height="60" variable="view-mode" current="0" width="250" display="view-mode">
+      <choice type="string" value="congestion"></choice>
+      <choice type="string" value="volume"></choice>
+      <choice type="string" value="change vs baseline"></choice>
+    </chooser>
+    <button x="620" y="542" height="35" disableUntilTicks="true" forever="false" kind="Observer" width="250" display="Save this run as baseline">save-baseline</button>
+    <button x="620" y="582" height="35" disableUntilTicks="true" forever="false" kind="Observer" width="250" display="Export link results (CSV)">export-link-results</button>
+    <output x="620" y="624" height="186" fontSize="11" width="250"></output>
+    <plot x="880" autoPlotX="true" yMax="10.0" autoPlotY="true" yAxis="vehicles" y="460" xMin="0.0" height="175" legend="true" xMax="100.0" yMin="0.0" width="300" xAxis="seconds" display="Vehicles">
+      <setup></setup>
+      <update></update>
+      <pen interval="1.0" mode="0" display="in CBD" color="-16777216" legend="true">
+        <setup></setup>
+        <update>plot count cars</update>
+      </pen>
+      <pen interval="1.0" mode="0" display="waiting to enter" color="-2674135" legend="true">
+        <setup></setup>
+        <update>plot queued-at-gates</update>
+      </pen>
+    </plot>
+    <plot x="880" autoPlotX="true" yMax="10.0" autoPlotY="true" yAxis="km/h" y="640" xMin="0.0" height="170" legend="false" xMax="100.0" yMin="0.0" width="300" xAxis="seconds" display="Mean speed">
+      <setup></setup>
+      <update></update>
+      <pen interval="1.0" mode="0" display="speed" color="-13345367" legend="true">
+        <setup></setup>
+        <update>if any? cars [ plot 3.6 * mean [speed] of cars ]</update>
+      </pen>
+    </plot>
+    <monitor x="1156" precision="0" y="10" height="50" fontSize="11" width="170" display="Simulated time">sim-clock</monitor>
+    <monitor x="1156" precision="0" y="64" height="50" fontSize="11" width="170" display="Cars in CBD">count cars</monitor>
+    <monitor x="1156" precision="0" y="118" height="50" fontSize="11" width="170" display="Waiting to enter">queued-at-gates</monitor>
+    <monitor x="1156" precision="0" y="172" height="50" fontSize="11" width="170" display="Trips completed">trips-done</monitor>
+    <monitor x="1156" precision="2" y="226" height="50" fontSize="11" width="170" display="Mean trip (min)">mean-trip-time-min</monitor>
+    <monitor x="1156" precision="2" y="280" height="50" fontSize="11" width="170" display="Mean delay (min)">mean-delay-min</monitor>
+    <monitor x="1156" precision="1" y="334" height="50" fontSize="11" width="170" display="Vehicle-hours">vehicle-hours</monitor>
+    <monitor x="1156" precision="0" y="388" height="50" fontSize="11" width="170" display="Stranded">stranded-count</monitor>
+    <monitor x="1156" precision="0" y="442" height="50" fontSize="11" width="170" display="Collins St veh/h">street-flow &quot;Collins St&quot;</monitor>
+    <monitor x="1156" precision="0" y="496" height="50" fontSize="11" width="170" display="Flinders Ln veh/h">street-flow &quot;Flinders Ln&quot;</monitor>
+    <plot x="1336" autoPlotX="true" yMax="10.0" autoPlotY="true" yAxis="s vs free flow" y="10" xMin="0.0" height="200" legend="false" xMax="100.0" yMin="0.0" width="260" xAxis="seconds" display="Trip delay (last 100 trips)">
+      <setup></setup>
+      <update></update>
+      <pen interval="1.0" mode="0" display="delay" color="-10899396" legend="true">
+        <setup></setup>
+        <update>if not empty? recent-delays [ plot mean recent-delays ]</update>
+      </pen>
+    </plot>
+    <note x="1336" y="220" backgroundDark="0" fontSize="11" width="260" markdown="false" height="250" textColorDark="-1" textColorLight="-16777216" backgroundLight="0">MAP KEY
+Roads (congestion view): green = free, yellow = busy,
+orange = heavy, red = queued.
+Black = closed block, magenta = lane closed,
+violet = trams / pedestrians only (Swanston St, Bourke St Mall).
+Cars: blue = moving, orange = slow, red = stopped.
+Dark squares = entry/exit points, blue P = car parks.
+
+Grid shown axis-aligned (real grid is rotated ~20 deg).
+1 patch = 10 m, 1 tick = 1 s.</note>
+  </widgets>
+  <info><![CDATA[## WHAT IS IT?
+
+A prototype traffic model of Melbourne's Hoddle Grid (the CBD between Flinders St, Spencer St, La Trobe St and Spring St). Its purpose is to estimate how traffic redistributes when a block is closed for roadworks: which streets gain or lose traffic, and how much trip times and total delay change.
+
+It started from the NetLogo library model *Traffic Grid* (Wilensky, 2003) but the core has been rebuilt. Roads are now a directed network instead of patches, and cars have origins, destinations and route choice. Rerouting is what makes a closure show up as a change in flow rather than just a jam.
+
+## HOW IT WORKS
+
+**Network.** There are 9 north-south streets (Spencer to Spring) and 9 east-west streets: 5 main streets plus the 4 "little" streets. Blocks are about 201 m by 100 m. Every block in each direction is one directed link, which stores its length, lanes, tram flag and whether cars are allowed. Swanston St and the Bourke St Mall carry trams and pedestrians only. Entry/exit gates sit at the ends of the main streets, and car parks are attached to little-street intersections.
+
+**Demand.** Vehicles arrive at the gates as a Poisson process (DEMAND-VEH-PER-HOUR, split by gate weight). THROUGH-TRAFFIC-% of them cross the CBD to another gate; the rest drive to a car park. If the first block is full, a vehicle waits at the gate, and that waiting time counts in its trip time.
+
+**Driving.** Cars follow a simple safe-speed rule: they accelerate to the speed limit and brake so they can always stop behind the car ahead. This gives about 1,800 veh/h per lane at saturation. Cars stay in their lane within a block and choose a lane for the turn they will make at the end of it. They slow down for turns and won't enter an intersection unless there is space on the next block.
+
+**Intersections.**
+
+- Main-street intersections are signalised with two phases and a 6 s intergreen.
+- Little-street intersections are unsignalised, and the little street gives way.
+- Right turns give way to oncoming traffic.
+- Right turns from streets with tram tracks are **hook turns**: the car waits at the left of the intersection and completes the turn when the cross street gets its green.
+
+**Route choice.** Every REROUTE-INTERVAL seconds the model computes the shortest travel time from every intersection to every destination (Dijkstra) using current link travel times. At each intersection a car chooses its next block from the current estimate, plus a turn penalty and some random noise.
+
+- INFORMED-DRIVERS-% use live travel times, as if they had navigation apps.
+- The other drivers use free-flow times.
+- All drivers avoid closed roads, as if following detour signs.
+
+**Closures.** A block can be fully closed (both directions or one direction) or lose one lane in each direction. Closures can be set with the choosers or by clicking a road while the model runs.
+
+## HOW TO USE IT
+
+1. The default demand (7,000 veh/h) gives moderate congestion; about 8,000 veh/h and above starts to saturate the grid. Leave CLOSURE-STREET = none. Press SETUP, then GO. The run stops after WARM-UP-S + MEASURE-S seconds.
+2. Press SAVE THIS RUN AS BASELINE.
+3. Pick a closure (e.g. Collins St, block 4 = Queen St to Elizabeth St). Press SETUP, then GO.
+4. Set VIEW-MODE to "change vs baseline". Red shows streets that gained traffic and blue shows streets that lost it; thickness shows how much. The output box shows the summary figures.
+5. EXPORT LINK RESULTS writes a CSV with the flow change on every block.
+
+For defensible numbers, use **BehaviorSpace** (Tools menu): the included experiment runs baseline and closure on 10 paired random seeds. Report the mean and range, not a single run.
+
+Block numbering: for east-west streets, block 1 runs from Spencer St to King St and block 8 from Exhibition St to Spring St. For north-south streets, block 1 runs from Flinders St to Flinders Ln and block 8 from Little Lonsdale St to La Trobe St.
+
+## ASSUMPTIONS TO VERIFY (prototype placeholders)
+
+- Little-street travel directions, lane counts per street and hook-turn locations should be checked against OpenStreetMap / VicRoads data.
+- Little streets are capped at 20 km/h and give-way junctions add an expected 6 s wait in route choice (LITTLE-ST-KMH and GIVE-WAY-DELAY in SETUP-CONSTANTS).
+- Gate weights, total demand and car-park locations are illustrative. Calibrate them to DTP SCATS signal volume counts.
+- Signal timings are generic: the same cycle length everywhere, with random or green-wave offsets. Replace them with real phasing where available.
+- The grid is drawn axis-aligned; the real grid is rotated.
+
+## NOT YET MODELLED
+
+Trams as vehicles, pedestrians and pedestrian signal phases, buses, bikes, kerbside parking manoeuvres, loading zones, turn bans, time-varying demand (peak build-up), and demand that changes mode or time of travel in response to a closure.
+
+## CREDITS
+
+Built on the Traffic Grid model: Wilensky, U. (2003). NetLogo Traffic Grid model. Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.
+]]></info>
+  <turtleShapes>
+    <shape name="default" rotatable="true" editableColorIndex="0">
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="150" y="5"></point>
+        <point x="40" y="250"></point>
+        <point x="150" y="205"></point>
+        <point x="260" y="250"></point>
+      </polygon>
+    </shape>
+    <shape name="airplane" rotatable="true" editableColorIndex="0">
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="150" y="0"></point>
+        <point x="135" y="15"></point>
+        <point x="120" y="60"></point>
+        <point x="120" y="105"></point>
+        <point x="15" y="165"></point>
+        <point x="15" y="195"></point>
+        <point x="120" y="180"></point>
+        <point x="135" y="240"></point>
+        <point x="105" y="270"></point>
+        <point x="120" y="285"></point>
+        <point x="150" y="270"></point>
+        <point x="180" y="285"></point>
+        <point x="210" y="270"></point>
+        <point x="165" y="240"></point>
+        <point x="180" y="180"></point>
+        <point x="285" y="195"></point>
+        <point x="285" y="165"></point>
+        <point x="180" y="105"></point>
+        <point x="180" y="60"></point>
+        <point x="165" y="15"></point>
+      </polygon>
+    </shape>
+    <shape name="arrow" rotatable="true" editableColorIndex="0">
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="150" y="0"></point>
+        <point x="0" y="150"></point>
+        <point x="105" y="150"></point>
+        <point x="105" y="293"></point>
+        <point x="195" y="293"></point>
+        <point x="195" y="150"></point>
+        <point x="300" y="150"></point>
+      </polygon>
+    </shape>
+    <shape name="box" rotatable="false" editableColorIndex="0">
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="150" y="285"></point>
+        <point x="285" y="225"></point>
+        <point x="285" y="75"></point>
+        <point x="150" y="135"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="150" y="135"></point>
+        <point x="15" y="75"></point>
+        <point x="150" y="15"></point>
+        <point x="285" y="75"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="15" y="75"></point>
+        <point x="15" y="225"></point>
+        <point x="150" y="285"></point>
+        <point x="150" y="135"></point>
+      </polygon>
+      <line endX="150" startY="285" marked="false" color="255" endY="135" startX="150"></line>
+      <line endX="15" startY="135" marked="false" color="255" endY="75" startX="150"></line>
+      <line endX="285" startY="135" marked="false" color="255" endY="75" startX="150"></line>
+    </shape>
+    <shape name="bug" rotatable="true" editableColorIndex="0">
+      <circle x="96" y="182" marked="true" color="-1920102913" diameter="108" filled="true"></circle>
+      <circle x="110" y="127" marked="true" color="-1920102913" diameter="80" filled="true"></circle>
+      <circle x="110" y="75" marked="true" color="-1920102913" diameter="80" filled="true"></circle>
+      <line endX="80" startY="100" marked="true" color="-1920102913" endY="30" startX="150"></line>
+      <line endX="220" startY="100" marked="true" color="-1920102913" endY="30" startX="150"></line>
+    </shape>
+    <shape name="butterfly" rotatable="true" editableColorIndex="0">
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="150" y="165"></point>
+        <point x="209" y="199"></point>
+        <point x="225" y="225"></point>
+        <point x="225" y="255"></point>
+        <point x="195" y="270"></point>
+        <point x="165" y="255"></point>
+        <point x="150" y="240"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="150" y="165"></point>
+        <point x="89" y="198"></point>
+        <point x="75" y="225"></point>
+        <point x="75" y="255"></point>
+        <point x="105" y="270"></point>
+        <point x="135" y="255"></point>
+        <point x="150" y="240"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="139" y="148"></point>
+        <point x="100" y="105"></point>
+        <point x="55" y="90"></point>
+        <point x="25" y="90"></point>
+        <point x="10" y="105"></point>
+        <point x="10" y="135"></point>
+        <point x="25" y="180"></point>
+        <point x="40" y="195"></point>
+        <point x="85" y="194"></point>
+        <point x="139" y="163"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="162" y="150"></point>
+        <point x="200" y="105"></point>
+        <point x="245" y="90"></point>
+        <point x="275" y="90"></point>
+        <point x="290" y="105"></point>
+        <point x="290" y="135"></point>
+        <point x="275" y="180"></point>
+        <point x="260" y="195"></point>
+        <point x="215" y="195"></point>
+        <point x="162" y="165"></point>
+      </polygon>
+      <polygon color="255" filled="true" marked="false">
+        <point x="150" y="255"></point>
+        <point x="135" y="225"></point>
+        <point x="120" y="150"></point>
+        <point x="135" y="120"></point>
+        <point x="150" y="105"></point>
+        <point x="165" y="120"></point>
+        <point x="180" y="150"></point>
+        <point x="165" y="225"></point>
+      </polygon>
+      <circle x="135" y="90" marked="false" color="255" diameter="30" filled="true"></circle>
+      <line endX="195" startY="105" marked="false" color="255" endY="60" startX="150"></line>
+      <line endX="105" startY="105" marked="false" color="255" endY="60" startX="150"></line>
+    </shape>
+    <shape name="car" rotatable="true" editableColorIndex="0">
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="180" y="15"></point>
+        <point x="164" y="21"></point>
+        <point x="144" y="39"></point>
+        <point x="135" y="60"></point>
+        <point x="132" y="74"></point>
+        <point x="106" y="87"></point>
+        <point x="84" y="97"></point>
+        <point x="63" y="115"></point>
+        <point x="50" y="141"></point>
+        <point x="50" y="165"></point>
+        <point x="60" y="225"></point>
+        <point x="150" y="285"></point>
+        <point x="165" y="285"></point>
+        <point x="225" y="285"></point>
+        <point x="225" y="15"></point>
+        <point x="180" y="15"></point>
+      </polygon>
+      <circle x="180" y="30" marked="false" color="255" diameter="90" filled="true"></circle>
+      <circle x="180" y="180" marked="false" color="255" diameter="90" filled="true"></circle>
+      <polygon color="255" filled="true" marked="false">
+        <point x="80" y="138"></point>
+        <point x="78" y="168"></point>
+        <point x="135" y="166"></point>
+        <point x="135" y="91"></point>
+        <point x="105" y="106"></point>
+        <point x="96" y="111"></point>
+        <point x="89" y="120"></point>
+      </polygon>
+      <circle x="195" y="195" marked="true" color="-1920102913" diameter="58" filled="true"></circle>
+      <circle x="195" y="47" marked="true" color="-1920102913" diameter="58" filled="true"></circle>
+    </shape>
+    <shape name="circle" rotatable="false" editableColorIndex="0">
+      <circle x="0" y="0" marked="true" color="-1920102913" diameter="300" filled="true"></circle>
+    </shape>
+    <shape name="circle 2" rotatable="false" editableColorIndex="0">
+      <circle x="0" y="0" marked="true" color="-1920102913" diameter="300" filled="true"></circle>
+      <circle x="30" y="30" marked="false" color="255" diameter="240" filled="true"></circle>
+    </shape>
+    <shape name="cow" rotatable="false" editableColorIndex="0">
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="200" y="193"></point>
+        <point x="197" y="249"></point>
+        <point x="179" y="249"></point>
+        <point x="177" y="196"></point>
+        <point x="166" y="187"></point>
+        <point x="140" y="189"></point>
+        <point x="93" y="191"></point>
+        <point x="78" y="179"></point>
+        <point x="72" y="211"></point>
+        <point x="49" y="209"></point>
+        <point x="48" y="181"></point>
+        <point x="37" y="149"></point>
+        <point x="25" y="120"></point>
+        <point x="25" y="89"></point>
+        <point x="45" y="72"></point>
+        <point x="103" y="84"></point>
+        <point x="179" y="75"></point>
+        <point x="198" y="76"></point>
+        <point x="252" y="64"></point>
+        <point x="272" y="81"></point>
+        <point x="293" y="103"></point>
+        <point x="285" y="121"></point>
+        <point x="255" y="121"></point>
+        <point x="242" y="118"></point>
+        <point x="224" y="167"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="73" y="210"></point>
+        <point x="86" y="251"></point>
+        <point x="62" y="249"></point>
+        <point x="48" y="208"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="25" y="114"></point>
+        <point x="16" y="195"></point>
+        <point x="9" y="204"></point>
+        <point x="23" y="213"></point>
+        <point x="25" y="200"></point>
+        <point x="39" y="123"></point>
+      </polygon>
+    </shape>
+    <shape name="cylinder" rotatable="false" editableColorIndex="0">
+      <circle x="0" y="0" marked="true" color="-1920102913" diameter="300" filled="true"></circle>
+    </shape>
+    <shape name="dot" rotatable="false" editableColorIndex="0">
+      <circle x="90" y="90" marked="true" color="-1920102913" diameter="120" filled="true"></circle>
+    </shape>
+    <shape name="face happy" rotatable="false" editableColorIndex="0">
+      <circle x="8" y="8" marked="true" color="-1920102913" diameter="285" filled="true"></circle>
+      <circle x="60" y="75" marked="false" color="255" diameter="60" filled="true"></circle>
+      <circle x="180" y="75" marked="false" color="255" diameter="60" filled="true"></circle>
+      <polygon color="255" filled="true" marked="false">
+        <point x="150" y="255"></point>
+        <point x="90" y="239"></point>
+        <point x="62" y="213"></point>
+        <point x="47" y="191"></point>
+        <point x="67" y="179"></point>
+        <point x="90" y="203"></point>
+        <point x="109" y="218"></point>
+        <point x="150" y="225"></point>
+        <point x="192" y="218"></point>
+        <point x="210" y="203"></point>
+        <point x="227" y="181"></point>
+        <point x="251" y="194"></point>
+        <point x="236" y="217"></point>
+        <point x="212" y="240"></point>
+      </polygon>
+    </shape>
+    <shape name="face neutral" rotatable="false" editableColorIndex="0">
+      <circle x="8" y="7" marked="true" color="-1920102913" diameter="285" filled="true"></circle>
+      <circle x="60" y="75" marked="false" color="255" diameter="60" filled="true"></circle>
+      <circle x="180" y="75" marked="false" color="255" diameter="60" filled="true"></circle>
+      <rectangle endX="240" startY="195" marked="false" color="255" endY="225" startX="60" filled="true"></rectangle>
+    </shape>
+    <shape name="face sad" rotatable="false" editableColorIndex="0">
+      <circle x="8" y="8" marked="true" color="-1920102913" diameter="285" filled="true"></circle>
+      <circle x="60" y="75" marked="false" color="255" diameter="60" filled="true"></circle>
+      <circle x="180" y="75" marked="false" color="255" diameter="60" filled="true"></circle>
+      <polygon color="255" filled="true" marked="false">
+        <point x="150" y="168"></point>
+        <point x="90" y="184"></point>
+        <point x="62" y="210"></point>
+        <point x="47" y="232"></point>
+        <point x="67" y="244"></point>
+        <point x="90" y="220"></point>
+        <point x="109" y="205"></point>
+        <point x="150" y="198"></point>
+        <point x="192" y="205"></point>
+        <point x="210" y="220"></point>
+        <point x="227" y="242"></point>
+        <point x="251" y="229"></point>
+        <point x="236" y="206"></point>
+        <point x="212" y="183"></point>
+      </polygon>
+    </shape>
+    <shape name="fish" rotatable="false" editableColorIndex="0">
+      <polygon color="-1" filled="true" marked="false">
+        <point x="44" y="131"></point>
+        <point x="21" y="87"></point>
+        <point x="15" y="86"></point>
+        <point x="0" y="120"></point>
+        <point x="15" y="150"></point>
+        <point x="0" y="180"></point>
+        <point x="13" y="214"></point>
+        <point x="20" y="212"></point>
+        <point x="45" y="166"></point>
+      </polygon>
+      <polygon color="-1" filled="true" marked="false">
+        <point x="135" y="195"></point>
+        <point x="119" y="235"></point>
+        <point x="95" y="218"></point>
+        <point x="76" y="210"></point>
+        <point x="46" y="204"></point>
+        <point x="60" y="165"></point>
+      </polygon>
+      <polygon color="-1" filled="true" marked="false">
+        <point x="75" y="45"></point>
+        <point x="83" y="77"></point>
+        <point x="71" y="103"></point>
+        <point x="86" y="114"></point>
+        <point x="166" y="78"></point>
+        <point x="135" y="60"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="30" y="136"></point>
+        <point x="151" y="77"></point>
+        <point x="226" y="81"></point>
+        <point x="280" y="119"></point>
+        <point x="292" y="146"></point>
+        <point x="292" y="160"></point>
+        <point x="287" y="170"></point>
+        <point x="270" y="195"></point>
+        <point x="195" y="210"></point>
+        <point x="151" y="212"></point>
+        <point x="30" y="166"></point>
+      </polygon>
+      <circle x="215" y="106" marked="false" color="255" diameter="30" filled="true"></circle>
+    </shape>
+    <shape name="flag" rotatable="false" editableColorIndex="0">
+      <rectangle endX="75" startY="15" marked="true" color="-1920102913" endY="300" startX="60" filled="true"></rectangle>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="90" y="150"></point>
+        <point x="270" y="90"></point>
+        <point x="90" y="30"></point>
+      </polygon>
+      <line endX="90" startY="135" marked="true" color="-1920102913" endY="135" startX="75"></line>
+      <line endX="90" startY="45" marked="true" color="-1920102913" endY="45" startX="75"></line>
+    </shape>
+    <shape name="flower" rotatable="false" editableColorIndex="0">
+      <polygon color="1504722175" filled="true" marked="false">
+        <point x="135" y="120"></point>
+        <point x="165" y="165"></point>
+        <point x="180" y="210"></point>
+        <point x="180" y="240"></point>
+        <point x="150" y="300"></point>
+        <point x="165" y="300"></point>
+        <point x="195" y="240"></point>
+        <point x="195" y="195"></point>
+        <point x="165" y="135"></point>
+      </polygon>
+      <circle x="85" y="132" marked="true" color="-1920102913" diameter="38" filled="true"></circle>
+      <circle x="130" y="147" marked="true" color="-1920102913" diameter="38" filled="true"></circle>
+      <circle x="192" y="85" marked="true" color="-1920102913" diameter="38" filled="true"></circle>
+      <circle x="85" y="40" marked="true" color="-1920102913" diameter="38" filled="true"></circle>
+      <circle x="177" y="40" marked="true" color="-1920102913" diameter="38" filled="true"></circle>
+      <circle x="177" y="132" marked="true" color="-1920102913" diameter="38" filled="true"></circle>
+      <circle x="70" y="85" marked="true" color="-1920102913" diameter="38" filled="true"></circle>
+      <circle x="130" y="25" marked="true" color="-1920102913" diameter="38" filled="true"></circle>
+      <circle x="96" y="51" marked="true" color="-1920102913" diameter="108" filled="true"></circle>
+      <circle x="113" y="68" marked="false" color="255" diameter="74" filled="true"></circle>
+      <polygon color="1504722175" filled="true" marked="false">
+        <point x="189" y="233"></point>
+        <point x="219" y="188"></point>
+        <point x="249" y="173"></point>
+        <point x="279" y="188"></point>
+        <point x="234" y="218"></point>
+      </polygon>
+      <polygon color="1504722175" filled="true" marked="false">
+        <point x="180" y="255"></point>
+        <point x="150" y="210"></point>
+        <point x="105" y="210"></point>
+        <point x="75" y="240"></point>
+        <point x="135" y="240"></point>
+      </polygon>
+    </shape>
+    <shape name="house" rotatable="false" editableColorIndex="0">
+      <rectangle endX="255" startY="120" marked="true" color="-1920102913" endY="285" startX="45" filled="true"></rectangle>
+      <rectangle endX="180" startY="210" marked="false" color="255" endY="285" startX="120" filled="true"></rectangle>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="15" y="120"></point>
+        <point x="150" y="15"></point>
+        <point x="285" y="120"></point>
+      </polygon>
+      <line endX="270" startY="120" marked="false" color="255" endY="120" startX="30"></line>
+    </shape>
+    <shape name="leaf" rotatable="false" editableColorIndex="0">
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="150" y="210"></point>
+        <point x="135" y="195"></point>
+        <point x="120" y="210"></point>
+        <point x="60" y="210"></point>
+        <point x="30" y="195"></point>
+        <point x="60" y="180"></point>
+        <point x="60" y="165"></point>
+        <point x="15" y="135"></point>
+        <point x="30" y="120"></point>
+        <point x="15" y="105"></point>
+        <point x="40" y="104"></point>
+        <point x="45" y="90"></point>
+        <point x="60" y="90"></point>
+        <point x="90" y="105"></point>
+        <point x="105" y="120"></point>
+        <point x="120" y="120"></point>
+        <point x="105" y="60"></point>
+        <point x="120" y="60"></point>
+        <point x="135" y="30"></point>
+        <point x="150" y="15"></point>
+        <point x="165" y="30"></point>
+        <point x="180" y="60"></point>
+        <point x="195" y="60"></point>
+        <point x="180" y="120"></point>
+        <point x="195" y="120"></point>
+        <point x="210" y="105"></point>
+        <point x="240" y="90"></point>
+        <point x="255" y="90"></point>
+        <point x="263" y="104"></point>
+        <point x="285" y="105"></point>
+        <point x="270" y="120"></point>
+        <point x="285" y="135"></point>
+        <point x="240" y="165"></point>
+        <point x="240" y="180"></point>
+        <point x="270" y="195"></point>
+        <point x="240" y="210"></point>
+        <point x="180" y="210"></point>
+        <point x="165" y="195"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="135" y="195"></point>
+        <point x="135" y="240"></point>
+        <point x="120" y="255"></point>
+        <point x="105" y="255"></point>
+        <point x="105" y="285"></point>
+        <point x="135" y="285"></point>
+        <point x="165" y="240"></point>
+        <point x="165" y="195"></point>
+      </polygon>
+    </shape>
+    <shape name="line" rotatable="true" editableColorIndex="0">
+      <line endX="150" startY="0" marked="true" color="-1920102913" endY="300" startX="150"></line>
+    </shape>
+    <shape name="line half" rotatable="true" editableColorIndex="0">
+      <line endX="150" startY="0" marked="true" color="-1920102913" endY="150" startX="150"></line>
+    </shape>
+    <shape name="pentagon" rotatable="false" editableColorIndex="0">
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="150" y="15"></point>
+        <point x="15" y="120"></point>
+        <point x="60" y="285"></point>
+        <point x="240" y="285"></point>
+        <point x="285" y="120"></point>
+      </polygon>
+    </shape>
+    <shape name="person" rotatable="false" editableColorIndex="0">
+      <circle x="110" y="5" marked="true" color="-1920102913" diameter="80" filled="true"></circle>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="105" y="90"></point>
+        <point x="120" y="195"></point>
+        <point x="90" y="285"></point>
+        <point x="105" y="300"></point>
+        <point x="135" y="300"></point>
+        <point x="150" y="225"></point>
+        <point x="165" y="300"></point>
+        <point x="195" y="300"></point>
+        <point x="210" y="285"></point>
+        <point x="180" y="195"></point>
+        <point x="195" y="90"></point>
+      </polygon>
+      <rectangle endX="172" startY="79" marked="true" color="-1920102913" endY="94" startX="127" filled="true"></rectangle>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="195" y="90"></point>
+        <point x="240" y="150"></point>
+        <point x="225" y="180"></point>
+        <point x="165" y="105"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="105" y="90"></point>
+        <point x="60" y="150"></point>
+        <point x="75" y="180"></point>
+        <point x="135" y="105"></point>
+      </polygon>
+    </shape>
+    <shape name="plant" rotatable="false" editableColorIndex="0">
+      <rectangle endX="165" startY="90" marked="true" color="-1920102913" endY="300" startX="135" filled="true"></rectangle>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="135" y="255"></point>
+        <point x="90" y="210"></point>
+        <point x="45" y="195"></point>
+        <point x="75" y="255"></point>
+        <point x="135" y="285"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="165" y="255"></point>
+        <point x="210" y="210"></point>
+        <point x="255" y="195"></point>
+        <point x="225" y="255"></point>
+        <point x="165" y="285"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="135" y="180"></point>
+        <point x="90" y="135"></point>
+        <point x="45" y="120"></point>
+        <point x="75" y="180"></point>
+        <point x="135" y="210"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="165" y="180"></point>
+        <point x="165" y="210"></point>
+        <point x="225" y="180"></point>
+        <point x="255" y="120"></point>
+        <point x="210" y="135"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="135" y="105"></point>
+        <point x="90" y="60"></point>
+        <point x="45" y="45"></point>
+        <point x="75" y="105"></point>
+        <point x="135" y="135"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="165" y="105"></point>
+        <point x="165" y="135"></point>
+        <point x="225" y="105"></point>
+        <point x="255" y="45"></point>
+        <point x="210" y="60"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="135" y="90"></point>
+        <point x="120" y="45"></point>
+        <point x="150" y="15"></point>
+        <point x="180" y="45"></point>
+        <point x="165" y="90"></point>
+      </polygon>
+    </shape>
+    <shape name="square" rotatable="false" editableColorIndex="0">
+      <rectangle endX="270" startY="30" marked="true" color="-1920102913" endY="270" startX="30" filled="true"></rectangle>
+    </shape>
+    <shape name="square 2" rotatable="false" editableColorIndex="0">
+      <rectangle endX="270" startY="30" marked="true" color="-1920102913" endY="270" startX="30" filled="true"></rectangle>
+      <rectangle endX="240" startY="60" marked="false" color="255" endY="240" startX="60" filled="true"></rectangle>
+    </shape>
+    <shape name="star" rotatable="false" editableColorIndex="0">
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="151" y="1"></point>
+        <point x="185" y="108"></point>
+        <point x="298" y="108"></point>
+        <point x="207" y="175"></point>
+        <point x="242" y="282"></point>
+        <point x="151" y="216"></point>
+        <point x="59" y="282"></point>
+        <point x="94" y="175"></point>
+        <point x="3" y="108"></point>
+        <point x="116" y="108"></point>
+      </polygon>
+    </shape>
+    <shape name="target" rotatable="false" editableColorIndex="0">
+      <circle x="0" y="0" marked="true" color="-1920102913" diameter="300" filled="true"></circle>
+      <circle x="30" y="30" marked="false" color="255" diameter="240" filled="true"></circle>
+      <circle x="60" y="60" marked="true" color="-1920102913" diameter="180" filled="true"></circle>
+      <circle x="90" y="90" marked="false" color="255" diameter="120" filled="true"></circle>
+      <circle x="120" y="120" marked="true" color="-1920102913" diameter="60" filled="true"></circle>
+    </shape>
+    <shape name="tree" rotatable="false" editableColorIndex="0">
+      <circle x="118" y="3" marked="true" color="-1920102913" diameter="94" filled="true"></circle>
+      <rectangle endX="180" startY="195" marked="false" color="-1653716737" endY="300" startX="120" filled="true"></rectangle>
+      <circle x="65" y="21" marked="true" color="-1920102913" diameter="108" filled="true"></circle>
+      <circle x="116" y="41" marked="true" color="-1920102913" diameter="127" filled="true"></circle>
+      <circle x="45" y="90" marked="true" color="-1920102913" diameter="120" filled="true"></circle>
+      <circle x="104" y="74" marked="true" color="-1920102913" diameter="152" filled="true"></circle>
+    </shape>
+    <shape name="triangle" rotatable="false" editableColorIndex="0">
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="150" y="30"></point>
+        <point x="15" y="255"></point>
+        <point x="285" y="255"></point>
+      </polygon>
+    </shape>
+    <shape name="triangle 2" rotatable="false" editableColorIndex="0">
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="150" y="30"></point>
+        <point x="15" y="255"></point>
+        <point x="285" y="255"></point>
+      </polygon>
+      <polygon color="255" filled="true" marked="false">
+        <point x="151" y="99"></point>
+        <point x="225" y="223"></point>
+        <point x="75" y="224"></point>
+      </polygon>
+    </shape>
+    <shape name="truck" rotatable="false" editableColorIndex="0">
+      <rectangle endX="195" startY="45" marked="true" color="-1920102913" endY="187" startX="4" filled="true"></rectangle>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="296" y="193"></point>
+        <point x="296" y="150"></point>
+        <point x="259" y="134"></point>
+        <point x="244" y="104"></point>
+        <point x="208" y="104"></point>
+        <point x="207" y="194"></point>
+      </polygon>
+      <rectangle endX="195" startY="60" marked="false" color="-1" endY="105" startX="195" filled="true"></rectangle>
+      <polygon color="255" filled="true" marked="false">
+        <point x="238" y="112"></point>
+        <point x="252" y="141"></point>
+        <point x="219" y="141"></point>
+        <point x="218" y="112"></point>
+      </polygon>
+      <circle x="234" y="174" marked="false" color="255" diameter="42" filled="true"></circle>
+      <rectangle endX="214" startY="185" marked="true" color="-1920102913" endY="194" startX="181" filled="true"></rectangle>
+      <circle x="144" y="174" marked="false" color="255" diameter="42" filled="true"></circle>
+      <circle x="24" y="174" marked="false" color="255" diameter="42" filled="true"></circle>
+      <circle x="24" y="174" marked="true" color="-1920102913" diameter="42" filled="false"></circle>
+      <circle x="144" y="174" marked="true" color="-1920102913" diameter="42" filled="false"></circle>
+      <circle x="234" y="174" marked="true" color="-1920102913" diameter="42" filled="false"></circle>
+    </shape>
+    <shape name="turtle" rotatable="true" editableColorIndex="0">
+      <polygon color="1504722175" filled="true" marked="false">
+        <point x="215" y="204"></point>
+        <point x="240" y="233"></point>
+        <point x="246" y="254"></point>
+        <point x="228" y="266"></point>
+        <point x="215" y="252"></point>
+        <point x="193" y="210"></point>
+      </polygon>
+      <polygon color="1504722175" filled="true" marked="false">
+        <point x="195" y="90"></point>
+        <point x="225" y="75"></point>
+        <point x="245" y="75"></point>
+        <point x="260" y="89"></point>
+        <point x="269" y="108"></point>
+        <point x="261" y="124"></point>
+        <point x="240" y="105"></point>
+        <point x="225" y="105"></point>
+        <point x="210" y="105"></point>
+      </polygon>
+      <polygon color="1504722175" filled="true" marked="false">
+        <point x="105" y="90"></point>
+        <point x="75" y="75"></point>
+        <point x="55" y="75"></point>
+        <point x="40" y="89"></point>
+        <point x="31" y="108"></point>
+        <point x="39" y="124"></point>
+        <point x="60" y="105"></point>
+        <point x="75" y="105"></point>
+        <point x="90" y="105"></point>
+      </polygon>
+      <polygon color="1504722175" filled="true" marked="false">
+        <point x="132" y="85"></point>
+        <point x="134" y="64"></point>
+        <point x="107" y="51"></point>
+        <point x="108" y="17"></point>
+        <point x="150" y="2"></point>
+        <point x="192" y="18"></point>
+        <point x="192" y="52"></point>
+        <point x="169" y="65"></point>
+        <point x="172" y="87"></point>
+      </polygon>
+      <polygon color="1504722175" filled="true" marked="false">
+        <point x="85" y="204"></point>
+        <point x="60" y="233"></point>
+        <point x="54" y="254"></point>
+        <point x="72" y="266"></point>
+        <point x="85" y="252"></point>
+        <point x="107" y="210"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="119" y="75"></point>
+        <point x="179" y="75"></point>
+        <point x="209" y="101"></point>
+        <point x="224" y="135"></point>
+        <point x="220" y="225"></point>
+        <point x="175" y="261"></point>
+        <point x="128" y="261"></point>
+        <point x="81" y="224"></point>
+        <point x="74" y="135"></point>
+        <point x="88" y="99"></point>
+      </polygon>
+    </shape>
+    <shape name="wheel" rotatable="false" editableColorIndex="0">
+      <circle x="3" y="3" marked="true" color="-1920102913" diameter="294" filled="true"></circle>
+      <circle x="30" y="30" marked="false" color="255" diameter="240" filled="true"></circle>
+      <line endX="150" startY="285" marked="true" color="-1920102913" endY="15" startX="150"></line>
+      <line endX="285" startY="150" marked="true" color="-1920102913" endY="150" startX="15"></line>
+      <circle x="120" y="120" marked="true" color="-1920102913" diameter="60" filled="true"></circle>
+      <line endX="79" startY="40" marked="true" color="-1920102913" endY="269" startX="216"></line>
+      <line endX="269" startY="84" marked="true" color="-1920102913" endY="221" startX="40"></line>
+      <line endX="269" startY="216" marked="true" color="-1920102913" endY="79" startX="40"></line>
+      <line endX="221" startY="40" marked="true" color="-1920102913" endY="269" startX="84"></line>
+    </shape>
+    <shape name="x" rotatable="false" editableColorIndex="0">
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="270" y="75"></point>
+        <point x="225" y="30"></point>
+        <point x="30" y="225"></point>
+        <point x="75" y="270"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="30" y="75"></point>
+        <point x="75" y="30"></point>
+        <point x="270" y="225"></point>
+        <point x="225" y="270"></point>
+      </polygon>
+    </shape>
+  </turtleShapes>
+  <linkShapes>
+    <shape name="default" curviness="0.0">
+      <lines>
+        <line x="-0.2" visible="false">
+          <dash value="0.0"></dash>
+          <dash value="1.0"></dash>
+        </line>
+        <line x="0.0" visible="true">
+          <dash value="1.0"></dash>
+          <dash value="0.0"></dash>
+        </line>
+        <line x="0.2" visible="false">
+          <dash value="0.0"></dash>
+          <dash value="1.0"></dash>
+        </line>
+      </lines>
+      <indicator>
+        <shape name="link direction" rotatable="true" editableColorIndex="0">
+          <line endX="90" startY="150" marked="true" color="-1920102913" endY="180" startX="150"></line>
+          <line endX="210" startY="150" marked="true" color="-1920102913" endY="180" startX="150"></line>
+        </shape>
+      </indicator>
+    </shape>
+  </linkShapes>
+  <previewCommands>setup repeat 600 [ go ]</previewCommands>
+  <experiments>
+    <experiment name="Collins St closure vs baseline (10 paired seeds)" repetitions="1" sequentialRunOrder="true" runMetricsEveryStep="false">
+      <setup>setup</setup>
+      <go>go</go>
+      <exitCondition>ticks &gt;= warm-up-s + measure-s</exitCondition>
+      <metrics>
+        <metric>mean-trip-time-min</metric>
+        <metric>mean-delay-min</metric>
+        <metric>trips-done</metric>
+        <metric>vehicle-hours</metric>
+        <metric>queued-at-gates</metric>
+        <metric>stranded-count</metric>
+        <metric>street-flow &quot;Collins St&quot;</metric>
+        <metric>street-flow &quot;Flinders Ln&quot;</metric>
+        <metric>street-flow &quot;Little Collins St&quot;</metric>
+        <metric>street-flow &quot;Flinders St&quot;</metric>
+        <metric>street-flow &quot;Bourke St&quot;</metric>
+        <metric>street-flow &quot;King St&quot;</metric>
+        <metric>street-flow &quot;William St&quot;</metric>
+      </metrics>
+      <constants>
+        <enumeratedValueSet variable="closure-street">
+          <value value="&quot;none&quot;"></value>
+          <value value="&quot;Collins St&quot;"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="closure-block">
+          <value value="4"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="closure-type">
+          <value value="&quot;Full closure (both directions)&quot;"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="closure-start-min">
+          <value value="0"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="fixed-seed?">
+          <value value="true"></value>
+        </enumeratedValueSet>
+        <steppedValueSet variable="seed" first="1" step="1" last="10"></steppedValueSet>
+      </constants>
+    </experiment>
+    <experiment name="smoke test (short)" repetitions="1" sequentialRunOrder="true" runMetricsEveryStep="false">
+      <setup>setup</setup>
+      <go>go</go>
+      <exitCondition>ticks &gt;= warm-up-s + measure-s</exitCondition>
+      <metrics>
+        <metric>mean-trip-time-min</metric>
+        <metric>mean-delay-min</metric>
+        <metric>trips-done</metric>
+        <metric>vehicle-hours</metric>
+        <metric>queued-at-gates</metric>
+        <metric>stranded-count</metric>
+        <metric>street-flow &quot;Collins St&quot;</metric>
+        <metric>street-flow &quot;Flinders Ln&quot;</metric>
+        <metric>street-flow &quot;Little Collins St&quot;</metric>
+        <metric>street-flow &quot;Flinders St&quot;</metric>
+        <metric>street-flow &quot;Bourke St&quot;</metric>
+        <metric>street-flow &quot;King St&quot;</metric>
+        <metric>street-flow &quot;William St&quot;</metric>
+      </metrics>
+      <constants>
+        <enumeratedValueSet variable="closure-street">
+          <value value="&quot;none&quot;"></value>
+          <value value="&quot;Collins St&quot;"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="warm-up-s">
+          <value value="300"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="measure-s">
+          <value value="900"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="fixed-seed?">
+          <value value="true"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="seed">
+          <value value="1"></value>
+        </enumeratedValueSet>
+      </constants>
+    </experiment>
+  </experiments>
+</model>
