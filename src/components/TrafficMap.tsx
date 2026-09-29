@@ -73,7 +73,7 @@ function readPalette(element: HTMLElement): Palette {
     less: v("--change-less"),
     closed: v("--closed"),
     reduced: v("--reduced"),
-    selected: v("--primary"),
+    selected: v("--map-selected"),
     hover: v("--ink"),
     car: v("--car"),
     slow: v("--car-slow"),
@@ -245,7 +245,7 @@ export default function TrafficMap(props: Props) {
       const px = (n: number) => n / s;
       // Selected extent halo under the roads.
       lctx.strokeStyle = palette.selected;
-      lctx.globalAlpha = 0.28;
+      lctx.globalAlpha = 0.85;
       for (const r of world.roads) {
         if (!drivable(r) || r.street !== p.selection.street) continue;
         if (p.selection.block !== 0 && r.section !== p.selection.block)

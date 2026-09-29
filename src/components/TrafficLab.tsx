@@ -2,16 +2,25 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowDownToLine,
+  ArrowRight,
+  Ban,
   BookOpen,
+  Car,
   Check,
-  FlaskConical,
+  Clock,
+  FlagTriangleRight,
   Footprints,
+  Gauge,
+  Hourglass,
+  Timer,
+  TrafficCone,
   Map as MapIcon,
   MousePointerClick,
   Pause,
   Play,
   RotateCcw,
   Route,
+  SlidersHorizontal,
   TerminalSquare,
   X,
 } from "lucide-react";
@@ -193,40 +202,65 @@ export default function TrafficLab() {
       <a className="skip-link" href="#workbench">
         Skip to simulation
       </a>
-      <header className="site-header">
-        <a className="brand" href="/" aria-label="Melbourne Traffic Lab home">
-          <span className="brand-mark">
-            <Route size={24} />
-          </span>
+      <div className="utility-bar">
+        <div className="container">
           <span>
-            Melbourne<span className="brand-light"> / Traffic lab</span>
+            <TrafficCone size={15} /> Melbourne CBD · NetLogo traffic model
           </span>
-        </a>
-        <div className="header-meta">
-          <span className="header-note">
-            <span className="status-dot" /> NetLogo model · runs in your browser
+          <span className="utility-note">
+            <span className="status-dot" /> Runs in your browser
           </span>
-          <button
-            className="button secondary"
-            onClick={() => setGuideOpen(true)}
-          >
-            <BookOpen size={16} /> Quick guide
-          </button>
+        </div>
+      </div>
+      <header className="site-header">
+        <div className="container">
+          <a className="brand" href="/" aria-label="Melbourne Traffic Lab home">
+            <span className="brand-plate">
+              <span className="brand-top">MELBOURNE</span>
+              <span className="brand-box">TRAFFIC LAB</span>
+            </span>
+          </a>
+          <nav aria-label="Page sections">
+            <a href="#workbench" className="active">
+              Simulator
+            </a>
+            <a href="#compare">Compare</a>
+            <a href="#output">Output</a>
+            <button onClick={() => setGuideOpen(true)}>Quick guide</button>
+          </nav>
         </div>
       </header>
-      <main id="workbench">
-        <div className="page-heading">
-          <div>
-            <p className="eyebrow">MELBOURNE CBD · SCENARIO WORKBENCH</p>
-            <h1>A different route through the city.</h1>
-            <p>Close a street. Follow the traffic. See what changes.</p>
+      <section className="hero" aria-labelledby="page-title">
+        <div className="container">
+          <h1 id="page-title">
+            Close a street in Melbourne&rsquo;s CBD and watch the traffic find
+            another way.
+          </h1>
+          <p>
+            A live traffic simulation of the Hoddle Grid on real OpenStreetMap
+            streets. Set the demand, close a road, and compare against an
+            open-road baseline. Every control from the desktop NetLogo model is
+            here.
+          </p>
+          <div className="hero-actions">
+            <a className="button dark" href="#workbench">
+              Open the simulator <ArrowRight size={16} />
+            </a>
+            <button
+              className="button outline-dark"
+              onClick={() => setGuideOpen(true)}
+            >
+              <BookOpen size={16} /> Quick guide
+            </button>
           </div>
         </div>
+      </section>
+      <main id="workbench" className="container">
         <div className="workbench">
           <aside className="controls panel" aria-label="Model controls">
             <div className="panel-heading">
               <h2>Model controls</h2>
-              <FlaskConical size={19} />
+              <SlidersHorizontal size={19} />
             </div>
 
             <section className="group" aria-labelledby="group-scenario">
@@ -722,18 +756,30 @@ export default function TrafficLab() {
             <div className="metrics">
               {(
                 [
-                  ["Cars", m?.cars, "On the network now"],
-                  ["Waiting at gates", m?.waiting, "Queued to enter the CBD"],
-                  ["Completed", m?.completed, "Trips finished while measuring"],
+                  [Car, "Cars", m?.cars, "On the network now"],
                   [
+                    Hourglass,
+                    "Waiting at gates",
+                    m?.waiting,
+                    "Queued to enter the CBD",
+                  ],
+                  [
+                    FlagTriangleRight,
+                    "Completed",
+                    m?.completed,
+                    "Trips finished while measuring",
+                  ],
+                  [
+                    Timer,
                     "Mean trip",
                     m?.completed ? `${number.format(m.meanTrip)} min` : "—",
                     m?.completed
                       ? "Measured trips only"
                       : "Waiting for finished trips",
                   ],
-                  ["Stranded", m?.stranded, "Trips with no viable route"],
+                  [Ban, "Stranded", m?.stranded, "Trips with no viable route"],
                   [
+                    Clock,
                     "Elapsed",
                     m ? clock(m.ticks) : undefined,
                     m
@@ -741,18 +787,21 @@ export default function TrafficLab() {
                       : "Simulated time",
                   ],
                   [
+                    TrafficCone,
                     "Mean delay",
                     m?.completed ? `${number.format(m.meanDelay)} min` : "—",
                     "Compared with free flow",
                   ],
                   [
+                    Gauge,
                     "Vehicle-hours",
                     m ? number.format(m.vehicleHours) : undefined,
                     "Time spent in the network",
                   ],
-                ] as [string, number | string | undefined, string][]
-              ).map(([label, value, help]) => (
-                <div className="metric panel" key={label}>
+                ] as [typeof Car, string, number | string | undefined, string][]
+              ).map(([Icon, label, value, help]) => (
+                <div className="metric" key={label}>
+                  <Icon size={26} strokeWidth={1.8} aria-hidden="true" />
                   <span>{label}</span>
                   <strong>
                     {value === undefined
@@ -766,7 +815,7 @@ export default function TrafficLab() {
               ))}
             </div>
 
-            <div className="comparison panel">
+            <div className="comparison panel" id="compare">
               <div className="comparison-head">
                 <div className="comparison-title">
                   <span className="comparison-icon">
@@ -856,7 +905,7 @@ export default function TrafficLab() {
               )}
             </div>
 
-            <div className="output panel">
+            <div className="output panel" id="output">
               <div className="output-head">
                 <h2>
                   <TerminalSquare size={16} /> Model output
@@ -895,29 +944,60 @@ export default function TrafficLab() {
             </div>
           </section>
         </div>
-        <footer>
-          <span>
-            <FlaskConical size={16} /> Built for exploration
-          </span>
-          <p>
-            Real streets. Synthetic traffic and signals. This model explores
-            possible effects; it is not a calibrated traffic forecast. The
-            combined NetLogo model runs in your browser on NetLogo Web
-            (Tortoise), GPL-2.0: <a href="/sim/LICENSE.md">licence</a> ·{" "}
-            <a
-              href="https://github.com/NetLogo/Tortoise"
-              target="_blank"
-              rel="noreferrer"
-            >
-              source
-            </a>
-            .
-          </p>
-          <button className="text-link" onClick={() => setGuideOpen(true)}>
-            <BookOpen size={15} /> Quick guide
-          </button>
-        </footer>
       </main>
+      <footer className="site-footer">
+        <div className="container">
+          <div>
+            <h2>Melbourne Traffic Lab</h2>
+            <p>
+              Real streets. Synthetic traffic and signals. This model explores
+              possible effects; it is not a calibrated traffic forecast or a
+              safety assessment.
+            </p>
+          </div>
+          <div>
+            <h2>The model</h2>
+            <ul>
+              <li>
+                <a href="#workbench">Simulator</a>
+              </li>
+              <li>
+                <button onClick={() => setGuideOpen(true)}>Quick guide</button>
+              </li>
+              <li>
+                <a href="#compare">Compare with a baseline</a>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h2>Credits</h2>
+            <ul>
+              <li>
+                NetLogo Web (Tortoise), GPL-2.0:{" "}
+                <a href="/sim/LICENSE.md">licence</a> ·{" "}
+                <a
+                  href="https://github.com/NetLogo/Tortoise"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  source
+                </a>
+              </li>
+              <li>
+                Map data{" "}
+                <a
+                  href="https://www.openstreetmap.org/copyright"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  © OpenStreetMap contributors
+                </a>
+              </li>
+              <li>Traffic Grid after Wilensky (2003)</li>
+            </ul>
+          </div>
+        </div>
+      </footer>
       <QuickGuide open={guideOpen} onClose={() => setGuideOpen(false)} />
     </>
   );

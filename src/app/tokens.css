@@ -1,18 +1,19 @@
 /* Generated from DESIGN.md by scripts/design-tokens.mjs. */
 :root {
-  --primary: #146b61;
-  --background: #f3f6f6;
+  --primary: #111111;
+  --accent: #fed203;
+  --background: #f4f4f4;
   --surface: #ffffff;
-  --ink: #20343b;
-  --muted: #52666d;
-  --border: #dce5e6;
-  --warning: #b06a19;
-  --danger: #b34749;
-  --font-display: Georgia, serif;
-  --font-body: Arial, sans-serif;
+  --ink: #111111;
+  --muted: #555555;
+  --border: #d6d6d6;
+  --warning: #b35c00;
+  --danger: #e0240b;
+  --font-display: var(--font-heading), Open Sans, Arial, sans-serif;
+  --font-body: Arial, Helvetica, sans-serif;
   --font-mono: ui-monospace, monospace;
-  --radius: 0.75rem;
-  --radius-sm: 0.375rem;
+  --radius: 0;
+  --radius-sm: 0;
   --space: 0.25rem;
   --panel-space: 1.5rem;
 }
