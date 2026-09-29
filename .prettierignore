@@ -1,0 +1,15 @@
+# Generated, third-party or data files.
+node_modules
+**/dist
+test-results
+playwright-report
+package-lock.json
+packages/simulation/runtime
+packages/simulation/build/vendor
+packages/simulation/build/model.nlogox
+packages/simulation/netlogo/data
+packages/simulation/netlogo/originals
+packages/simulation/netlogo/code
+packages/simulation/netlogo/*.nlogox
+.vercel
+.next

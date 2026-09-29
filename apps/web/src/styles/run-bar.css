@@ -1,0 +1,99 @@
+/* The black bar under the map: Restart, Start, Step, speed, Keep running and the clock. */
+.run-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  padding: 14px 18px;
+  background: var(--dark);
+  color: #ffffff;
+}
+.run-buttons {
+  display: flex;
+  gap: 8px;
+}
+.run-bar .button.secondary {
+  background: transparent;
+  border-color: #ffffff;
+  color: #ffffff;
+}
+.run-bar .button.secondary:hover:not(:disabled) {
+  background: #ffffff;
+  color: var(--ink);
+}
+.go-button {
+  min-width: 112px;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+.setup-button {
+  position: relative;
+}
+.run-bar .setup-button.needed {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.needed-dot {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--dark);
+}
+.speed {
+  flex: 1;
+  min-width: 160px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.run-bar .label-row .value {
+  background: var(--accent);
+  color: var(--ink);
+}
+.run-bar input[type="range"] {
+  accent-color: var(--accent);
+}
+.run-bar .toggle-field {
+  margin: 0;
+}
+.run-bar .toggle {
+  color: #ffffff;
+}
+.run-bar .toggle-track {
+  background: #555555;
+}
+.run-bar .toggle input:checked + .toggle-track {
+  background: var(--accent);
+}
+.run-bar .toggle input:checked + .toggle-track::after {
+  background: var(--ink);
+}
+.clock {
+  min-width: 170px;
+  display: grid;
+  gap: 2px;
+}
+.clock .time {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--accent);
+}
+.clock small {
+  font-size: 11px;
+  color: #d6d6d6;
+}
+.progress {
+  height: 4px;
+  background: #444444;
+  margin-top: 5px;
+}
+.progress span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}

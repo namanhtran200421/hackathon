@@ -1,0 +1,197 @@
+/* Animations, and layout changes for large screens, tablets, phones,
+   reduced motion and high-contrast mode. */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+@media (min-width: 1500px) {
+  .map-stage {
+    height: 600px;
+  }
+  .workbench {
+    grid-template-columns: 330px minmax(0, 1fr);
+  }
+}
+@media (max-width: 1150px) {
+  .map-subtitle {
+    display: none;
+  }
+  .comparison-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .metric strong {
+    font-size: 26px;
+  }
+  .site-header nav a,
+  .site-header nav button {
+    padding: 10px;
+    font-size: 13px;
+  }
+}
+@media (max-width: 900px) {
+  .container {
+    padding: 0 20px;
+  }
+  .workbench {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .results {
+    order: -1;
+  }
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .map-stage {
+    height: 470px;
+  }
+  .site-header nav a {
+    display: none;
+  }
+  .site-footer .container {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+@media (max-width: 700px) {
+  .utility-bar .utility-note {
+    display: none;
+  }
+  .site-header .container {
+    height: 70px;
+  }
+  .brand-plate {
+    width: 170px;
+    height: 100px;
+    padding-top: 12px;
+  }
+  .brand-top {
+    font-size: 19px;
+  }
+  .brand-box {
+    font-size: 15px;
+    border-width: 2px;
+  }
+  .hero .container {
+    padding-top: 48px;
+    padding-bottom: 36px;
+  }
+  .hero p {
+    font-size: 15px;
+  }
+  main {
+    padding-top: 24px;
+  }
+  .map-legend {
+    position: static;
+    max-width: none;
+    border-width: 1px 0 0;
+  }
+  .map-stage {
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+  }
+  .map-canvas {
+    position: relative;
+    inset: auto;
+    flex: 1;
+  }
+  .attribution {
+    bottom: auto;
+    top: 6px;
+    right: 60px;
+  }
+  .clock {
+    min-width: 0;
+  }
+}
+@media (max-width: 430px) {
+  .container {
+    padding: 0 14px;
+  }
+  .map-stage {
+    height: 440px;
+  }
+  .map-toolbar {
+    gap: 6px;
+    padding: 10px 12px;
+  }
+  .map-mode select {
+    max-width: 150px;
+  }
+  .map-location {
+    display: none;
+  }
+  .zoom-controls {
+    top: 10px;
+    right: 10px;
+  }
+  .run-bar {
+    padding: 12px;
+  }
+  .run-buttons {
+    width: 100%;
+  }
+  .run-buttons .button {
+    flex: 1;
+    padding: 9px 6px;
+  }
+  .click-banner {
+    white-space: normal;
+    width: calc(100% - 20px);
+    top: 8px;
+  }
+  .metrics {
+    gap: 10px;
+  }
+  .metric strong {
+    font-size: 24px;
+  }
+  .guide-body {
+    padding: 20px 18px 32px;
+  }
+  .guide-header {
+    margin: -20px -18px 20px;
+    padding: 20px 18px 16px;
+  }
+  .comparison-actions {
+    width: 100%;
+  }
+  .comparison-actions .button {
+    flex: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+@media (forced-colors: active) {
+  * {
+    scrollbar-color: auto;
+  }
+  .button,
+  .panel,
+  .metric,
+  .toggle-track {
+    border: 1px solid CanvasText;
+  }
+  .brand-plate {
+    clip-path: none;
+    border: 1px solid CanvasText;
+  }
+}

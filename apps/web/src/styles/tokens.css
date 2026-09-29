@@ -1,0 +1,22 @@
+/*
+ * Design tokens: the colours, fonts and spacing the whole page uses.
+ * Safety yellow and black, like traffic-management signs. See docs/design.md.
+ */
+:root {
+  --primary: #111111;
+  --accent: #fed203;
+  --background: #f4f4f4;
+  --surface: #ffffff;
+  --ink: #111111;
+  --muted: #555555;
+  --border: #d6d6d6;
+  --warning: #b35c00;
+  --danger: #e0240b;
+  --font-display: "Open Sans", Arial, sans-serif;
+  --font-body: Arial, Helvetica, sans-serif;
+  --font-mono: ui-monospace, monospace;
+  --radius: 0;
+  --radius-sm: 0;
+  --space: 0.25rem;
+  --panel-space: 1.5rem;
+}

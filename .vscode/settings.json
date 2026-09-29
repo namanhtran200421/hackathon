@@ -1,6 +1,4 @@
 {
-  "java.project.sourcePaths": ["combined"],
-  "java.project.referencedLibraries": [
-    "/Applications/NetLogo 7.0.4/app/*.jar"
-  ]
+  "java.project.sourcePaths": ["simulation/tools"],
+  "java.project.referencedLibraries": ["/Applications/NetLogo 7.0.4/app/*.jar"]
 }

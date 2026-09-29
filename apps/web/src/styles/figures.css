@@ -1,0 +1,40 @@
+/* The yellow figure tiles under the map. */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+.metric {
+  background: var(--accent);
+  color: var(--ink);
+  padding: 18px 14px 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.metric svg {
+  order: -2;
+  margin-bottom: 6px;
+}
+.metric strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -1.2px;
+  line-height: 1.15;
+  order: -1;
+  margin: 2px 0;
+}
+.metric > span {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.metric small {
+  font-size: 11px;
+  color: #3a3a3a;
+}

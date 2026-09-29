@@ -1,0 +1,54 @@
+/* The black footer. */
+.site-footer {
+  background: var(--dark);
+  color: #ffffff;
+  margin-top: 40px;
+  border-top: 6px solid var(--accent);
+}
+.site-footer .container {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1.2fr;
+  gap: 32px;
+  padding-top: 44px;
+  padding-bottom: 48px;
+}
+.site-footer h2 {
+  color: var(--accent);
+  font-size: 17px;
+  margin-bottom: 12px;
+}
+.site-footer p {
+  color: #d6d6d6;
+  font-size: 13px;
+  line-height: 1.7;
+  max-width: 420px;
+}
+.site-footer ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+.site-footer li::before {
+  content: "› ";
+  color: var(--accent);
+}
+.site-footer a,
+.site-footer button {
+  color: #ffffff;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  text-decoration: none;
+}
+.site-footer a:hover,
+.site-footer button:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.site-footer :focus-visible {
+  outline-color: var(--accent);
+}

@@ -1,0 +1,166 @@
+/*
+ * Colours for the map, and page-wide basics: box sizing, fonts, links,
+ * form fields, focus outlines and helpers.
+ */
+:root {
+  --yellow-hover: #f2c400;
+  --dark: #0a0a0a;
+  --dark-soft: #222529;
+  --map-bg: #f7f7f7;
+  --grid: #e8e8e8;
+  --road: #bdbdbd;
+  --road-access: #d9d9d9;
+  --road-restricted: #cdbfd6;
+  --cong-light: #e8b800;
+  --cong-busy: #e07b00;
+  --cong-jam: #9e1b0f;
+  --vol-low: #d6d6d6;
+  --vol-high: #111111;
+  --change-more: #e07b00;
+  --change-less: #1f66c2;
+  --closed: #e0240b;
+  --reduced: #8e3fa0;
+  --map-selected: #fed203;
+  --car: #111111;
+  --car-slow: #e8a000;
+  --car-stopped: #e0240b;
+  --gate: #666666;
+  --dest: #111111;
+  --scroll-thumb: #9a9a9a;
+  --scroll-track: var(--background);
+}
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+}
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border: 2px solid var(--scroll-track);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--ink);
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  background: var(--background);
+  color: #333333;
+  font: 14px/1.55 var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button,
+a,
+input,
+select,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  cursor: pointer;
+  color: inherit;
+}
+button:disabled,
+select:disabled,
+input:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+a {
+  color: inherit;
+}
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  color: var(--ink);
+}
+h2 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+}
+h3 {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+}
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+select {
+  width: 100%;
+  padding: 10px 28px 10px 11px;
+  border: 1px solid #bdbdbd;
+  border-radius: 0;
+  color: var(--ink);
+  background: var(--surface);
+  height: 44px;
+  font-size: 13px;
+}
+select:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--ink);
+  cursor: pointer;
+  min-height: 24px;
+  margin: 4px 0 0;
+}
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.skip-link {
+  position: fixed;
+  top: -80px;
+  left: 20px;
+  z-index: 100;
+  background: var(--accent);
+  color: var(--ink);
+  font-weight: 700;
+  padding: 10px 14px;
+}
+.skip-link:focus {
+  top: 10px;
+}
