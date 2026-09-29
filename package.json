@@ -1,25 +1,25 @@
 {
   "name": "melbourne-traffic-lab",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "private": true,
-  "description": "Close a street in Melbourne's CBD and watch the traffic find another way. A NetLogo traffic model in the browser, with an Express server and a React page, written in TypeScript.",
+  "description": "Close a street in Melbourne's CBD and watch the traffic find another way. A NetLogo traffic model that runs in the browser, with a React front end written in TypeScript.",
   "type": "module",
   "workspaces": [
-    "packages/*",
-    "apps/*"
+    "simulation",
+    "frontend"
   ],
   "scripts": {
-    "dev": "npm run build -w @traffic-lab/simulation && npm run dev -w @traffic-lab/server",
-    "build": "npm run build -w @traffic-lab/simulation && npm run build -w @traffic-lab/web && npm run build -w @traffic-lab/server",
-    "start": "npm run start -w @traffic-lab/server",
+    "dev": "npm run build -w @traffic-lab/simulation && npm run dev -w @traffic-lab/frontend",
+    "build": "npm run build -w @traffic-lab/simulation && npm run build -w @traffic-lab/frontend",
+    "start": "npm run preview -w @traffic-lab/frontend",
     "test": "npm test --workspaces --if-present",
     "test:e2e": "playwright test",
     "typecheck": "npm run typecheck --workspaces --if-present && tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "model:map": "python3 packages/simulation/netlogo/tools/prepare_map.py",
-    "model:desktop": "python3 packages/simulation/netlogo/tools/merge_code.py && python3 packages/simulation/netlogo/tools/build.py",
+    "model:map": "python3 simulation/netlogo/tools/prepare_map.py",
+    "model:desktop": "python3 simulation/netlogo/tools/merge_code.py && python3 simulation/netlogo/tools/build.py",
     "model:web": "npm run model -w @traffic-lab/simulation"
   },
   "devDependencies": {

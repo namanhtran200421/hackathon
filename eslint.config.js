@@ -29,8 +29,8 @@ export default tseslint.config(
       "test-results/**",
       "playwright-report/**",
       // Generated or third-party files.
-      "packages/simulation/runtime/**",
-      "packages/simulation/build/vendor/**",
+      "simulation/runtime/**",
+      "simulation/build/vendor/**",
     ],
   },
   js.configs.recommended,
@@ -45,7 +45,7 @@ export default tseslint.config(
     rules: houseRules,
   },
   {
-    files: ["apps/web/**/*.{ts,tsx}", "e2e/**/*.ts"],
+    files: ["frontend/src/**/*.{ts,tsx}", "e2e/**/*.ts"],
     languageOptions: { globals: { ...globals.browser } },
   },
 );

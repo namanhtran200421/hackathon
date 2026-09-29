@@ -1,6 +1,6 @@
 /**
- * End-to-end tests. Playwright builds everything and starts the production
- * server itself.
+ * End-to-end tests. Playwright builds the site and serves it with Vite's
+ * preview server, which sends the same headers as Vercel.
  *
  * Run with:  npm run test:e2e
  */
@@ -15,7 +15,7 @@ export default defineConfig({
   workers: 1,
   reporter: "list",
   use: {
-    baseURL: "http://127.0.0.1:" + port,
+    baseURL: "http://localhost:" + port,
     headless: true,
     viewport: { width: 1440, height: 1000 },
     screenshot: "only-on-failure",
@@ -23,7 +23,7 @@ export default defineConfig({
   webServer: {
     command: "npm run build && npm start",
     env: { PORT: String(port) },
-    url: "http://127.0.0.1:" + port + "/api/health",
+    url: "http://localhost:" + port + "/",
     reuseExistingServer: true,
     timeout: 180000,
   },

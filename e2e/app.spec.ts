@@ -60,6 +60,19 @@ async function checkAccessibility(page: Page, area?: string): Promise<void> {
   expect(problems).toEqual([]);
 }
 
+test("the built site is served with strict security headers", async function ({ request }) {
+  const page = await request.get("/");
+  const policy = page.headers()["content-security-policy"] || "";
+  expect(policy).toContain("script-src 'self';");
+  expect(policy).toContain("frame-ancestors 'none'");
+  expect(page.headers()["x-content-type-options"]).toBe("nosniff");
+
+  const worker = await request.get("/sim/worker.js");
+  expect(worker.status()).toBe(200);
+  const preview = await request.get("/sim/network-osm.json");
+  expect(preview.status()).toBe(200);
+});
+
 test("start, pause, step, closures and closing roads by clicking", async function ({ page }) {
   const errors: string[] = [];
   page.on("pageerror", function (error) {

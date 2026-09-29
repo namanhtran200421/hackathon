@@ -10,7 +10,7 @@ Written for everyday users in Australian English. Words like "vehicles per hour"
 
 ## Colours
 
-The colour tokens live in `apps/web/src/styles/tokens.css`; map colours are at the top of `apps/web/src/styles/base.css`. Each part of the page has its own stylesheet in the same folder.
+The colour tokens live in `frontend/src/styles/tokens.css`; map colours are at the top of `frontend/src/styles/base.css`. Each part of the page has its own stylesheet in the same folder.
 
 - **Safety yellow** (`#fed203`): the header, main buttons (Start, Close this street), the figure tiles and the chosen street on the map. Never put white text on yellow.
 - **Black**: text, the top bar, the map's toolbar and run bar, the simulation log and the footer.
@@ -50,7 +50,7 @@ Below 900 px wide, the map comes first and the settings follow. Below 430 px, th
 
 ## Security and speed
 
-- The page only loads files from its own server; a strict content security policy blocks everything else. There are no third-party scripts, fonts or trackers.
+- There is no backend: the page and the model are static files. The page only loads files from its own address; a strict content security policy (set in `frontend/vite/securityHeaders.ts` and `vercel.json`) blocks everything else. There are no third-party scripts, fonts or trackers.
 - The browser cannot send NetLogo code to the model. Only the listed settings and buttons are accepted, and every value is checked.
 - Large files are compressed. Built files have content hashes and are cached for a year; the page and simulation files are re-checked on each visit.
 - The simulation runs in a background thread and the map is drawn on a canvas, so the page stays at 60 frames per second even with nearly 2,000 cars.

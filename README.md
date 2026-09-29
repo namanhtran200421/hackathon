@@ -32,54 +32,47 @@ Every button, slider and switch from the desktop NetLogo model has a matching co
 
 ## How it works
 
-The project is a small monorepo with three parts, all written in TypeScript:
+There is no backend. The whole traffic model runs in your browser, so the site is a React page plus a set of static files, and any static host can serve it.
 
-1. **The simulation** (`packages/simulation`). The NetLogo model, the map data and the tools that build it, plus the TypeScript code that runs the model in the browser. The web page runs the same model with NetLogo Web, the engine behind netlogoweb.org.
-2. **The server** (`apps/server`). A small Express server. It sends the web page and the simulation files to the browser, answers a health check and serves the two road maps. It adds security headers and compresses large files. It does not need a database.
-3. **The web page** (`apps/web`). A React page, built with Vite. The simulation runs in a background worker inside the browser, so the page stays smooth. The map is drawn on a canvas that refreshes 60 times a second and slides each car between its positions.
+The project has two parts, both written in TypeScript:
 
-Because the traffic is calculated in each visitor's browser, the server does very little work and one small server can handle many visitors.
+1. **The simulation** (`simulation/`). The NetLogo model, the map data and the tools that build it, plus the code that runs the model in the browser. The page runs the same model as desktop NetLogo, using NetLogo Web (the engine behind netlogoweb.org).
+2. **The front end** (`frontend/`). A React page built with Vite. The model runs in a background worker inside the browser, so the page stays smooth. The map is drawn on a canvas that refreshes 60 times a second and slides each car between its positions.
 
 ## Project layout
 
 ```
-apps/
-  server/                   Express server
-    src/index.ts              Starts the server
-    src/app.ts                Puts the pieces together
-    src/config.ts             Port, mode and folders
-    src/middleware/           Security headers, caching, error pages
-    src/routes/               The API and the web page
-    test/                     Server tests
-  web/                      React page
-    src/main.tsx              Starts the page
-    src/app/                  The page layout
-    src/components/           Shared pieces: page frame, form controls
-    src/features/             One folder per part of the page:
-      simulation/               talking to the simulator
-      map/                      the live map and run bar
-      settings/                 the settings panel and closures
-      figures/                  the yellow number tiles
-      baseline/                 saving and comparing with normal traffic
-      results/                  results tables and charts
-      log/                      the simulation log
-      guide/                    the quick guide
-    src/lib/                  Number and time formatting
-    src/styles/               Colours and layout, one file per part
-packages/
-  simulation/               Everything about the traffic model
-    src/                      Settings, data types, messages, and the code
+frontend/                   The web page (React + Vite)
+  src/main.tsx                Starts the page
+  src/app/                    The page layout
+  src/components/             Shared pieces: page frame, form controls
+  src/features/               One folder per part of the page:
+    simulation/                 talking to the model in the background worker
+    map/                        the live map and run bar
+    settings/                   the settings panel and closures
+    figures/                    the yellow number tiles
+    baseline/                   saving and comparing with normal traffic
+    results/                    results tables and charts
+    log/                        the simulation log
+    guide/                      the quick guide
+  src/lib/                    Number and time formatting
+  src/styles/                 Colours and layout, one file per part
+  vite/                       Build helpers: the /sim files and security headers
+  test/                       Front-end tests
+simulation/                 Everything about the traffic model
+  src/                        Settings, data types, messages, and the code
                               that controls the model in the browser and Node
-    runtime/                  Files the browser loads from /sim
-    build/                    Turns the NetLogo model into JavaScript
-    netlogo/                  The desktop NetLogo model, its code, map data,
+  runtime/                    Files the browser loads from /sim
+  build/                      Turns the NetLogo model into JavaScript
+  netlogo/                    The desktop NetLogo model, its code, map data,
                               the team's original models and build tools
-    test/                     Simulation tests
+  test/                       Simulation tests
 e2e/                        Browser tests of the whole site
 docs/design.md              How the page looks and behaves
+vercel.json                 How Vercel builds and serves the site
 ```
 
-The simulation package has its own [README](packages/simulation/README.md) with details about the model.
+The simulation folder has its own [README](simulation/README.md) with details about the model.
 
 ## Commands
 
@@ -88,9 +81,9 @@ Run these from the project folder.
 | Command                 | What it does                                                   |
 | ----------------------- | -------------------------------------------------------------- |
 | `npm run dev`           | Start the site with live reloading while you edit the code     |
-| `npm run build`         | Build the simulation worker, the web page and the server       |
-| `npm start`             | Start the production site (run `npm run build` first)          |
-| `npm test`              | Test the simulation and the server                             |
+| `npm run build`         | Build the site into `frontend/dist`                            |
+| `npm start`             | Serve the built site locally, with the same headers as Vercel  |
+| `npm test`              | Test the simulation and the security headers                   |
 | `npm run test:e2e`      | Test the site in a real browser (builds and starts it for you) |
 | `npm run typecheck`     | Check the TypeScript types                                     |
 | `npm run lint`          | Check the code for mistakes and house style                    |
@@ -103,15 +96,9 @@ The first time you run the browser tests, install a test browser with `npx playw
 
 ## Putting it online
 
-Run it on any host that supports Node.js:
+The site deploys to Vercel as a static site. `vercel.json` tells Vercel to run `npm run build`, serve `frontend/dist`, and send the security headers, so there is nothing to set up in the Vercel dashboard. Push to the connected Git repository, or run `npx vercel deploy`.
 
-```sh
-npm install
-npm run build
-npm start
-```
-
-The server listens on the port in the `PORT` environment variable, or 3000. It needs no secrets and no database. Put it behind HTTPS, as most hosts do by default. `/api/health` answers `{"status":"ok"}` for health checks.
+Any other static host works too: run `npm run build` and upload `frontend/dist`. Set the headers from `frontend/vite/securityHeaders.ts` on that host if you can.
 
 ## Writing code for this project
 
@@ -120,8 +107,8 @@ The code is TypeScript, written to be easy to read:
 - Use `if` and `else` rather than the `? :` operator.
 - Use `function () {}` rather than arrow functions.
 - Start every file with a short comment saying what it is for.
-- Keep each feature of the page in its own folder under `apps/web/src/features`.
-- The page talks to the model only through `packages/simulation/src/createTrafficSim.ts`, which checks every input.
+- Keep each part of the page in its own folder under `frontend/src/features`.
+- The page talks to the model only through `simulation/src/createTrafficSim.ts`, which checks every input.
 
 `npm run lint` checks the first two rules, `npm run typecheck` checks the types, and `npm run format` handles the layout.
 
@@ -131,4 +118,4 @@ This is a model for exploring ideas, not a traffic forecast or a safety assessme
 
 ## Credits
 
-The traffic model builds on our groupmate's Hoddle Grid prototype, which credits Wilensky's NetLogo Traffic Grid (2003). The web page runs it with NetLogo Web (Tortoise) by Uri Wilensky and contributors, under the GPL (see `packages/simulation/runtime/LICENSE.md` and https://github.com/NetLogo/Tortoise). Map data © OpenStreetMap contributors, available under the Open Database Licence: https://www.openstreetmap.org/copyright.
+The traffic model builds on our groupmate's Hoddle Grid prototype, which credits Wilensky's NetLogo Traffic Grid (2003). The web page runs it with NetLogo Web (Tortoise) by Uri Wilensky and contributors, under the GPL (see `simulation/runtime/LICENSE.md` and https://github.com/NetLogo/Tortoise). Map data © OpenStreetMap contributors, available under the Open Database Licence: https://www.openstreetmap.org/copyright.
