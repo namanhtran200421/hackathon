@@ -20,6 +20,11 @@ export interface SliderText {
 }
 
 export const SLIDER_TEXT: Record<NumberSettingName, SliderText> = {
+  "profile-start-hour": {
+    label: "Start hour in Melbourne",
+    unit: ":00",
+    help: "Local clock time at setup, including warm-up. Observed demand updates every 15 minutes.",
+  },
   "demand-veh-per-hour": { label: "Cars arriving per hour", unit: "cars/hour" },
   "through-traffic-%": {
     label: "Cars just passing through",
@@ -56,6 +61,11 @@ export const SLIDER_TEXT: Record<NumberSettingName, SliderText> = {
 
 /** The text shown for each option of each drop-down list. */
 export const CHOICE_TEXT: { [Name in ChoiceSettingName]: Record<Settings[Name], string> } = {
+  "demand-profile": {
+    "Flat (synthetic)": "Flat (synthetic)",
+    "SCATS weekday": "SCATS weekday",
+    "SCATS weekend": "SCATS weekend",
+  },
   "network-source": {
     "Real OSM map": "Real Melbourne streets",
     "Schematic Hoddle grid": "Simple grid",

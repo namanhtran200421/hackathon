@@ -19,6 +19,8 @@ breed [ painters painter ]
 directed-link-breed [ roads road ]   ;; one directed link = one direction of one block
 
 globals [
+  observed-weekday observed-weekend observed-signal-points observed-data-version
+  active-demand-profile active-profile-start-hour observed-signal-count
   selected-street selected-block baseline-signature baseline-summary
   generated-total completed-total run-finished? active-network demand-seed
   ;; ---- physical constants ----
@@ -108,6 +110,7 @@ to setup
   set demand-seed ifelse-value fixed-seed? [seed] [random 1000000]
   if not is-string? selected-street [set selected-street "Collins St"]
   setup-constants
+  load-observed-data
   set gates no-turtles
   set carparks no-turtles
   set signals no-turtles
@@ -585,7 +588,7 @@ end
 to generate-demand
   with-local-randomness [
     random-seed (demand-seed + ticks * 104729)
-    let rate demand-veh-per-hour / 3600
+    let rate effective-arrivals-per-hour / 3600
     foreach sort gates [g -> ask g [
       repeat random-poisson (rate * weight / gate-weight-sum) [
         set generated-total generated-total + 1
@@ -1060,7 +1063,7 @@ to-report seg-distance [px py]
 end
 
 to-report scenario-signature
-  report (list active-network demand-veh-per-hour through-traffic-% informed-drivers-% speed-limit-kmh cycle-length ew-green-share signal-coordination hook-turns? fixed-seed? seed route-noise reroute-interval warm-up-s measure-s)
+  report (list observed-data-version demand-profile profile-start-hour use-observed-signals? active-network demand-veh-per-hour through-traffic-% informed-drivers-% speed-limit-kmh cycle-length ew-green-share signal-coordination hook-turns? fixed-seed? seed route-noise reroute-interval warm-up-s measure-s)
 end
 
 ;; =====================================================================
@@ -1246,6 +1249,7 @@ to build-osm-network
     let names remove-duplicates [street] of my-links
     set signalised? count link-neighbors >= 3 and length names >= 2 and any? my-links with [road-kind = "main"]
   ]
+  apply-observed-signals
   ; Twelve synthetic boundary entry/exit gates, attached to the nearest road node.
   let chosen []
   foreach [[-108 -65] [-108 0] [-108 65] [108 -65] [108 0] [108 65] [-70 -90] [0 -90] [70 -90] [-70 90] [0 90] [70 90]] [xy ->
@@ -1299,4 +1303,43 @@ to draw-osm-roads
     ]
     die
   ]
+end
+
+; Public DTP data supplies relative demand timing and conservative signal matches.
+; Absolute CBD entry demand, routes and signal phases remain assumptions.
+to load-observed-data
+  file-open "data/observed/profiles.txt"
+  set observed-weekday file-read
+  set observed-weekend file-read
+  set observed-signal-points file-read
+  set observed-data-version file-read
+  file-close
+  set active-demand-profile demand-profile
+  set active-profile-start-hour profile-start-hour
+  set observed-signal-count 0
+end
+
+to apply-observed-signals
+  if use-observed-signals? [
+    foreach observed-signal-points [point ->
+      let target min-one-of nodes [distancexy item 0 point item 1 point]
+      if target != nobody [
+        if [distancexy item 0 point item 1 point] of target < 0.01 [
+          ask target [set signalised? true]
+          set observed-signal-count observed-signal-count + 1
+        ]
+      ]
+    ]
+  ]
+end
+
+to-report observed-demand-factor
+  if active-demand-profile = "Flat (synthetic)" [report 1]
+  let index floor (((active-profile-start-hour * 3600 + ticks) mod 86400) / 900)
+  if active-demand-profile = "SCATS weekday" [report item index observed-weekday]
+  report item index observed-weekend
+end
+
+to-report effective-arrivals-per-hour
+  report demand-veh-per-hour * observed-demand-factor
 end

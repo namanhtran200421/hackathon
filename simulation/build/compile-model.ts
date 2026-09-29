@@ -48,7 +48,7 @@ const hours = "(max list (1 / 3600) (measured-seconds / 3600))";
 const questions: Record<string, string> = {
   // The numbers shown under the map, plus the selection and baseline state.
   metrics:
-    "(list ticks count cars generated-total completed-total stranded-count queued-at-gates mean-trip-time-min mean-delay-min measured-seconds trips-done vehicle-hours run-finished? closure-desc selection-label measuring? (is-list? baseline-signature) (baseline-signature = scenario-signature) baseline-summary selected-street selected-block warm-up-s measure-s)",
+    "(list ticks count cars generated-total completed-total stranded-count queued-at-gates mean-trip-time-min mean-delay-min measured-seconds trips-done vehicle-hours run-finished? closure-desc selection-label measuring? (is-list? baseline-signature) (baseline-signature = scenario-signature) baseline-summary selected-street selected-block warm-up-s measure-s observed-demand-factor effective-arrivals-per-hour observed-signal-count observed-data-version)",
   // Position, direction and colour of every car.
   cars: "[ (list who xcor ycor heading color) ] of cars",
   // The road layout. It only changes when Setup runs.

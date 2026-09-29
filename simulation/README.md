@@ -27,7 +27,7 @@ The model's Info tab has the full details.
 
 Real, from OpenStreetMap: the street layout, one-way streets, and the number of lanes and speed limits where the map records them.
 
-Made up: how many cars arrive and where they go, the traffic light timings, and the destinations. There are no trams, buses, bikes, pedestrians, turn bans or parking limits. Treat the results as a way to explore ideas, not as a forecast.
+Observed when selected: relative weekday/weekend demand profiles and conservatively matched signal locations from DTP. Assumed: absolute arrival rates, where cars go, traffic light timings, and destinations. There are no trams, buses, bikes, pedestrians, turn bans or parking limits. Treat the results as a way to explore ideas, not as a forecast.
 
 ## What is in this folder
 
@@ -118,3 +118,7 @@ These tests check that the model works as designed, not that it matches real Mel
 ## Credits
 
 The Hoddle Grid traffic prototype was written by our groupmate; its Info tab credits Wilensky (2003), NetLogo Traffic Grid. Map data © OpenStreetMap contributors, https://www.openstreetmap.org/copyright, under the Open Database Licence. The map extract was downloaded on 29 September 2026.
+
+## Observed traffic data
+
+Select **SCATS weekday** or **SCATS weekend** and restart to use August 2026 Melbourne CBD detector patterns. The arrival slider sets an assumed peak, not a measured boundary flow. Matched DTP signal locations are optional; timings remain synthetic. See [data requirements, provenance and model limitations](../docs/data-and-limitations.md). Rebuild retained data with `npm run model:data`, then `npm run model:desktop` and `npm run model:web`.

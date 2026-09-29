@@ -152,6 +152,10 @@ export function createTrafficSim(scope: ModelScope) {
       selectedBlock: Number(m[19]) || 0,
       warmUp: m[20] as number,
       measure: m[21] as number,
+      demandFactor: m[22] as number,
+      effectiveArrivalsPerHour: m[23] as number,
+      observedSignalCount: m[24] as number,
+      observedDataVersion: m[25] as string,
     };
   }
 

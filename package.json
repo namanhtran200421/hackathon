@@ -20,7 +20,8 @@
     "format:check": "prettier --check .",
     "model:map": "python3 simulation/netlogo/tools/prepare_map.py",
     "model:desktop": "python3 simulation/netlogo/tools/merge_code.py && python3 simulation/netlogo/tools/build.py",
-    "model:web": "npm run model -w @traffic-lab/simulation"
+    "model:web": "npm run model -w @traffic-lab/simulation",
+    "model:data": "python3 simulation/build/prepare-observed.py"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",

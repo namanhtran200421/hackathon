@@ -1,0 +1,872 @@
+{
+  "version": "dtp-cbd-aug2026-v1",
+  "retrieved": "2026-09-30",
+  "timezone": "Australia/Melbourne (AEST, UTC+10 in August)",
+  "periodStart": "2026-08-01",
+  "periodEnd": "2026-08-30",
+  "source": "Department of Transport and Planning, Victoria",
+  "licence": "CC BY 4.0",
+  "countsUrl": "https://opendata.transport.vic.gov.au/dataset/traffic-signal-volume-data",
+  "signalsUrl": "https://opendata.transport.vic.gov.au/dataset/victorian-traffic-signals",
+  "inventorySitesInBounds": 153,
+  "cohortSites": 138,
+  "cohortDetectors": 1293,
+  "days": {
+    "weekday": 20,
+    "weekend": 10
+  },
+  "quality": {
+    "cbd_rows": 105560,
+    "quality_rejected": 65617,
+    "identical_duplicates_removed": 0,
+    "quality_passed": 39943,
+    "archive_sha256": "5aad32104a4d51bfba26e2adf6e7816c429cb90a4212f3c496410b752209378c"
+  },
+  "matchedSignalSites": 80,
+  "matchedNodes": 80,
+  "method": "Same detector cohort; at least 80% valid days in each day group. Mean each detector across days, then mean across detectors. Divide both profiles by their shared maximum 15-minute mean. Counts are detector activations, not unique CBD arrivals.",
+  "filters": "96 intervals, zero alarms, non-negative integer values, <=900 activations per interval, non-zero daily total matching supplied sum; conflicting duplicates excluded. Missing/zero-total days are excluded, not filled with zeros.",
+  "limitations": "No detector-direction mapping or OD estimation. Peak entry scale is user-assumed. Timing remains synthetic. Signal matches supplement inferred junctions; unmapped sites do not prove absence. Month includes events/weather and has not been classified as incident-free.",
+  "factors": {
+    "weekday": [
+      0.26584195,
+      0.23792514,
+      0.21235798,
+      0.19065567,
+      0.17387498,
+      0.15645254,
+      0.14833454,
+      0.13964972,
+      0.13471395,
+      0.12263929,
+      0.11578152,
+      0.11062279,
+      0.1085735,
+      0.10989525,
+      0.10942717,
+      0.11044833,
+      0.11879712,
+      0.12130451,
+      0.12818372,
+      0.14118323,
+      0.16526881,
+      0.21786786,
+      0.29628321,
+      0.37891781,
+      0.41523279,
+      0.49408109,
+      0.60192492,
+      0.66127704,
+      0.69077378,
+      0.7648462,
+      0.85845533,
+      0.91545436,
+      0.94298005,
+      0.96678159,
+      0.96670173,
+      0.95412805,
+      0.92560069,
+      0.90102952,
+      0.87369609,
+      0.85174586,
+      0.81823424,
+      0.80462535,
+      0.80031229,
+      0.79497315,
+      0.7913048,
+      0.78743924,
+      0.79564927,
+      0.80316382,
+      0.80376586,
+      0.80682748,
+      0.80722936,
+      0.8042151,
+      0.79382783,
+      0.79590789,
+      0.80195767,
+      0.80356722,
+      0.81669791,
+      0.83084455,
+      0.84832406,
+      0.84690337,
+      0.86126859,
+      0.86704327,
+      0.87046264,
+      0.87728036,
+      0.90406978,
+      0.93556304,
+      0.94128226,
+      0.96300747,
+      0.98095793,
+      1.0,
+      0.97598578,
+      0.9601178,
+      0.93366518,
+      0.90998425,
+      0.86404201,
+      0.81691156,
+      0.76096293,
+      0.7261538,
+      0.68464445,
+      0.6583518,
+      0.63685854,
+      0.63168586,
+      0.6267692,
+      0.62855599,
+      0.63011881,
+      0.62438673,
+      0.6092456,
+      0.58734709,
+      0.5776011,
+      0.56073607,
+      0.51668236,
+      0.48392743,
+      0.45512751,
+      0.41687186,
+      0.37761532,
+      0.34146519
+    ],
+    "weekend": [
+      0.56702792,
+      0.53727241,
+      0.50121047,
+      0.47320646,
+      0.44427059,
+      0.41569916,
+      0.39385382,
+      0.37355786,
+      0.36136807,
+      0.3412621,
+      0.32208755,
+      0.30011782,
+      0.28876557,
+      0.28405346,
+      0.26606899,
+      0.25469319,
+      0.25194788,
+      0.23142819,
+      0.22075324,
+      0.21168712,
+      0.2067705,
+      0.21073008,
+      0.22321585,
+      0.23663298,
+      0.24444259,
+      0.26632912,
+      0.30545405,
+      0.32202723,
+      0.30147566,
+      0.31573603,
+      0.34985341,
+      0.3712753,
+      0.35857629,
+      0.3915198,
+      0.43749232,
+      0.48888345,
+      0.49647955,
+      0.54598607,
+      0.60051552,
+      0.65813175,
+      0.65551807,
+      0.67192323,
+      0.69182572,
+      0.72744721,
+      0.7384494,
+      0.75135179,
+      0.77371951,
+      0.80437066,
+      0.81682772,
+      0.82832732,
+      0.83427737,
+      0.83282367,
+      0.83273843,
+      0.82796673,
+      0.82092729,
+      0.81540336,
+      0.81311958,
+      0.81639405,
+      0.83032534,
+      0.8230128,
+      0.82217422,
+      0.83352818,
+      0.83415474,
+      0.81666399,
+      0.81622576,
+      0.81602147,
+      0.8231824,
+      0.81656388,
+      0.80753091,
+      0.8136062,
+      0.81345021,
+      0.8053027,
+      0.80429908,
+      0.80212672,
+      0.78377537,
+      0.76259882,
+      0.75362101,
+      0.74109391,
+      0.7153517,
+      0.70429734,
+      0.67405902,
+      0.66947179,
+      0.66113858,
+      0.65311592,
+      0.65394206,
+      0.6584427,
+      0.64159918,
+      0.62514767,
+      0.61811592,
+      0.60921439,
+      0.5898389,
+      0.57434141,
+      0.55467956,
+      0.53067103,
+      0.48866275,
+      0.45435981
+    ]
+  },
+  "signalMatches": [
+    {
+      "site": "1036",
+      "name": "QUEENSBERRY/DRUMMOND",
+      "node": 170,
+      "x": 37.669668,
+      "y": 99.034725,
+      "distanceMetres": 8.84
+    },
+    {
+      "site": "1059",
+      "name": "FRANKLIN/PEEL/WILLIAM",
+      "node": 627,
+      "x": -70.062733,
+      "y": 48.564463,
+      "distanceMetres": 6.29
+    },
+    {
+      "site": "2024",
+      "name": "SPRING / FLINDERS LANE",
+      "node": 210,
+      "x": 95.425605,
+      "y": -3.45426,
+      "distanceMetres": 5.27
+    },
+    {
+      "site": "2835",
+      "name": "SPENCER/LITTLE COLLINS",
+      "node": 279,
+      "x": -85.334102,
+      "y": -45.06011,
+      "distanceMetres": 9.72
+    },
+    {
+      "site": "2900",
+      "name": "SPENCER/LITTLE BOURKE",
+      "node": 595,
+      "x": -94.668412,
+      "y": -23.767933,
+      "distanceMetres": 5.34
+    },
+    {
+      "site": "2901",
+      "name": "SPRING/LONSDALE",
+      "node": 97,
+      "x": 75.61372,
+      "y": 50.638355,
+      "distanceMetres": 6.41
+    },
+    {
+      "site": "2902",
+      "name": "EXHIBITION/LONSDALE",
+      "node": 141,
+      "x": 53.816073,
+      "y": 42.523127,
+      "distanceMetres": 6.73
+    },
+    {
+      "site": "2903",
+      "name": "RUSSELL/LONSDALE",
+      "node": 142,
+      "x": 32.15298,
+      "y": 34.442408,
+      "distanceMetres": 8.19
+    },
+    {
+      "site": "2904",
+      "name": "SWANSTON/LONSDALE",
+      "node": 613,
+      "x": 11.041292,
+      "y": 26.623291,
+      "distanceMetres": 5.67
+    },
+    {
+      "site": "2906",
+      "name": "ELIZABETH/LONSDALE",
+      "node": 411,
+      "x": -11.324469,
+      "y": 18.455743,
+      "distanceMetres": 7.76
+    },
+    {
+      "site": "2907",
+      "name": "QUEEN/LONSDALE",
+      "node": 266,
+      "x": -32.963818,
+      "y": 10.5164,
+      "distanceMetres": 6.59
+    },
+    {
+      "site": "2908",
+      "name": "WILLIAM/LONSDALE",
+      "node": 355,
+      "x": -54.828301,
+      "y": 2.541436,
+      "distanceMetres": 8.35
+    },
+    {
+      "site": "2910",
+      "name": "SPENCER/LONSDALE",
+      "node": 222,
+      "x": -97.339253,
+      "y": -12.91312,
+      "distanceMetres": 8.37
+    },
+    {
+      "site": "2911",
+      "name": "EXHIBITION/LITTLE LONSDALE",
+      "node": 7,
+      "x": 49.592152,
+      "y": 54.136029,
+      "distanceMetres": 5.0
+    },
+    {
+      "site": "2912",
+      "name": "RUSSELL/LITTLE LONSDALE",
+      "node": 6,
+      "x": 28.003811,
+      "y": 45.994084,
+      "distanceMetres": 5.91
+    },
+    {
+      "site": "2913",
+      "name": "SWANSTON/LITTLE LONSDALE",
+      "node": 556,
+      "x": 6.856066,
+      "y": 38.133779,
+      "distanceMetres": 0.13
+    },
+    {
+      "site": "2914",
+      "name": "ELIZABETH/LITTLE LONSDALE",
+      "node": 393,
+      "x": -15.436702,
+      "y": 29.790345,
+      "distanceMetres": 6.3
+    },
+    {
+      "site": "2915",
+      "name": "QUEEN/LITTLE LONSDALE",
+      "node": 268,
+      "x": -37.051426,
+      "y": 21.830965,
+      "distanceMetres": 5.17
+    },
+    {
+      "site": "2916",
+      "name": "WILLIAM/LITTLE LONSDALE",
+      "node": 360,
+      "x": -57.507057,
+      "y": 14.336903,
+      "distanceMetres": 7.1
+    },
+    {
+      "site": "2932",
+      "name": "WELLINGTON/SPRING/FLINDERS",
+      "node": 209,
+      "x": 99.19222,
+      "y": -13.557663,
+      "distanceMetres": 11.14
+    },
+    {
+      "site": "3410",
+      "name": "FLINDERS LANE/MARKET",
+      "node": 679,
+      "x": -24.561707,
+      "y": -47.800808,
+      "distanceMetres": 6.7
+    },
+    {
+      "site": "4388",
+      "name": "ELIZABETH/VICTORIA",
+      "node": 589,
+      "x": -34.787764,
+      "y": 86.713827,
+      "distanceMetres": 9.85
+    },
+    {
+      "site": "4389",
+      "name": "VICTORIA/SWANSTON",
+      "node": 318,
+      "x": -4.725198,
+      "y": 81.12111,
+      "distanceMetres": 8.48
+    },
+    {
+      "site": "4400",
+      "name": "RATHDOWNE/QUEENSBERRY",
+      "node": 242,
+      "x": 50.398593,
+      "y": 97.305925,
+      "distanceMetres": 4.16
+    },
+    {
+      "site": "4402",
+      "name": "VICTORIA/BOUVERIE",
+      "node": 246,
+      "x": -17.725868,
+      "y": 82.844344,
+      "distanceMetres": 8.93
+    },
+    {
+      "site": "4403",
+      "name": "VICTORIA/CARDIGAN/FRANKLIN",
+      "node": 232,
+      "x": 7.209598,
+      "y": 79.518102,
+      "distanceMetres": 6.48
+    },
+    {
+      "site": "4404",
+      "name": "VICTORIA/LYGON",
+      "node": 240,
+      "x": 21.284937,
+      "y": 77.624549,
+      "distanceMetres": 8.41
+    },
+    {
+      "site": "4405",
+      "name": "VICTORIA/RATHDOWNE",
+      "node": 18,
+      "x": 47.565058,
+      "y": 75.126528,
+      "distanceMetres": 7.27
+    },
+    {
+      "site": "4419",
+      "name": "NICHOLSON/GERTRUDE",
+      "node": 415,
+      "x": 89.8412,
+      "y": 96.011274,
+      "distanceMetres": 8.46
+    },
+    {
+      "site": "4444",
+      "name": "ALBERT/NICHOLSON/LONSDALE",
+      "node": 131,
+      "x": 83.905022,
+      "y": 52.142288,
+      "distanceMetres": 10.01
+    },
+    {
+      "site": "4445",
+      "name": "ALBERT/GISBORNE",
+      "node": 374,
+      "x": 107.426359,
+      "y": 49.030894,
+      "distanceMetres": 8.55
+    },
+    {
+      "site": "4504",
+      "name": "VICTORIA/CHETWYND",
+      "node": 602,
+      "x": -99.776164,
+      "y": 95.688446,
+      "distanceMetres": 7.35
+    },
+    {
+      "site": "4505",
+      "name": "VICTORIA/WILLIAM/HOWARD",
+      "node": 598,
+      "x": -86.854643,
+      "y": 92.759616,
+      "distanceMetres": 7.15
+    },
+    {
+      "site": "4506",
+      "name": "VICTORIA/PEEL",
+      "node": 183,
+      "x": -65.031493,
+      "y": 90.94844,
+      "distanceMetres": 11.67
+    },
+    {
+      "site": "4510",
+      "name": "ELIZABETH/THERRY",
+      "node": 410,
+      "x": -32.429122,
+      "y": 76.45235,
+      "distanceMetres": 6.64
+    },
+    {
+      "site": "4511",
+      "name": "ELIZABETH/FRANKLIN",
+      "node": 395,
+      "x": -27.900038,
+      "y": 63.995642,
+      "distanceMetres": 8.81
+    },
+    {
+      "site": "4512",
+      "name": "ELIZABETH/A'BECKETT",
+      "node": 610,
+      "x": -23.822103,
+      "y": 52.799076,
+      "distanceMetres": 6.71
+    },
+    {
+      "site": "4514",
+      "name": "KING/ROSSLYN/CHETWYND",
+      "node": 692,
+      "x": -101.323967,
+      "y": 67.525599,
+      "distanceMetres": 36.21
+    },
+    {
+      "site": "4523",
+      "name": "SWANSTON/FRANKLIN ",
+      "node": 320,
+      "x": -6.629172,
+      "y": 73.374352,
+      "distanceMetres": 10.22
+    },
+    {
+      "site": "4556",
+      "name": "QUEEN/A'BECKETT",
+      "node": 271,
+      "x": -45.34009,
+      "y": 44.849715,
+      "distanceMetres": 4.87
+    },
+    {
+      "site": "4560",
+      "name": "EXHIBITION/FLINDERS",
+      "node": 122,
+      "x": 77.851879,
+      "y": -23.114485,
+      "distanceMetres": 7.83
+    },
+    {
+      "site": "4561",
+      "name": "RUSSELL/FLINDERS",
+      "node": 239,
+      "x": 55.734118,
+      "y": -29.960665,
+      "distanceMetres": 7.6
+    },
+    {
+      "site": "4563",
+      "name": "ELIZABETH/FLINDERS",
+      "node": 274,
+      "x": 12.000754,
+      "y": -46.031933,
+      "distanceMetres": 10.09
+    },
+    {
+      "site": "4564",
+      "name": "QUEEN/FLINDERS",
+      "node": 238,
+      "x": -9.683446,
+      "y": -54.061445,
+      "distanceMetres": 8.31
+    },
+    {
+      "site": "4565",
+      "name": "FLINDERS/MARKET",
+      "node": 137,
+      "x": -21.904058,
+      "y": -58.52315,
+      "distanceMetres": 8.47
+    },
+    {
+      "site": "4566",
+      "name": "WILLIAM/FLINDERS",
+      "node": 479,
+      "x": -30.422254,
+      "y": -63.14961,
+      "distanceMetres": 6.87
+    },
+    {
+      "site": "4567",
+      "name": "SPENCER/FLINDERS",
+      "node": 213,
+      "x": -74.627874,
+      "y": -80.062457,
+      "distanceMetres": 11.67
+    },
+    {
+      "site": "4568",
+      "name": "EXHIBITION/FLINDERS LANE",
+      "node": 697,
+      "x": 73.552327,
+      "y": -11.599544,
+      "distanceMetres": 5.76
+    },
+    {
+      "site": "4569",
+      "name": "RUSSELL/FLINDERS LANE",
+      "node": 15,
+      "x": 51.77051,
+      "y": -19.659112,
+      "distanceMetres": 5.99
+    },
+    {
+      "site": "4570",
+      "name": "SWANSTON/FLINDERS LANE",
+      "node": 241,
+      "x": 30.69312,
+      "y": -27.49604,
+      "distanceMetres": 1.67
+    },
+    {
+      "site": "4571",
+      "name": "ELIZABETH/FLINDERS LANE",
+      "node": 391,
+      "x": 8.371331,
+      "y": -35.753758,
+      "distanceMetres": 6.27
+    },
+    {
+      "site": "4572",
+      "name": "QUEEN/FLINDERS LANE",
+      "node": 147,
+      "x": -13.351564,
+      "y": -43.747647,
+      "distanceMetres": 4.71
+    },
+    {
+      "site": "4573",
+      "name": "WILLIAM/FLINDERS LANE",
+      "node": 583,
+      "x": -35.055991,
+      "y": -51.79163,
+      "distanceMetres": 5.44
+    },
+    {
+      "site": "4575",
+      "name": "SPRING/COLLINS",
+      "node": 202,
+      "x": 91.446167,
+      "y": 7.474025,
+      "distanceMetres": 5.01
+    },
+    {
+      "site": "4576",
+      "name": "COLLINS/EXHIBITION",
+      "node": 700,
+      "x": 69.7734,
+      "y": -1.20003,
+      "distanceMetres": 7.59
+    },
+    {
+      "site": "4577",
+      "name": "RUSSELL/COLLINS",
+      "node": 614,
+      "x": 47.910675,
+      "y": -9.209504,
+      "distanceMetres": 7.96
+    },
+    {
+      "site": "4578",
+      "name": "SWANSTON/COLLINS",
+      "node": 326,
+      "x": 26.533398,
+      "y": -15.868666,
+      "distanceMetres": 7.78
+    },
+    {
+      "site": "4580",
+      "name": "ELIZABETH/COLLINS",
+      "node": 388,
+      "x": 4.602077,
+      "y": -25.344224,
+      "distanceMetres": 7.63
+    },
+    {
+      "site": "4581",
+      "name": "QUEEN/COLLINS",
+      "node": 298,
+      "x": -17.137527,
+      "y": -33.158888,
+      "distanceMetres": 5.86
+    },
+    {
+      "site": "4583",
+      "name": "WILLIAM/COLLINS",
+      "node": 356,
+      "x": -39.091713,
+      "y": -41.336456,
+      "distanceMetres": 9.25
+    },
+    {
+      "site": "4585",
+      "name": "SPENCER/COLLINS",
+      "node": 276,
+      "x": -83.22434,
+      "y": -56.120865,
+      "distanceMetres": 10.38
+    },
+    {
+      "site": "4586",
+      "name": "EXHIBITION/LITTLE COLLINS",
+      "node": 16,
+      "x": 65.534529,
+      "y": 10.177988,
+      "distanceMetres": 6.27
+    },
+    {
+      "site": "4587",
+      "name": "RUSSELL/LITTLE COLLINS",
+      "node": 17,
+      "x": 43.760627,
+      "y": 2.123986,
+      "distanceMetres": 7.09
+    },
+    {
+      "site": "4588",
+      "name": "SWANSTON/LITTLE COLLINS",
+      "node": 327,
+      "x": 22.725449,
+      "y": -5.613868,
+      "distanceMetres": 0.79
+    },
+    {
+      "site": "4589",
+      "name": "ELIZABETH/LITTLE COLLINS",
+      "node": 389,
+      "x": 0.456426,
+      "y": -13.845982,
+      "distanceMetres": 5.52
+    },
+    {
+      "site": "4590",
+      "name": "QUEEN/LITTLE COLLINS",
+      "node": 270,
+      "x": -21.307802,
+      "y": -21.87438,
+      "distanceMetres": 5.29
+    },
+    {
+      "site": "4591",
+      "name": "WILLIAM/LITTLE COLLINS",
+      "node": 2,
+      "x": -41.927887,
+      "y": -29.376235,
+      "distanceMetres": 6.93
+    },
+    {
+      "site": "4593",
+      "name": "SPRING/BOURKE",
+      "node": 377,
+      "x": 83.829391,
+      "y": 28.618146,
+      "distanceMetres": 7.8
+    },
+    {
+      "site": "4594",
+      "name": "BOURKE/EXHIBITION",
+      "node": 329,
+      "x": 61.614013,
+      "y": 20.633162,
+      "distanceMetres": 8.35
+    },
+    {
+      "site": "4595",
+      "name": "RUSSELL/BOURKE",
+      "node": 331,
+      "x": 39.957076,
+      "y": 12.689367,
+      "distanceMetres": 7.81
+    },
+    {
+      "site": "4597",
+      "name": "ELIZABETH/BOURKE",
+      "node": 390,
+      "x": -3.326898,
+      "y": -3.524391,
+      "distanceMetres": 8.31
+    },
+    {
+      "site": "4599",
+      "name": "QUEEN/BOURKE",
+      "node": 291,
+      "x": -25.223041,
+      "y": -11.286735,
+      "distanceMetres": 7.12
+    },
+    {
+      "site": "4600",
+      "name": "WILLIAM/BOURKE",
+      "node": 358,
+      "x": -46.891411,
+      "y": -19.645754,
+      "distanceMetres": 9.94
+    },
+    {
+      "site": "4602",
+      "name": "SPENCER/BOURKE",
+      "node": 282,
+      "x": -89.643327,
+      "y": -33.616414,
+      "distanceMetres": 9.95
+    },
+    {
+      "site": "4603",
+      "name": "EXHIBITION/LITTLE BOURKE",
+      "node": 13,
+      "x": 57.831568,
+      "y": 32.082424,
+      "distanceMetres": 3.22
+    },
+    {
+      "site": "4604",
+      "name": "RUSSELL/LITTLE BOURKE",
+      "node": 14,
+      "x": 35.987311,
+      "y": 24.188723,
+      "distanceMetres": 5.29
+    },
+    {
+      "site": "4605",
+      "name": "SWANSTON/LITTLE BOURKE",
+      "node": 323,
+      "x": 14.810545,
+      "y": 16.263852,
+      "distanceMetres": 0.69
+    },
+    {
+      "site": "4606",
+      "name": "ELIZABETH/LITTLE BOURKE",
+      "node": 396,
+      "x": -7.509485,
+      "y": 7.984984,
+      "distanceMetres": 5.65
+    },
+    {
+      "site": "4607",
+      "name": "QUEEN/LITTLE BOURKE",
+      "node": 261,
+      "x": -29.289543,
+      "y": 0.050094,
+      "distanceMetres": 6.01
+    },
+    {
+      "site": "4608",
+      "name": "WILLIAM/LITTLE BOURKE",
+      "node": 359,
+      "x": -51.029147,
+      "y": -7.869211,
+      "distanceMetres": 5.91
+    }
+  ],
+  "signalsSha256": "e5fd0df86f223db345ffbdeb21db188e2240f4eb7409e4998ea5fde0a8a766af",
+  "retainedSha256": "d87d7ce3e69c655eba5b29fa56f320ab28eaf48434ae0d5261f831f1fdb80539"
+}

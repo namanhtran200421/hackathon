@@ -79,6 +79,19 @@ def main():
     nodes, edges = MAP_FILE.read_text().splitlines()
     code = code.replace(LOAD_MAP_FROM_DISK, "let node-data " + nodes + "\n  let edge-data " + edges)
 
+    profiles = (NETLOGO_FOLDER / "data/observed/profiles.txt").read_text().splitlines()
+    loader = '''  file-open "data/observed/profiles.txt"
+  set observed-weekday file-read
+  set observed-weekend file-read
+  set observed-signal-points file-read
+  set observed-data-version file-read
+  file-close'''
+    embedded = "\n".join("  set " + name + " " + value for name, value in zip(
+        ["observed-weekday", "observed-weekend", "observed-signal-points", "observed-data-version"], profiles))
+    if loader not in code:
+        raise ValueError("Observed-data loader changed; review embedding")
+    code = code.replace(loader, embedded)
+
     for name in ["choose-street", "choose-section", "export-link-results", "draw-background", "draw-osm-roads"]:
         code = empty_procedure(code, name)
 

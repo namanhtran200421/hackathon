@@ -31,8 +31,11 @@ All closures accumulate. Choose section narrows the scope; section 0 means whole
 ## BASELINE
 Run with no closures, wait through warm-up plus at least 60 seconds of measurement, Save baseline, then Setup and apply closures. The baseline survives Setup only with matching configuration; changing network or demand/signal/measurement settings clears it. Change-vs-baseline is grey until a baseline is saved. Demand generation uses an independent tick-seeded random stream, so baseline and closure runs receive the same arrivals and OD requests with the same seed. Travel-time averages include trips completed in the measurement window, even if they started in warm-up. Always compare waiting, stranded, active and completed counts together. CSV is written beside the model as combined-link-results.csv.
 
+## PUBLIC DATA
+Optional SCATS weekday/weekend profiles supply relative time-of-day demand from August 2026 CBD detector observations. The demand slider is an assumed peak entry scale when a profile is selected, not measured CBD arrivals. Start hour is AEST; profiles repeat daily. Optional matched DTP intersection sites supplement inferred signals; phase timings stay synthetic. Press Setup after changing profile, start hour or signal locations. See docs/data-and-limitations.md and data/observed/summary.json. Data © Department of Transport and Planning, Victoria, CC BY 4.0.
+
 ## LIMITS
-This is an exploratory traffic simulation, not a calibrated forecast or safety assessment. No actual SCATS counts, turn restrictions, time-dependent access, real parking capacities, trams, buses or pedestrians. Signals are inferred/synthetic and turn conflicts simplified. Geometry-chain compression retains all OSM shape points; movement carries overshoot to the next link but advances at most one link per second. Destination gates D are illustrative, not real car parks. Continuous congestion-based route choice may produce loops; road closures can strand trips. Green-wave offsets in OSM mode are an approximation. Setup is required after changing controls that affect speed, signal plans, random seed, demand comparison or network source.
+This is an exploratory traffic simulation, not a calibrated forecast or safety assessment. No calibrated absolute entry counts, turn restrictions, time-dependent access, real parking capacities, trams, buses or pedestrians. Signals are inferred/synthetic and turn conflicts simplified. Geometry-chain compression retains all OSM shape points; movement carries overshoot to the next link but advances at most one link per second. Destination gates D are illustrative, not real car parks. Continuous congestion-based route choice may produce loops; road closures can strand trips. Green-wave offsets in OSM mode are an approximation. Setup is required after changing controls that affect speed, signal plans, random seed, demand comparison or network source.
 
 ## CREDITS
 Hoddle Grid Traffic prototype supplied by the user's groupmate; its Info tab credits Wilensky (2003), NetLogo Traffic Grid. Original files are preserved. Real-map data © OpenStreetMap contributors, https://www.openstreetmap.org/copyright ; ODbL https://opendatacommons.org/licenses/odbl/1-0/ . Public extract downloaded 2026-09-29. Runtime is offline.
@@ -212,7 +215,16 @@ def main():
 
     model = ElementTree.Element("model", version="NetLogo 7.0.4", snapToGrid="true")
     ElementTree.SubElement(model, "code").text = SOURCE_CODE.read_text()
-    build_interface(Interface(model))
+    interface = Interface(model)
+    build_interface(interface)
+    profile = interface.add("chooser", x=10, y=888, width=300, height=58,
+                            display="demand-profile", variable="demand-profile", current=0)
+    for name in ["Flat (synthetic)", "SCATS weekday", "SCATS weekend"]:
+        ElementTree.SubElement(profile, "choice", type="string", value=name)
+    interface.add("slider", x=330, y=888, width=300, height=48, display="profile-start-hour",
+                  variable="profile-start-hour", min=0, max=23, step=1, default=8, direction="Horizontal")
+    interface.add("switch", x=650, y=888, width=300, height=38, display="use-observed-signals?",
+                  variable="use-observed-signals?", on="false")
     ElementTree.SubElement(model, "info").text = INFO
     for name in ["turtleShapes", "linkShapes"]:
         model.append(original.find(name))

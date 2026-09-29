@@ -114,8 +114,12 @@ The code is TypeScript, written to be easy to read:
 
 ## Limits
 
-This is a model for exploring ideas, not a traffic forecast or a safety assessment. The streets are real, but the number of cars, where they go and the traffic light timings are made up. There are no trams, buses, bikes or pedestrians. Results from the web page and from desktop NetLogo may differ slightly because the two use different random number generators; compare runs within the same one.
+This is a model for exploring ideas, not a traffic forecast or a safety assessment. The streets are real. Optional SCATS profiles provide observed time-of-day patterns, while absolute arrival rates, destinations and traffic light timings remain assumed. There are no trams, buses, bikes or pedestrians. Results from the web page and from desktop NetLogo may differ slightly because the two use different random number generators; compare runs within the same one.
 
 ## Credits
 
 The traffic model builds on our groupmate's Hoddle Grid prototype, which credits Wilensky's NetLogo Traffic Grid (2003). The web page runs it with NetLogo Web (Tortoise) by Uri Wilensky and contributors, under the GPL (see `simulation/runtime/LICENSE.md` and https://github.com/NetLogo/Tortoise). Map data © OpenStreetMap contributors, available under the Open Database Licence: https://www.openstreetmap.org/copyright.
+
+## Observed traffic data
+
+Select **SCATS weekday** or **SCATS weekend** and restart to use August 2026 Melbourne CBD detector patterns. The arrival slider sets an assumed peak, not a measured boundary flow. Matched DTP signal locations are optional; timings remain synthetic. See [data requirements, provenance and model limitations](docs/data-and-limitations.md). Rebuild retained data with `npm run model:data`, then `npm run model:desktop` and `npm run model:web`.

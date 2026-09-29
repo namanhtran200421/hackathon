@@ -242,3 +242,18 @@ test("a simulator that fails to load offers Try again", async function ({ page }
   await page.getByRole("button", { name: "Try again" }).click();
   await expect(statusLine(page)).toContainText("Ready", { timeout: 60000 });
 });
+
+test("observed public data controls apply on restart", async function ({ page, request }) {
+  await openReady(page);
+  const response = await request.get("/sim/observed-data.json");
+  expect(response.ok()).toBe(true);
+  const data = await response.json();
+  await page.getByLabel("Traffic demand profile").selectOption("SCATS weekday");
+  await page.locator('label[for="observed-signals"]').click();
+  await expect(page.getByLabel("Use matched DTP signal locations")).toBeChecked();
+  await page.getByRole("button", { name: "Restart" }).click();
+  await expect(page.getByLabel("Active demand rate")).toContainText(
+    String(Math.round(2500 * data.factors.weekday[32])).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " cars/hour",
+  );
+  await expect(page.getByLabel("Active demand rate")).toContainText("80 matched signals applied");
+});

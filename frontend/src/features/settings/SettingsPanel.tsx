@@ -99,6 +99,57 @@ export default function SettingsPanel(props: SettingsPanelProps) {
         />
       </section>
 
+      <section className="group" aria-label="Public traffic data">
+        <h3 className="group-title">Public traffic data</h3>
+        <Choice
+          id="demand-profile"
+          label="Traffic demand profile"
+          value={settings["demand-profile"]}
+          options={choiceOptions("demand-profile")}
+          onChange={function (value) {
+            sim.set("demand-profile", value);
+          }}
+          needsRestart
+        />
+        {slider("profile-start-hour", true)}
+        <Toggle
+          id="observed-signals"
+          label="Use matched DTP signal locations"
+          checked={settings["use-observed-signals?"]}
+          onChange={setSwitch("use-observed-signals?")}
+          needsRestart
+        />
+        {sim.metrics && (
+          <p className="help" aria-label="Active demand rate">
+            Active arrival rate: {Math.round(sim.metrics.effectiveArrivalsPerHour).toLocaleString("en-AU")}{" "}
+            cars/hour · {sim.metrics.observedSignalCount} matched signals applied.
+          </p>
+        )}
+        <p className="help">
+          SCATS profiles use August 2026 detector observations. In observed mode, Cars arriving per hour is
+          the assumed peak arrival rate, scaled by the selected time of day. It is not a measured CBD entry
+          count.
+        </p>
+        <p className="help">
+          1,293 detectors at 138 sites inform the profiles. Up to 80 matched signal locations supplement
+          inferred signals on the real map. Signal timings, trip destinations and route choices remain
+          synthetic.
+        </p>
+        <p className="help">
+          <a
+            href="https://opendata.transport.vic.gov.au/dataset/traffic-signal-volume-data"
+            target="_blank"
+            rel="noreferrer"
+          >
+            DTP traffic volumes
+          </a>{" "}
+          ·{" "}
+          <a href="/sim/observed-data.json" target="_blank" rel="noreferrer">
+            Data provenance and profiles
+          </a>
+        </p>
+      </section>
+
       <ClosureControls
         sim={sim}
         selection={props.selection}

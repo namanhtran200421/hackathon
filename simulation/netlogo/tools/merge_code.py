@@ -34,7 +34,7 @@ def replace_procedure(code, name, body):
 GENERATE_DEMAND = """to generate-demand
   with-local-randomness [
     random-seed (demand-seed + ticks * 104729)
-    let rate demand-veh-per-hour / 3600
+    let rate effective-arrivals-per-hour / 3600
     foreach sort gates [g -> ask g [
       repeat random-poisson (rate * weight / gate-weight-sum) [
         set generated-total generated-total + 1
@@ -262,6 +262,9 @@ def main():
     code = fix_baseline_and_output(code)
     code = code + "\n" + (MODEL_FOLDER / "osm_network.nls").read_text()
 
+    code = code.replace("globals [", "globals [\n  observed-weekday observed-weekend observed-signal-points observed-data-version\n  active-demand-profile active-profile-start-hour observed-signal-count", 1)
+    code = code.replace("  setup-constants\n", "  setup-constants\n  load-observed-data\n", 1)
+    code += "\n" + (MODEL_FOLDER / "observed_data.nls").read_text()
     (MODEL_FOLDER / "combined.nls").write_text(code)
     print("Merged", len(code.splitlines()), "lines")
 

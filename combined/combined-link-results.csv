@@ -1,0 +1,1281 @@
+street,direction,block,from,to,lanes,lanes_open,closed,veh_per_hour,baseline_veh_per_hour,change_veh_per_hour,mean_travel_time_s
+"Little Bourke St",WB,1,"grid 26034533","grid 2020813831",1,1,false,0,0,0,15.7
+"Queen St",SB,1,"grid 26034533","grid 6804266286",2,2,false,0,0,0,21.1
+"William St",SB,1,"grid 26034534","grid 2189145397",1,1,false,0,0,0,22.9
+"Little Bourke St",WB,2,"grid 26034534","grid 2189145401",1,1,false,0,0,0,15.9
+"Little Collins St",WB,1,"grid 26034544","grid 2189145378",1,1,false,0,0,0,15.8
+"William St",SB,2,"grid 26034544","grid 2189145390",1,1,false,24,12,12,25.8
+"Eades Place",SB,1,"grid 26034576","grid 2905756476",1,1,false,0,0,0,1.6
+"Roden St",SB,1,"grid 26034576","grid 8977295941",1,1,false,0,0,0,14
+"Eades Place",NB,2,"grid 26034577","grid 2905756476",1,1,false,0,0,0,8.3
+"Eades Place",SB,3,"grid 26034577","grid 8927996695",1,1,false,0,0,0,16.2
+"Rosslyn St",EB,1,"grid 26034627","grid 6695923951",1,1,false,96,48,48,10.3
+"Unnamed road",SB,1,"grid 26034627","grid 8960001660",1,1,false,72,120,-48,10.9
+"Little Lonsdale St",EB,1,"grid 26034662","grid 1985557963",1,1,false,12,0,12,13.1
+"Russell St",NB,1,"grid 26034662","grid 2181268836",2,2,false,0,12,-12,23.1
+"Little Lonsdale St",EB,2,"grid 26034663","grid 589403294",1,1,false,0,0,0,15.7
+"Exhibition St",NB,1,"grid 26034663","grid 11135234155",2,2,false,0,0,0,14.4
+"Spring St",NB,1,"grid 26034664","grid 277089855",2,2,false,0,24,-24,20.2
+"Spring St",EB,2,"grid 26034664","grid 767583050",1,1,false,0,0,0,2.3
+"Spring St",NB,3,"grid 26034668","grid 26034664",2,2,false,0,36,-36,23.1
+"Lonsdale St",EB,1,"grid 26034668","grid 277089929",2,2,false,0,0,0,14.4
+"Lonsdale St",EB,2,"grid 26034669","grid 1985557923",2,2,false,0,0,0,14.5
+"Russell St",NB,2,"grid 26034669","grid 6207070037",2,2,false,12,0,12,21.6
+"Lonsdale St",EB,3,"grid 26034670","grid 589402311",2,2,false,0,0,0,14.4
+"Exhibition St",NB,2,"grid 26034670","grid 11135234153",2,2,false,12,0,12,13.1
+"Spring St",NB,4,"grid 26034671","grid 317537930",1,1,false,0,36,-36,23.2
+"Little Bourke St",WB,3,"grid 26034671","grid 588876889",1,1,false,0,0,0,36
+"Exhibition St",NB,3,"grid 26034672","grid 595594348",1,1,false,12,0,12,21.9
+"Little Bourke St",WB,4,"grid 26034672","grid 1985557912",1,1,false,0,0,0,53
+"Little Bourke St",WB,5,"grid 26034673","grid 245532558",1,1,false,0,0,0,18.7
+"Russell St",NB,3,"grid 26034673","grid 13807338303",2,2,false,24,12,12,12.2
+"Flinders Ln",WB,1,"grid 26051949","grid 1838361782",1,1,false,24,24,0,50.2
+"Russell St",NB,4,"grid 26051949","grid 8633729233",2,2,false,12,24,-12,16.2
+"Little Collins St",WB,2,"grid 26051950","grid 1985557931",1,1,false,0,0,0,52.3
+"Exhibition St",NB,4,"grid 26051950","grid 6775862757",1,1,false,48,0,48,15
+"Little Collins St",WB,3,"grid 26051952","grid 176722502",1,1,false,0,0,0,29.1
+"Russell St",NB,5,"grid 26051952","grid 2187983882",2,2,false,0,12,-12,23.3
+"Victoria St",EB,1,"grid 30220444","grid 501027474",3,3,false,36,36,0,23.7
+"Exhibition St",SB,5,"grid 30220444","grid 1691676471",2,2,false,0,12,-12,14.2
+"Victoria St",EB,2,"grid 30287324","grid 30287325",3,3,false,48,60,-12,8.3
+"Victoria St",EB,3,"grid 30287325","grid 319157897",3,3,false,36,48,-12,5.3
+"Mackenzie St",SB,1,"grid 30287325","grid 2384091373",1,1,false,12,12,0,12
+"Mackenzie St",WB,2,"grid 30287404","grid 319157116",1,1,false,12,12,0,2
+"Brunswick St",SB,1,"grid 30287465","grid 4283908119",1,1,false,216,192,24,2.4
+"Unnamed road",EB,2,"grid 30467855","grid 5642440936",1,1,false,84,84,0,12
+"Unnamed road",NB,3,"grid 30467863","grid 30467855",1,1,false,12,12,0,13.2
+"Dudley St",WB,1,"grid 30467863","grid 2266563656",3,3,false,0,0,0,14.4
+"Batman St",WB,1,"grid 30942265","grid 5232347251",1,1,false,0,0,0,14.6
+"Spencer St",NB,1,"grid 30942265","grid 6943763839",2,2,false,0,0,0,14.4
+"Rathdowne St",SB,1,"grid 30943327","grid 1865096363",2,2,false,0,0,0,14.1
+"Victoria Parade",EB,1,"grid 30945324","grid 8869200174",3,3,false,216,180,36,8.5
+"A'Beckett St",EB,1,"grid 33085559","grid 319159694",2,2,false,12,12,0,17.3
+"A'Beckett St",WB,2,"grid 33085559","grid 12149195617",1,1,false,0,0,0,6.7
+"Wills St",NB,1,"grid 33085575","grid 33085559",1,1,false,12,12,0,17
+"Wills St",SB,2,"grid 33085575","grid 2181275333",1,1,false,0,0,0,17.6
+"Queen St",NB,2,"grid 33675553","grid 33675555",1,1,false,0,12,-12,14.6
+"Queen St",SB,3,"grid 33675553","grid 703554592",1,1,false,0,0,0,0.2
+"Queen St",SB,2,"grid 33675555","grid 33675553",1,1,false,0,0,0,14.6
+"Franklin St",EB,1,"grid 33675555","grid 774501396",1,1,false,0,0,0,1.5
+"Queen St",NB,4,"grid 33675555","grid 11140069162",1,1,false,0,0,0,8.9
+"Cardigan St",NB,1,"grid 33675682","grid 291210792",1,1,false,0,0,0,21.4
+"Victoria St",EB,4,"grid 33675682","grid 1725216871",3,3,false,0,0,0,14.2
+"Victoria St",EB,5,"grid 34157905","grid 30220444",4,4,false,36,48,-12,8.3
+"Rathdowne St",NB,2,"grid 34157905","grid 2766300604",2,2,false,0,0,0,18.5
+"Queensberry St",EB,1,"grid 34160610","grid 30943327",2,2,false,0,0,0,1.1
+"William St",SB,3,"grid 34633426","grid 387153095",1,1,false,36,24,12,22.5
+"William St",SB,4,"grid 35285653","grid 2266563661",1,1,false,24,12,12,20.1
+"Milton St",SB,1,"grid 35354279","grid 2266563642",1,1,false,72,96,-24,15.9
+"Milton St",NB,2,"grid 35354279","grid 6695934646",1,1,false,0,0,0,14.1
+"Walsh St",WB,1,"grid 35354279","grid 6695934649",1,1,false,0,0,0,24.9
+"Unnamed road",EB,4,"grid 54562179","grid 252588540",1,1,false,36,48,-12,22.3
+"Batman Avenue",NB,1,"grid 54562179","grid 576876287",2,2,false,324,288,36,39.3
+"Boundary access",SB,0,"grid 54562179","gate 709",1,1,false,0,0,0,2.5
+"Therry St",EB,1,"grid 55722470","grid 2190483598",1,1,false,0,0,0,28.1
+"Flinders St",WB,1,"grid 60072264","grid 1479930070",2,2,false,264,264,0,5.7
+"Boundary access",SB,0,"grid 60072264","gate 712",1,1,false,12,24,-12,3
+"Park St",NB,1,"grid 103121662","grid 2181268833",1,1,false,0,0,0,23.3
+"Little Lonsdale St",EB,3,"grid 103121662","grid 2189145384",1,1,false,0,0,0,36.9
+"Flinders Ln",WB,2,"grid 113536277","grid 607756858",1,1,false,36,0,36,14.6
+"Rothsay Ln",SB,1,"grid 114607245","grid 114607252",1,1,false,12,12,0,5.1
+"Flinders Ln",WB,3,"grid 114607245","grid 2190478940",1,1,false,0,0,0,21.7
+"Rothsay Ln",NB,1,"grid 114607252","grid 114607245",1,1,false,12,12,0,20.9
+"Flinders St",EB,2,"grid 122705653","grid 1479930102",4,4,false,0,12,-12,18.7
+"Little Bourke St",WB,6,"grid 131102989","grid 26034534",1,1,false,0,0,0,20.3
+"Little Bourke St",WB,7,"grid 131124746","grid 131102989",1,1,false,0,0,0,15.1
+"Little Queen St",SB,1,"grid 131124746","grid 2177124620",1,1,false,0,0,0,32.7
+"Hardware St",NB,1,"grid 131221744","grid 168377580",1,1,false,0,0,0,52.6
+"Unnamed road",SB,5,"grid 131221744","grid 595594361",1,1,false,0,0,0,14.2
+"Lonsdale St",EB,4,"grid 131221744","grid 6381558802",2,2,false,12,0,12,19
+"Little Bourke St",WB,8,"grid 131238672","grid 26034533",1,1,false,0,0,0,47.2
+"Somerset Place",SB,1,"grid 131238672","grid 131238689",1,1,false,0,0,0,6.9
+"Somerset Place",NB,1,"grid 131238689","grid 131238672",1,1,false,0,0,0,20.2
+"Flinders Ln",WB,4,"grid 144699879","grid 642420359",1,1,false,0,0,0,46.8
+"Flinders Ln",EB,5,"grid 144699879","grid 8955976461",1,1,false,24,0,24,22.8
+"Little Collins St",WB,4,"grid 145196475","grid 2174950802",1,1,false,0,0,0,21
+"Godfrey St",NB,1,"grid 145196475","grid 2469456589",1,1,false,0,0,0,5.5
+"Little Collins St",EB,5,"grid 145196475","grid 9146197604",1,1,false,0,0,0,33.4
+"Church St",NB,1,"grid 145210375","grid 2177124617",1,1,false,0,0,0,23.3
+"Little Collins St",WB,6,"grid 145210375","grid 9146197604",1,1,false,12,12,0,21.1
+"Little Collins St",WB,7,"grid 145261423","grid 2020813837",1,1,false,0,0,0,25.2
+"McKillop St",NB,1,"grid 145261423","grid 2177124606",1,1,false,0,0,0,53.5
+"Little Lonsdale St",EB,4,"grid 168377580","grid 2190483577",1,1,false,0,0,0,36.5
+"Victoria Parade",WB,2,"grid 170219377","grid 2189377511",3,3,false,156,108,48,14.2
+"Gisborne St",SB,1,"grid 170219377","grid 10990568694",1,1,false,60,72,-12,10.8
+"Victoria Parade",WB,3,"grid 170219402","grid 170219377",3,3,false,216,180,36,9.2
+"Sugden Place",NB,1,"grid 174792823","grid 174792857",1,1,false,0,0,0,21.8
+"Little Collins St",WB,8,"grid 174792823","grid 174812829",1,1,false,0,0,0,17.8
+"Sugden Place",SB,1,"grid 174792857","grid 174792823",1,1,false,0,0,0,35
+"Little Collins St",WB,9,"grid 174812829","grid 2190478930",1,1,false,0,0,0,35.1
+"Carson Place",SB,1,"grid 174812829","grid 13780588543",1,1,false,0,0,0,23.4
+"Royal Ln",NB,1,"grid 176721271","grid 176721287",1,1,false,0,0,0,23.6
+"Little Collins St",WB,10,"grid 176721271","grid 2187874242",1,1,false,0,0,0,30.6
+"Bourke St",EB,1,"grid 176721287","grid 2188404539",1,1,false,12,0,12,21
+"Little Collins St",WB,11,"grid 176722502","grid 176721271",1,1,false,0,0,0,20.3
+"Russell Place",NB,1,"grid 176722502","grid 2188404539",1,1,false,0,0,0,23.6
+"Franklin St",WB,2,"grid 227508487","grid 33675553",2,2,false,0,0,0,20.3
+"Anthony St",SB,1,"grid 227508487","grid 227508496",1,1,false,0,0,0,24
+"Anthony St",NB,2,"grid 227508487","grid 1923401354",1,1,false,12,0,12,16.7
+"Anthony St",NB,1,"grid 227508496","grid 227508487",1,1,false,12,0,12,22.8
+"A'Beckett St",EB,3,"grid 227508496","grid 13253252673",1,1,false,0,0,0,9.2
+"A'Beckett St",WB,4,"grid 227508496","grid 13253263257",1,1,false,0,0,0,5.5
+"Gertrude St",WB,1,"grid 233275077","grid 233314824",1,1,false,36,48,-12,32.3
+"Gertrude St",EB,2,"grid 233275077","grid 652430413",1,1,false,12,24,-12,6.6
+"Gertrude St",EB,1,"grid 233314824","grid 233275077",1,1,false,0,0,0,31.1
+"Royal Ln",NB,2,"grid 233314824","grid 233314845",1,1,false,12,12,0,5.1
+"Gertrude St",WB,3,"grid 233314824","grid 2200514713",1,1,false,48,60,-12,27.3
+"Royal Ln",SB,2,"grid 233314845","grid 233314824",1,1,false,12,12,0,21.3
+"Nicholson St",SB,1,"grid 233315285","grid 767587081",2,2,false,168,204,-36,17.1
+"Princes St",WB,1,"grid 233315285","grid 767658128",1,1,false,0,0,0,14.5
+"Princes St",EB,2,"grid 233315285","grid 2797967113",1,1,false,12,0,12,23.8
+"Exhibition St",NB,6,"grid 244244659","grid 1691676459",2,2,false,0,0,0,19.1
+"Exhibition St",NB,7,"grid 244244659","grid 3199584806",1,1,false,0,0,0,20.4
+"Little Bourke St",WB,9,"grid 245532558","grid 245533066",1,1,false,0,0,0,20.1
+"Little Bourke St",WB,10,"grid 245533066","grid 2187770693",1,1,false,0,0,0,41.6
+"Unnamed road",SB,6,"grid 245537592","grid 4544002877",1,1,false,0,0,0,14.3
+"Lonsdale St",EB,5,"grid 245537592","grid 9756035315",2,2,false,0,0,0,15.9
+"Russell St",NB,6,"grid 247417082","grid 9086096520",1,1,false,48,36,12,17.2
+"Alma St",EB,1,"grid 248838949","grid 266734181",1,1,false,0,0,0,25.9
+"Alma St",WB,2,"grid 248838949","grid 277095753",1,1,false,0,0,0,4.3
+"Regent St",SB,1,"grid 248838949","grid 2797967113",1,1,false,0,0,0,26.1
+"Exhibition St",SB,8,"grid 252588303","grid 741702223",2,2,false,48,48,0,9.5
+"Flinders St",EB,3,"grid 252588303","grid 1449431504",2,2,false,12,24,-12,20.5
+"Unnamed road",WB,4,"grid 252588540","grid 54562179",1,1,false,180,168,12,20.4
+"Boundary access",SB,0,"grid 252588540","gate 714",1,1,false,36,36,0,3.5
+"Unnamed road",NB,7,"grid 266733534","grid 381825173",1,1,false,0,0,0,14.3
+"Albert St",WB,1,"grid 266733534","grid 11655178916",1,1,false,0,0,0,5.1
+"Alma St",EB,3,"grid 266734181","grid 367099135",1,1,false,0,0,0,6.4
+"Fitzroy St",NB,1,"grid 266734181","grid 9494147820",1,1,false,36,72,-36,4.3
+"Batman Avenue",SB,2,"grid 266739054","grid 252588540",2,2,false,12,0,12,36.4
+"Unnamed road",WB,8,"grid 266739054","grid 576876287",1,1,false,0,0,0,14.5
+"Parliament Place",NB,1,"grid 268533991","grid 268533992",1,1,false,0,0,0,24
+"St Andrews Place",EB,1,"grid 268533991","grid 3146813285",1,1,false,0,0,0,12.7
+"St Andrews Place",WB,2,"grid 268533991","grid 8873674098",1,1,false,0,0,0,18.1
+"Parliament Place",SB,1,"grid 268533992","grid 268533991",1,1,false,0,0,0,24
+"Cathedral Place",WB,1,"grid 268533992","grid 8873674099",1,1,false,0,0,0,14.6
+"Victoria Parade",WB,4,"grid 277089855","grid 8870964254",3,3,false,132,120,12,8.1
+"La Trobe St",EB,1,"grid 277089910","grid 501027474",2,2,false,0,0,0,16
+"Victoria St",WB,6,"grid 277089910","grid 1691676471",4,4,false,12,0,12,23.7
+"Albert St",EB,2,"grid 277089929","grid 2324975789",2,2,false,0,0,0,4.7
+"Spring St",SB,5,"grid 277089929","grid 9991984390",1,1,false,0,0,0,14.4
+"Alma St",EB,2,"grid 277095753","grid 248838949",1,1,false,0,0,0,17.5
+"Jeffcott St",EB,1,"grid 289597163","grid 9561530846",1,1,false,0,0,0,14.1
+"Jeffcott St",WB,2,"grid 289597163","grid 11961603221",1,1,false,0,0,0,5.6
+"Batman St",WB,2,"grid 289597248","grid 6943763862",1,1,false,0,0,0,17.8
+"Unnamed road",NB,9,"grid 289597248","grid 6943763863",1,1,false,0,0,0,14.5
+"Victoria St",EB,7,"grid 291210710","grid 3933094370",3,3,false,48,60,-12,5.2
+"Orr St",NB,1,"grid 291210710","grid 6930998717",1,1,false,0,0,0,21.5
+"Earl St",EB,1,"grid 291210712","grid 6206967737",1,1,false,60,48,12,6.5
+"Earl St",WB,2,"grid 291210712","grid 6930998717",1,1,false,0,0,0,18.4
+"Earl St",EB,3,"grid 291210792","grid 1725216810",1,1,false,48,60,-12,21.3
+"Cardigan St",NB,2,"grid 291210792","grid 3208518294",1,1,false,60,108,-48,2.3
+"Boundary access",SB,0,"grid 291210792","gate 716",1,1,false,0,0,0,2.5
+"Peel St",SB,1,"grid 296038801","grid 9146197756",2,2,false,120,120,0,25.7
+"Unnamed road",SB,10,"grid 296038801","grid 13205873861",2,2,false,0,0,0,0.6
+"Little La Trobe St",WB,1,"grid 313278042","grid 313278047",1,1,false,0,0,0,28
+"Little La Trobe St",EB,1,"grid 313278047","grid 313278042",1,1,false,0,0,0,14.8
+"Literature Ln",EB,1,"grid 313278047","grid 313278049",1,1,false,0,0,0,12.8
+"Little La Trobe St",WB,2,"grid 313278047","grid 2190483595",1,1,false,0,0,0,22.4
+"Literature Ln",WB,1,"grid 313278049","grid 313278047",1,1,false,0,0,0,26.1
+"A'Beckett St",WB,5,"grid 313278197","grid 3213448174",1,1,false,0,0,0,22.4
+"A'Beckett St",EB,6,"grid 313278197","grid 13759745626",1,1,false,0,0,0,2.4
+"Spring St",NB,6,"grid 317537930","grid 26034668",1,1,false,0,36,-36,14.4
+"Lonsdale St",WB,6,"grid 317537930","grid 6207022858",2,2,false,0,0,0,21.8
+"Franklin St",WB,3,"grid 317729737","grid 9146197756",2,2,false,0,0,0,15.5
+"Mackenzie St",EB,3,"grid 319157074","grid 1985557917",1,1,false,0,0,0,14.5
+"Russell St",NB,7,"grid 319157074","grid 10302452296",2,2,false,0,12,-12,3.9
+"Mackenzie St",WB,4,"grid 319157116","grid 1985557917",1,1,false,12,12,0,20.2
+"Mackenzie St",NB,5,"grid 319157116","grid 2384091372",1,1,false,12,0,12,16.1
+"Victoria St",EB,8,"grid 319157174","grid 30287324",4,4,false,36,60,-24,21.8
+"Victoria St",EB,9,"grid 319157897","grid 34157905",4,4,false,36,48,-12,16.6
+"Hudson Place",SB,1,"grid 319157918","grid 767671059",1,1,false,0,0,0,14.1
+"Queensberry St",EB,2,"grid 319157918","grid 7759495227",2,2,false,0,0,0,15.9
+"Queensberry St",EB,3,"grid 319157922","grid 319157918",2,2,false,0,0,0,15.2
+"Elm Tree Place",SB,1,"grid 319157922","grid 2384091371",1,1,false,0,0,0,14.1
+"A'Beckett St",WB,1,"grid 319159694","grid 33085559",1,1,false,0,0,0,18.6
+"Electric Place",NB,1,"grid 319159694","grid 319159699",1,1,false,12,12,0,21.9
+"A'Beckett St",EB,7,"grid 319159694","grid 2020813893",2,2,false,0,0,0,18.6
+"Franklin St",WB,4,"grid 319159699","grid 317729737",1,1,false,0,0,0,14
+"Electric Place",SB,1,"grid 319159699","grid 319159694",1,1,false,0,0,0,20.7
+"Batman St",WB,3,"grid 332544860","grid 30942265",1,1,false,0,0,0,14.3
+"Spencer St",SB,2,"grid 332544860","grid 9002590994",2,2,false,0,0,0,15.9
+"Spencer St",SB,3,"grid 332544861","grid 4996764092",2,2,false,12,0,12,13.3
+"Alma St",WB,3,"grid 367099135","grid 266734181",1,1,false,0,0,0,19.6
+"Unnamed road",SB,7,"grid 381825173","grid 266733534",1,1,false,0,0,0,14.3
+"Morrison Place",NB,1,"grid 381825173","grid 1992134560",1,1,false,0,0,0,8.4
+"Eades Place",NB,4,"grid 387153086","grid 26034577",1,1,false,0,0,0,4.2
+"Unnamed road",NB,11,"grid 387153086","grid 8927996695",1,1,false,0,0,0,14.3
+"Chetwynd St",SB,1,"grid 387153087","grid 387153088",1,1,false,0,0,0,9.9
+"Chetwynd St",NB,2,"grid 387153087","grid 8927996682",1,1,false,0,0,0,15
+"Chetwynd St",NB,1,"grid 387153088","grid 387153087",1,1,false,0,0,0,9.9
+"Chetwynd St",SB,3,"grid 387153088","grid 13751647373",1,1,false,0,0,0,2.4
+"Rosslyn St",WB,2,"grid 387153095","grid 777788326",1,1,false,0,0,0,14.2
+"William St",SB,5,"grid 387153095","grid 777795238",1,1,false,36,24,12,15.3
+"Unnamed road",SB,12,"grid 387153106","grid 296038801",1,1,false,120,120,0,6.5
+"Victoria Parade",EB,5,"grid 501027474","grid 767584894",3,3,false,36,36,0,40.8
+"Unnamed road",EB,13,"grid 566892220","grid 2200514710",1,1,false,204,204,0,33.3
+"Boundary access",SB,0,"grid 566892220","gate 717",1,1,false,24,24,0,2.7
+"Stanley St",SB,1,"grid 572039322","grid 572039368",1,1,false,0,0,0,1.1
+"Stanley St",EB,2,"grid 572039322","grid 8927996680",1,1,false,0,0,0,14.8
+"Stanley St",WB,3,"grid 572039368","grid 387153086",1,1,false,0,0,0,17.5
+"Stanley St",NB,1,"grid 572039368","grid 572039322",1,1,false,0,0,0,1.1
+"Unnamed road",EB,8,"grid 576876287","grid 266739054",1,1,false,12,0,12,13.8
+"Batman Avenue",WB,3,"grid 576876287","grid 576877857",2,2,false,276,264,12,38.7
+"Flinders St",EB,4,"grid 576877847","grid 252588303",2,2,false,12,12,0,13.1
+"Exhibition St",NB,9,"grid 576877847","grid 6775870290",2,2,false,60,108,-48,15.1
+"Exhibition St",NB,10,"grid 576877857","grid 576877847",2,2,false,96,156,-60,10.5
+"Flinders St",WB,5,"grid 576877857","grid 9512482841",2,2,false,168,120,48,34.8
+"Unnamed road",WB,14,"grid 588194334","grid 6775862775",1,1,false,0,0,0,14.3
+"Exhibition St",SB,11,"grid 588194334","grid 6775862781",2,2,false,0,0,0,15.3
+"Little Bourke St",WB,11,"grid 588876889","grid 588876900",1,1,false,0,0,0,18.6
+"Little Bourke St",WB,12,"grid 588876900","grid 589402268",1,1,false,0,0,0,24.9
+"Crossley St",SB,1,"grid 588876900","grid 2187983874",1,1,false,0,0,0,23.1
+"Little Bourke St",WB,13,"grid 589402268","grid 26034672",1,1,false,0,0,0,15.1
+"Exhibition St",SB,12,"grid 589402268","grid 6206786039",1,1,false,0,0,0,17.7
+"Little Collins St",WB,12,"grid 589402289","grid 26051950",1,1,false,24,0,24,12.8
+"Exhibition St",SB,13,"grid 589402289","grid 13976139573",1,1,false,0,0,0,23.2
+"Exhibition St",SB,14,"grid 589402311","grid 595594347",2,2,false,0,0,0,14.3
+"Lonsdale St",EB,7,"grid 589402311","grid 6207022861",2,2,false,0,0,0,19.2
+"Little Lonsdale St",EB,5,"grid 589403294","grid 26034664",1,1,false,0,0,0,52.5
+"Exhibition St",SB,15,"grid 589403294","grid 6775859251",2,2,false,12,12,0,17.9
+"Nicholson St",NB,2,"grid 589472357","grid 767586831",2,2,false,48,48,0,29.6
+"Albert St",WB,3,"grid 589472357","grid 9991984390",2,2,false,0,0,0,18.3
+"Albert St",WB,4,"grid 589472358","grid 589472357",2,2,false,0,0,0,14.6
+"Nicholson St",SB,3,"grid 589472358","grid 10964455898",1,1,false,48,96,-48,8.7
+"Spencer St",SB,4,"grid 589529030","grid 1479930110",2,2,false,0,12,-12,15.1
+"Flinders St",WB,6,"grid 589696723","grid 8955976422",4,4,false,0,12,-12,18.2
+"Flinders St",EB,7,"grid 589747750","grid 9105247458",2,2,false,0,12,-12,13.9
+"Flinders St",WB,8,"grid 591392066","grid 60072264",2,2,false,36,36,0,65.5
+"William St",NB,6,"grid 591392066","grid 1833110277",2,2,false,12,12,0,12.1
+"Flinders St",WB,9,"grid 591392087","grid 5880339363",2,2,false,60,48,12,5.5
+"Flinders St",EB,10,"grid 591408716","grid 591408731",2,2,false,0,0,0,14.2
+"Market St",NB,1,"grid 591408716","grid 9561515045",1,1,false,0,0,0,23.1
+"Flinders St",EB,11,"grid 591408731","grid 1833110288",2,2,false,0,0,0,23.9
+"Market St",SB,2,"grid 591408731","grid 2189272905",1,1,false,0,0,0,14.7
+"Flinders St",EB,12,"grid 591426700","grid 1833110282",2,2,false,180,156,24,8
+"Queen St",SB,5,"grid 591426700","grid 9105320429",1,1,false,36,36,0,13.2
+"Exhibition St",SB,16,"grid 595594347","grid 589402268",1,1,false,0,0,0,23.3
+"Lonsdale St",WB,8,"grid 595594347","grid 595594348",2,2,false,0,0,0,14.5
+"Exhibition St",NB,17,"grid 595594348","grid 26034670",2,2,false,12,0,12,12.3
+"Lonsdale St",WB,9,"grid 595594348","grid 6381474061",2,2,false,0,0,0,22.6
+"Russell St",NB,8,"grid 595594352","grid 26034669",1,1,false,24,0,24,15.5
+"Lonsdale St",WB,10,"grid 595594352","grid 595594353",2,2,false,0,0,0,15.8
+"Waratah Place",SB,1,"grid 595594353","grid 245532558",1,1,false,0,0,0,23.1
+"Lonsdale St",WB,11,"grid 595594353","grid 595594354",2,2,false,0,0,0,16.7
+"Heffernan Ln",SB,1,"grid 595594354","grid 245533066",1,1,false,0,0,0,23.2
+"Lonsdale St",WB,12,"grid 595594354","grid 9756035316",2,2,false,0,0,0,17.1
+"Unnamed road",NB,5,"grid 595594361","grid 131221744",1,1,false,0,0,0,14.2
+"Lonsdale St",WB,13,"grid 595594361","grid 2020813849",2,2,false,0,0,0,21.1
+"Unnamed road",NB,15,"grid 595594367","grid 6381291673",1,1,false,0,0,0,14.3
+"Lonsdale St",WB,14,"grid 595594367","grid 6381291675",2,2,false,0,0,0,15.3
+"Queen St",NB,6,"grid 607756857","grid 6206971382",1,1,false,96,96,0,11.2
+"Flinders Ln",WB,6,"grid 607756857","grid 12514091450",1,1,false,0,0,0,34.7
+"Flinders Ln",WB,7,"grid 607756858","grid 607756857",1,1,false,36,0,36,20.5
+"Queen St",SB,7,"grid 607756858","grid 9765780357",1,1,false,0,0,0,20.8
+"Queen St",SB,8,"grid 607756866","grid 607756858",1,1,false,0,0,0,18.2
+"Unnamed road",WB,16,"grid 607756866","grid 6206971382",1,1,false,0,0,0,14.5
+"Little Bourke St",WB,14,"grid 633912993","grid 13240105553",1,1,false,0,0,0,11.2
+"Flinders Ln",EB,4,"grid 642420359","grid 144699879",1,1,false,0,0,0,60
+"Flinders Ln",WB,8,"grid 642420359","grid 2174950798",1,1,false,0,0,0,19.2
+"Gertrude St",WB,2,"grid 652430413","grid 233275077",1,1,false,12,24,-12,22
+"Exhibition St",SB,18,"grid 663497749","grid 252588303",2,2,false,48,60,-12,12
+"Sargood Ln",EB,1,"grid 663497749","grid 4544096366",1,1,false,0,0,0,75.4
+"Unnamed road",WB,17,"grid 663497749","grid 6775870290",1,1,false,0,0,0,14.4
+"Queen St",NB,3,"grid 703554592","grid 33675553",1,1,false,0,12,-12,13.4
+"Queen St",SB,9,"grid 703554592","grid 12280427079",2,2,false,0,0,0,0.6
+"William St",SB,7,"grid 703557084","grid 34633426",1,1,false,0,0,0,20.4
+"Howard St",WB,1,"grid 703557084","grid 777774421",1,1,false,0,0,0,14.3
+"Batman Avenue",EB,4,"grid 741702223","grid 266739054",2,2,false,0,0,0,49.9
+"Flinders St",WB,13,"grid 741702223","grid 576877857",1,1,false,48,48,0,7.7
+"Russell St",NB,9,"grid 741702228","grid 1833110301",1,1,false,12,36,-24,12.1
+"Russell St",SB,10,"grid 741702228","grid 9086096520",1,1,false,12,12,0,1.4
+"Flinders St",WB,14,"grid 741702228","grid 9105320429",2,2,false,84,48,36,70.6
+"Spring St",SB,7,"grid 767583050","grid 9991984389",2,2,false,0,0,0,9.3
+"Victoria Parade",WB,6,"grid 767583089","grid 277089855",3,3,false,132,96,36,22.3
+"Spring St",SB,8,"grid 767583089","grid 767583050",2,2,false,0,0,0,6.6
+"La Trobe St",EB,2,"grid 767584383","grid 277089910",2,2,false,0,0,0,27.8
+"Exhibition St",SB,19,"grid 767584383","grid 2291073957",2,2,false,12,12,0,14.8
+"Victoria Parade",WB,7,"grid 767584876","grid 767583089",3,3,false,132,96,36,10.9
+"Nicholson St",NB,4,"grid 767584876","grid 767584894",2,2,false,48,48,0,10.8
+"Victoria Parade",EB,8,"grid 767584894","grid 767587081",3,3,false,48,48,0,17.8
+"Nicholson St",NB,5,"grid 767584894","grid 767658128",2,2,false,12,12,0,21.4
+"Albert St",EB,5,"grid 767586831","grid 767587073",2,2,false,0,0,0,14.6
+"Nicholson St",NB,6,"grid 767586831","grid 6212705501",1,1,false,48,48,0,6.6
+"Victoria Parade",WB,9,"grid 767587066","grid 767584876",3,3,false,132,96,36,8.4
+"Nicholson St",SB,7,"grid 767587066","grid 767587073",2,2,false,24,60,-36,23.8
+"Nicholson St",SB,8,"grid 767587073","grid 589472358",2,2,false,24,60,-36,16.9
+"Albert St",EB,6,"grid 767587073","grid 6207245784",2,2,false,0,0,0,24.5
+"Nicholson St",SB,9,"grid 767587081","grid 767587066",2,2,false,168,204,-36,6.8
+"Victoria Parade",EB,10,"grid 767587081","grid 6207152062",3,3,false,36,36,0,27.4
+"Princes St",EB,1,"grid 767658128","grid 233315285",1,1,false,0,0,0,14.5
+"Nicholson St",NB,10,"grid 767658128","grid 2200514710",2,2,false,12,12,0,31.6
+"Rathdowne St",NB,3,"grid 767670317","grid 34160610",2,2,false,0,0,0,14.1
+"Queensberry St",WB,4,"grid 767670317","grid 7759495228",2,2,false,0,0,0,15
+"Hudson Place",NB,1,"grid 767671059","grid 319157918",1,1,false,0,0,0,14.1
+"Queensberry St",WB,5,"grid 767671059","grid 2384091371",2,2,false,0,0,0,15.2
+"Drummond St",SB,1,"grid 767737811","grid 30287325",1,1,false,0,0,0,33.4
+"Franklin St",EB,5,"grid 774501396","grid 1923401354",2,2,false,0,0,0,19.2
+"Elizabeth St",NB,1,"grid 774508242","grid 774546372",1,1,false,0,0,0,14.6
+"Victoria St",WB,10,"grid 774508242","grid 777700831",2,2,false,12,0,12,44.5
+"Elizabeth St",NB,2,"grid 774508242","grid 1895925155",1,1,false,0,0,0,15.1
+"Elizabeth St",NB,3,"grid 774546372","grid 775933295",1,1,false,12,0,12,13.9
+"Victoria St",EB,11,"grid 774546374","grid 1725216852",2,2,false,48,36,12,12.2
+"Elizabeth St",SB,4,"grid 774546374","grid 1895925154",1,1,false,12,12,0,12.2
+"Elizabeth St",SB,5,"grid 774546433","grid 774546374",3,3,false,36,0,36,12.4
+"Unnamed road",WB,18,"grid 774546433","grid 775933297",1,1,false,0,0,0,14.2
+"Unnamed road",EB,19,"grid 775933250","grid 775933295",1,1,false,48,48,0,36
+"Unnamed road",WB,19,"grid 775933295","grid 775933250",1,1,false,0,0,0,14.2
+"Unnamed road",EB,20,"grid 775933295","grid 775933297",1,1,false,60,48,12,28.1
+"Unnamed road",EB,18,"grid 775933297","grid 774546433",1,1,false,36,0,36,9.7
+"Unnamed road",WB,20,"grid 775933297","grid 775933295",1,1,false,0,0,0,14.2
+"Elizabeth St",SB,6,"grid 775933297","grid 8976031240",1,1,false,24,48,-24,5
+"Unnamed road",EB,21,"grid 775933327","grid 775933250",1,1,false,72,72,0,27.4
+"Victoria St",EB,12,"grid 775933327","grid 1895925155",2,2,false,12,12,0,19
+"Bouverie St",SB,1,"grid 775942450","grid 1900213543",2,2,false,0,0,0,14.5
+"Victoria St",EB,13,"grid 775942450","grid 10904440439",2,2,false,24,24,0,31.5
+"Victoria St",WB,14,"grid 775942452","grid 1895925154",4,4,false,0,0,0,26.5
+"Bouverie St",NB,2,"grid 775942452","grid 1900213541",2,2,false,0,0,0,14.5
+"Therry St",NB,2,"grid 775942455","grid 775942452",2,2,false,0,0,0,16.4
+"Therry St",WB,3,"grid 775942455","grid 2190483578",1,1,false,36,24,12,29.8
+"Victoria St",EB,15,"grid 777697587","grid 775933327",2,2,false,120,120,0,44.6
+"Peel St",SB,2,"grid 777697587","grid 777700831",2,2,false,84,84,0,29.7
+"Peel St",SB,3,"grid 777700831","grid 387153106",2,2,false,60,72,-12,41.2
+"Victoria St",WB,16,"grid 777700831","grid 777701894",1,1,false,12,0,12,12.9
+"Peel St",NB,4,"grid 777701894","grid 777703067",2,2,false,192,192,0,2.3
+"Victoria St",WB,17,"grid 777701894","grid 777706218",1,1,false,12,0,12,15.9
+"Boundary access",SB,0,"grid 777701894","gate 715",1,1,false,12,12,0,3
+"Victoria St",EB,18,"grid 777703067","grid 777697587",2,2,false,204,204,0,6.1
+"Victoria St",WB,19,"grid 777706218","grid 777721749",1,1,false,12,0,12,11.7
+"Capel St",SB,1,"grid 777706218","grid 777789012",1,1,false,0,0,0,16.7
+"Victoria St",EB,20,"grid 777710193","grid 777703067",1,1,false,12,12,0,16.3
+"Capel St",SB,2,"grid 777710193","grid 777706218",1,1,false,0,0,0,14.2
+"Capel St",NB,3,"grid 777721749","grid 777721838",1,1,false,0,0,0,14.2
+"Victoria St",WB,21,"grid 777721749","grid 9086096442",1,1,false,12,0,12,21.1
+"Victoria St",EB,22,"grid 777721838","grid 777710193",1,1,false,12,12,0,14.7
+"Victoria St",EB,23,"grid 777771693","grid 1900213541",2,2,false,24,24,0,19.4
+"Howard St",SB,2,"grid 777774421","grid 26034627",1,1,false,0,0,0,25.1
+"Howard St",EB,1,"grid 777774421","grid 703557084",1,1,false,0,0,0,14.3
+"William St",NB,8,"grid 777774421","grid 777774714",1,1,false,12,12,0,2.8
+"William St",NB,9,"grid 777774714","grid 9086096441",2,2,false,12,12,0,14.2
+"Eades Place",EB,5,"grid 777776726","grid 26034576",1,1,false,0,0,0,14.4
+"Roden St",NB,2,"grid 777776726","grid 9086096489",1,1,false,0,0,0,15.9
+"Unnamed road",WB,22,"grid 777781181","grid 777781264",1,1,false,0,0,0,14.3
+"Chetwynd St",SB,4,"grid 777781181","grid 9086096485",1,1,false,0,0,0,15.1
+"Unnamed road",EB,22,"grid 777781264","grid 777781181",1,1,false,0,0,0,14.3
+"William St",NB,10,"grid 777788322","grid 6695934648",1,1,false,0,0,0,14.1
+"Walsh St",WB,2,"grid 777788322","grid 6695934652",1,1,false,0,0,0,14.7
+"William St",NB,11,"grid 777788326","grid 777788328",1,1,false,0,0,0,14.2
+"Rosslyn St",WB,3,"grid 777788326","grid 6695923950",1,1,false,0,0,0,14.7
+"Rosslyn St",EB,4,"grid 777788328","grid 34633426",1,1,false,36,24,12,28.1
+"William St",NB,12,"grid 777788328","grid 777774421",1,1,false,12,12,0,21.3
+"Capel St",SB,4,"grid 777789012","grid 35285653",1,1,false,0,0,0,30.3
+"Unnamed road",WB,23,"grid 777789012","grid 8977274903",1,1,false,0,0,0,14.3
+"William St",SB,13,"grid 777795238","grid 35285653",1,1,false,24,12,12,17.1
+"Capel St",NB,5,"grid 777795238","grid 8977274903",1,1,false,0,0,0,29
+"Spring St",NB,9,"grid 1449431342","grid 1449431476",1,1,false,96,72,24,15.9
+"Collins St",WB,1,"grid 1449431342","grid 1449431554",1,0,true,0,48,-48,1.9
+"Unnamed road",WB,24,"grid 1449431464","grid 1449431544",1,1,false,180,180,0,7.9
+"Boundary access",SB,0,"grid 1449431464","gate 710",1,1,false,0,12,-12,2.5
+"Collins St",SB,2,"grid 1449431465","grid 1449431342",1,0,true,0,0,0,15
+"Spring St",SB,10,"grid 1449431465","grid 1449431578",1,1,false,12,24,-12,2.5
+"Spring St",SB,11,"grid 1449431467","grid 1449431465",2,2,false,12,24,-12,12.5
+"Macarthur St",NB,1,"grid 1449431467","grid 7388133845",1,1,false,0,0,0,15.4
+"Collins St",NB,3,"grid 1449431476","grid 1449431467",1,0,true,0,12,-12,14.8
+"Spring St",NB,12,"grid 1449431476","grid 2279153639",1,1,false,96,72,24,22.7
+"Spring St",NB,13,"grid 1449431492","grid 1449431342",1,1,false,84,96,-12,12.5
+"Spring St",NB,14,"grid 1449431494","grid 1449431544",1,1,false,12,24,-12,14
+"Spring St",NB,15,"grid 1449431504","grid 1449431494",2,2,false,12,24,-12,6.3
+"Spring St",NB,16,"grid 1449431544","grid 1449431492",1,1,false,84,108,-24,6.3
+"Flinders Ln",WB,9,"grid 1449431544","grid 13976139570",1,1,false,84,84,0,49.7
+"Collins St",WB,4,"grid 1449431554","grid 13976139575",1,0,true,0,48,-48,31.3
+"Spring St",SB,17,"grid 1449431578","grid 1449431464",1,1,false,12,24,-12,10.3
+"Flinders St",WB,15,"grid 1479930070","grid 589696723",2,2,false,0,12,-12,4.1
+"Spencer St",NB,5,"grid 1479930070","grid 1479930102",2,2,false,264,252,12,5.7
+"Flinders St",EB,16,"grid 1479930102","grid 1479930110",3,3,false,48,24,24,7.7
+"Spencer St",NB,6,"grid 1479930102","grid 2174950792",2,2,false,216,204,12,20.6
+"Spencer St",SB,7,"grid 1479930110","grid 60072264",1,1,false,12,24,-12,17.1
+"Flinders St",EB,17,"grid 1479930110","grid 1833110268",2,2,false,24,0,24,41.3
+"La Trobe St",EB,3,"grid 1492145829","grid 2291074006",1,1,false,168,156,12,11
+"Spencer St",NB,8,"grid 1492145829","grid 9561530847",2,2,false,12,0,12,21.3
+"Spencer St",NB,9,"grid 1492145844","grid 1492145829",2,2,false,192,156,36,14.7
+"Spencer St",SB,10,"grid 1492150956","grid 1492150966",2,2,false,36,72,-36,20
+"Little Lonsdale St",EB,6,"grid 1492150956","grid 14084735337",1,1,false,0,0,0,26.7
+"Spencer St",SB,11,"grid 1492150966","grid 1492150982",2,2,false,36,72,-36,18.9
+"Lonsdale St",EB,15,"grid 1492150966","grid 14084735336",2,2,false,0,0,0,19.9
+"Lonsdale St",EB,16,"grid 1492150975","grid 1492150966",1,1,false,0,0,0,14.5
+"Spencer St",NB,12,"grid 1492150975","grid 1492150978",2,2,false,48,48,0,17.4
+"Spencer St",NB,13,"grid 1492150978","grid 1492145844",2,2,false,192,156,36,28.2
+"Unnamed road",EB,25,"grid 1492150978","grid 1492150956",1,1,false,24,60,-36,14.1
+"Boundary access",SB,0,"grid 1492150978","gate 707",1,1,false,36,36,0,3.3
+"Lonsdale St",WB,17,"grid 1492150982","grid 1492150985",1,1,false,0,0,0,14.5
+"Spencer St",SB,14,"grid 1492150982","grid 9086085384",2,2,false,36,72,-36,21.8
+"Spencer St",NB,15,"grid 1492150985","grid 1492150975",2,2,false,48,48,0,18.9
+"Victoria St",EB,24,"grid 1492410147","grid 33675682",3,3,false,0,0,0,24
+"Swanston St",SB,1,"grid 1492410147","grid 2183271188",1,1,false,0,0,0,14.4
+"Exhibition St",NB,20,"grid 1691676459","grid 34157905",2,2,false,0,0,0,14.2
+"Victoria St",WB,25,"grid 1691676459","grid 3199584806",3,3,false,0,0,0,16.7
+"Exhibition St",SB,21,"grid 1691676471","grid 767584383",2,2,false,0,12,-12,20.5
+"Victoria St",WB,26,"grid 1691676471","grid 1691676459",4,4,false,0,0,0,14.2
+"Berkeley St",SB,1,"grid 1725216788","grid 13747665507",1,1,false,0,0,0,14.8
+"Earl St",WB,3,"grid 1725216810","grid 291210792",1,1,false,0,0,0,14.3
+"Cardigan St",SB,3,"grid 1725216810","grid 1725216871",1,1,false,84,96,-12,13.2
+"Earl St",EB,4,"grid 1725216810","grid 6930998717",1,1,false,48,60,-12,11.2
+"Unnamed road",EB,26,"grid 1725216833","grid 1953969337",1,1,false,0,0,0,14.3
+"Leicester St",NB,1,"grid 1725216833","grid 13747663098",1,1,false,0,0,0,21.5
+"Victoria St",EB,27,"grid 1725216852","grid 777771693",2,2,false,24,24,0,15.1
+"Leicester St",NB,2,"grid 1725216852","grid 1725216833",1,1,false,0,0,0,15.3
+"Victoria St",EB,28,"grid 1725216871","grid 291210710",3,3,false,48,48,0,18.2
+"Cardigan St",SB,4,"grid 1725216871","grid 1725216922",1,1,false,60,60,0,23.7
+"Cardigan St",NB,5,"grid 1725216895","grid 33675682",1,1,false,0,0,0,14.3
+"Victoria St",WB,29,"grid 1725216895","grid 3345190173",3,3,false,60,60,0,8.1
+"Victoria St",WB,30,"grid 1725216922","grid 1725216895",4,4,false,36,48,-12,19.1
+"Franklin St",WB,6,"grid 1725216922","grid 9981007238",1,1,false,24,12,12,6.6
+"Highlander Ln",NB,1,"grid 1833110268","grid 144699879",1,1,false,24,0,24,21.3
+"Flinders St",EB,18,"grid 1833110268","grid 1833110277",2,2,false,0,0,0,27.3
+"William St",SB,14,"grid 1833110275","grid 591392087",1,1,false,0,0,0,14.7
+"Flinders St",EB,19,"grid 1833110275","grid 591408716",2,2,false,0,0,0,20.9
+"William St",NB,15,"grid 1833110277","grid 3306900958",1,1,false,12,12,0,20.9
+"Flinders St",EB,20,"grid 1833110277","grid 9105320418",2,2,false,0,0,0,14.8
+"Flinders St",EB,21,"grid 1833110282","grid 2165149751",2,2,false,144,156,-12,16.2
+"Bond St",NB,1,"grid 1833110282","grid 12860214799",1,1,false,36,0,36,5.4
+"Flinders St",EB,22,"grid 1833110288","grid 591426700",2,2,false,156,156,0,3
+"Queen St",NB,10,"grid 1833110288","grid 9765780356",1,1,false,108,108,0,15.4
+"Flinders St",EB,23,"grid 1833110301","grid 1985557938",2,2,false,0,0,0,14.2
+"Russell St",NB,11,"grid 1833110301","grid 8633729235",2,2,false,12,24,-12,15.4
+"Russell St",SB,12,"grid 1833110319","grid 1985557917",2,2,false,72,60,12,16.5
+"Victoria St",WB,31,"grid 1833110319","grid 1985557960",4,4,false,0,0,0,14.5
+"Flinders Ln",WB,10,"grid 1838361782","grid 114607245",1,1,false,12,12,0,48.9
+"Swanston St",SB,2,"grid 1838361782","grid 9512482857",1,1,false,0,0,0,12.3
+"Queensberry St",WB,6,"grid 1865096363","grid 767670317",2,2,false,0,0,0,14.4
+"Rathdowne St",SB,4,"grid 1865096363","grid 2766300603",2,2,false,0,0,0,28
+"Elizabeth St",SB,7,"grid 1895925154","grid 2190483578",2,2,false,0,0,0,21
+"Victoria St",EB,32,"grid 1895925155","grid 774546372",2,2,false,12,0,12,12
+"Elizabeth St",NB,8,"grid 1895925155","grid 775933250",2,2,false,0,0,0,15.9
+"Victoria St",EB,33,"grid 1900213541","grid 775942450",2,2,false,24,24,0,9.7
+"Victoria St",WB,34,"grid 1900213543","grid 775942452",3,3,false,0,0,0,14.5
+"Therry St",WB,4,"grid 1900213543","grid 775942455",1,1,false,36,36,0,5.3
+"Anthony St",SB,2,"grid 1923401354","grid 227508487",1,1,false,0,0,0,14.4
+"Franklin St",EB,7,"grid 1923401354","grid 2190483581",2,2,false,12,0,12,23.6
+"Leicester St",SB,3,"grid 1953969337","grid 777771693",1,1,false,0,0,0,15.5
+"Unnamed road",WB,26,"grid 1953969337","grid 1725216833",1,1,false,0,0,0,14.3
+"Lygon St",NB,1,"grid 1985549822","grid 291210712",2,2,false,0,0,0,21.5
+"Victoria St",EB,35,"grid 1985549822","grid 1985551133",4,4,false,48,72,-24,15.4
+"Victoria St",EB,36,"grid 1985551133","grid 319157174",3,3,false,36,60,-24,6.6
+"Lygon St",SB,2,"grid 1985551133","grid 1833110319",1,1,false,72,60,12,26.4
+"Little Bourke St",WB,15,"grid 1985557912","grid 26034673",1,1,false,0,0,0,15.3
+"Russell St",SB,13,"grid 1985557912","grid 6381512708",1,1,false,0,0,0,15.7
+"Mackenzie St",WB,3,"grid 1985557917","grid 319157074",1,1,false,0,12,-12,14.5
+"Mackenzie St",EB,4,"grid 1985557917","grid 319157116",1,1,false,12,0,12,9.8
+"Russell St",SB,14,"grid 1985557917","grid 6207229685",2,2,false,72,60,12,16
+"Flinders Ln",WB,11,"grid 1985557921","grid 26051949",1,1,false,24,24,0,11.1
+"Russell St",SB,15,"grid 1985557921","grid 6206949955",2,2,false,0,0,0,15.9
+"Russell St",SB,16,"grid 1985557923","grid 1985557927",2,2,false,0,0,0,14.3
+"Lonsdale St",EB,18,"grid 1985557923","grid 9756035318",2,2,false,0,0,0,14.5
+"Lonsdale St",WB,19,"grid 1985557927","grid 595594352",2,2,false,0,0,0,14.5
+"Russell St",SB,17,"grid 1985557927","grid 13807338304",2,2,false,0,0,0,19.9
+"Little Collins St",WB,13,"grid 1985557931","grid 26051952",1,1,false,0,0,0,16
+"Russell St",SB,18,"grid 1985557931","grid 9086096518",2,2,false,0,0,0,23.1
+"Flinders St",EB,24,"grid 1985557938","grid 576877847",2,2,false,0,0,0,33.1
+"Russell St",SB,19,"grid 1985557938","grid 9512482841",1,1,false,0,0,0,14.5
+"Russell St",NB,20,"grid 1985557960","grid 1985549822",1,1,false,0,12,-12,14.2
+"Victoria St",WB,37,"grid 1985557960","grid 3933086391",3,3,false,0,0,0,9.6
+"Little Lonsdale St",WB,1,"grid 1985557963","grid 26034662",1,1,false,0,12,-12,15.7
+"Little Lonsdale St",EB,7,"grid 1985557963","grid 26034663",1,1,false,0,0,0,52.3
+"Russell St",SB,21,"grid 1985557963","grid 6207070036",2,2,false,0,0,0,19.7
+"Morrison Place",SB,1,"grid 1992134560","grid 381825173",1,1,false,0,0,0,21.7
+"Little Bourke St",WB,16,"grid 2020813831","grid 131124746",1,1,false,0,0,0,16.7
+"Queen St",NB,11,"grid 2020813831","grid 2020813871",2,2,false,24,24,0,19.5
+"Little Collins St",WB,14,"grid 2020813837","grid 2020813891",1,1,false,0,0,0,15.7
+"Queen St",SB,12,"grid 2020813837","grid 6804242154",2,2,false,0,0,0,19.2
+"Queen St",SB,13,"grid 2020813849","grid 26034533",2,2,false,0,0,0,23.2
+"Lonsdale St",WB,20,"grid 2020813849","grid 2020813871",1,1,false,0,0,0,14.3
+"Little Lonsdale St",EB,8,"grid 2020813855","grid 168377580",1,1,false,60,60,0,25.9
+"Queen St",SB,14,"grid 2020813855","grid 2020813875",2,2,false,0,0,0,23.1
+"Lonsdale St",EB,21,"grid 2020813869","grid 2020813875",1,1,false,24,0,24,10.3
+"Queen St",NB,15,"grid 2020813869","grid 2020813883",2,2,false,72,84,-12,14.8
+"Queen St",NB,16,"grid 2020813871","grid 2020813869",1,1,false,24,24,0,9.5
+"Lonsdale St",WB,22,"grid 2020813871","grid 2189145387",2,2,false,0,0,0,32.8
+"Lonsdale St",EB,23,"grid 2020813875","grid 131221744",2,2,false,12,0,12,25.2
+"Queen St",SB,17,"grid 2020813875","grid 2020813849",1,1,false,0,0,0,14.2
+"Little Lonsdale St",EB,9,"grid 2020813883","grid 2020813855",1,1,false,48,36,12,12.9
+"Queen St",NB,18,"grid 2020813883","grid 2181268821",2,2,false,12,24,-12,23
+"A'Beckett St",WB,8,"grid 2020813887","grid 2020813893",1,1,false,0,0,0,14.4
+"Queen St",SB,19,"grid 2020813887","grid 2181275342",2,2,false,0,0,0,24
+"A'Beckett St",EB,9,"grid 2020813887","grid 13253263257",1,1,false,0,0,0,1.5
+"Little Collins St",WB,15,"grid 2020813891","grid 26034544",1,1,false,0,0,0,52.7
+"Queen St",NB,20,"grid 2020813891","grid 2177124611",2,2,false,72,36,36,15.5
+"A'Beckett St",WB,7,"grid 2020813893","grid 319159694",1,1,false,0,0,0,18.6
+"A'Beckett St",EB,8,"grid 2020813893","grid 2020813887",1,1,false,0,0,0,14.4
+"Queen St",NB,21,"grid 2020813893","grid 6167489383",2,2,false,0,12,-12,0.9
+"Unnamed road",SB,27,"grid 2096319043","grid 2096319051",1,1,false,0,0,0,18.9
+"Victoria Parade",EB,11,"grid 2096319043","grid 8869200234",3,3,false,36,36,0,9.7
+"Victoria Parade",WB,12,"grid 2096319051","grid 6207152063",3,3,false,120,108,12,44.1
+"Elizabeth St",NB,9,"grid 2165149751","grid 2190478937",1,1,false,84,96,-12,26.1
+"Spencer St",NB,16,"grid 2174950792","grid 2174950793",1,1,false,204,180,24,2.5
+"Collins St",EB,5,"grid 2174950793","grid 2174950794",1,0,true,0,192,-192,14.9
+"Spencer St",NB,17,"grid 2174950793","grid 3211909915",1,1,false,336,120,216,28.3
+"Boundary access",SB,0,"grid 2174950793","gate 706",1,1,false,12,12,0,2.6
+"Collins St",EB,6,"grid 2174950794","grid 2189145403",1,0,true,0,216,-216,53.5
+"Spencer St",SB,18,"grid 2174950798","grid 589529030",2,2,false,0,12,-12,7
+"Little Collins St",EB,4,"grid 2174950802","grid 145196475",1,1,false,12,0,12,21.6
+"Spencer St",SB,19,"grid 2174950802","grid 2174950794",1,1,false,0,24,-24,23.2
+"Little Collins St",WB,16,"grid 2174950802","grid 3211909915",1,1,false,0,0,0,16.5
+"Spencer St",SB,20,"grid 2174950855","grid 2174950802",2,2,false,12,24,-12,27.1
+"Bourke St",WB,2,"grid 2174950855","grid 2174950856",1,1,false,0,0,0,14.5
+"Spencer St",NB,21,"grid 2174950856","grid 2174963248",2,2,false,300,120,180,13.8
+"Spencer St",SB,22,"grid 2174963245","grid 2174950855",2,2,false,12,24,-12,12
+"Bourke St",EB,3,"grid 2174963245","grid 2177124607",2,2,false,216,96,120,21.2
+"Unnamed road",EB,28,"grid 2174963248","grid 2174963245",1,1,false,192,48,144,6.3
+"Spencer St",NB,23,"grid 2174963248","grid 9086085383",2,2,false,60,48,12,28.8
+"Little William St",NB,1,"grid 2177115239","grid 131102989",1,1,false,0,0,0,19.6
+"Bourke St",EB,4,"grid 2177115239","grid 2177124620",1,1,false,60,12,48,29
+"Bourke St",EB,5,"grid 2177124599","grid 2177124610",2,2,false,72,12,60,6.5
+"Queen St",NB,22,"grid 2177124599","grid 6804266285",2,2,false,24,24,0,21.3
+"Gresham St",NB,1,"grid 2177124600","grid 633912993",1,1,false,0,0,0,23
+"Bourke St",EB,6,"grid 2177124600","grid 2189145380",2,2,false,192,84,108,21.2
+"Queen St",SB,23,"grid 2177124605","grid 2020813837",2,2,false,0,0,0,23.4
+"Bourke St",WB,7,"grid 2177124605","grid 2177124611",2,2,false,0,0,0,14.5
+"Bourke St",WB,8,"grid 2177124606","grid 2177124605",2,2,false,0,0,0,19.2
+"Bourke St",EB,9,"grid 2177124607","grid 2177124613",1,1,false,216,96,120,1.5
+"Queen St",SB,24,"grid 2177124610","grid 2177124605",1,1,false,0,0,0,14.1
+"Bourke St",EB,10,"grid 2177124610","grid 2190478926",2,2,false,24,12,12,33.8
+"Queen St",NB,25,"grid 2177124611","grid 2177124599",2,2,false,36,24,12,21.4
+"Bourke St",WB,11,"grid 2177124611","grid 10302346941",2,2,false,0,0,0,29.2
+"Bourke St",EB,12,"grid 2177124613","grid 2177124600",2,2,false,216,96,120,34.2
+"Church St",SB,1,"grid 2177124617","grid 145210375",1,1,false,0,0,0,23.3
+"Bourke St",WB,13,"grid 2177124617","grid 2174950855",2,2,false,0,0,0,44.5
+"Little Queen St",NB,1,"grid 2177124620","grid 131124746",1,1,false,0,0,0,19.5
+"Bourke St",EB,14,"grid 2177124620","grid 2177124599",2,2,false,60,12,48,13.7
+"Spencer St",SB,24,"grid 2180491134","grid 8959936632",2,2,false,0,24,-24,22.9
+"Collins St",WB,7,"grid 2180785576","grid 2189145381",1,0,true,0,12,-12,22.2
+"Market St",SB,3,"grid 2180785576","grid 12514091450",1,1,false,0,0,0,23.2
+"Queen St",SB,26,"grid 2180785582","grid 2180785617",2,2,false,0,0,0,14.2
+"Collins St",EB,8,"grid 2180785582","grid 2190478922",1,0,true,0,144,-144,32.9
+"Collins St",WB,9,"grid 2180785597","grid 2180785576",1,0,true,0,12,-12,24
+"Queen St",NB,27,"grid 2180785597","grid 2180822307",1,1,false,84,60,24,12.6
+"Queen St",SB,28,"grid 2180785617","grid 607756866",1,1,false,0,0,0,18.4
+"Collins St",WB,10,"grid 2180785617","grid 2180785597",1,0,true,0,0,0,14.4
+"Collins St",EB,11,"grid 2180822307","grid 2180785582",1,0,true,0,156,-156,14.4
+"Queen St",NB,29,"grid 2180822307","grid 6804242153",2,2,false,84,36,48,8.9
+"Queen St",SB,30,"grid 2181268810","grid 2020813855",2,2,false,36,48,-12,18.5
+"La Trobe St",WB,4,"grid 2181268810","grid 2181268821",2,2,false,0,0,0,14.5
+"Queen St",NB,31,"grid 2181268821","grid 2181275339",2,2,false,12,24,-12,12
+"La Trobe St",WB,5,"grid 2181268821","grid 6167279414",2,2,false,0,0,0,3.9
+"Exhibition St",NB,22,"grid 2181268826","grid 2181275344",2,2,false,0,0,0,14.6
+"La Trobe St",WB,6,"grid 2181268826","grid 2841675045",2,2,false,72,60,12,3.1
+"Russell St",SB,22,"grid 2181268830","grid 1985557963",2,2,false,36,48,-12,19.1
+"La Trobe St",WB,7,"grid 2181268830","grid 2181268836",1,1,false,72,60,12,9.3
+"La Trobe St",WB,8,"grid 2181268832","grid 2187770692",2,2,false,36,36,0,25.6
+"Park St",SB,1,"grid 2181268833","grid 103121662",1,1,false,0,0,0,23.3
+"La Trobe St",WB,9,"grid 2181268833","grid 5063475565",2,2,false,0,0,0,41.9
+"Park St",NB,2,"grid 2181268833","grid 11347834846",1,1,false,0,0,0,14.3
+"Russell St",NB,23,"grid 2181268836","grid 2181275340",2,2,false,0,0,0,14.6
+"La Trobe St",WB,10,"grid 2181268836","grid 2841675054",1,1,false,60,72,-12,1.3
+"La Trobe St",WB,11,"grid 2181268844","grid 2181268810",1,1,false,0,0,0,16.2
+"La Trobe St",EB,12,"grid 2181275328","grid 2181275344",2,2,false,12,0,12,20.1
+"La Trobe St",EB,13,"grid 2181275329","grid 3367904421",1,1,false,12,12,0,8.7
+"Wills St",NB,2,"grid 2181275333","grid 33085575",1,1,false,12,12,0,4.5
+"La Trobe St",EB,14,"grid 2181275333","grid 2181275339",2,2,false,96,72,24,13.3
+"Russell St",SB,24,"grid 2181275335","grid 2181268830",2,2,false,48,60,-12,29.8
+"La Trobe St",EB,15,"grid 2181275335","grid 2181275328",1,1,false,12,0,12,12
+"La Trobe St",EB,16,"grid 2181275339","grid 2181275342",2,2,false,96,72,24,3.8
+"Queen St",NB,32,"grid 2181275339","grid 12148870173",2,2,false,12,24,-12,9.1
+"La Trobe St",EB,17,"grid 2181275340","grid 2181275335",1,1,false,0,0,0,14.4
+"Russell St",NB,25,"grid 2181275340","grid 6207229686",2,2,false,0,0,0,18.3
+"Queen St",SB,33,"grid 2181275342","grid 2181268810",2,2,false,36,48,-12,18.2
+"La Trobe St",EB,18,"grid 2181275342","grid 2190483588",2,2,false,60,24,36,23.5
+"Exhibition St",NB,23,"grid 2181275344","grid 244244659",2,2,false,0,0,0,1.9
+"La Trobe St",EB,19,"grid 2181275344","grid 767584383",2,2,false,12,0,12,12.2
+"Victoria St",WB,38,"grid 2183271187","grid 1900213543",3,3,false,36,36,0,34.7
+"Swanston St",NB,3,"grid 2183271187","grid 10904440439",1,1,false,0,0,0,14.5
+"Victoria St",WB,39,"grid 2183271188","grid 2183271187",4,4,false,60,60,0,5.4
+"Swanston St",SB,4,"grid 2183271188","grid 2183273514",1,1,false,0,0,0,19.8
+"Franklin St",WB,8,"grid 2183273514","grid 2183290179",1,1,false,24,12,12,0.9
+"Franklin St",EB,9,"grid 2183273514","grid 9981007238",1,1,false,24,12,12,8
+"Swanston St",NB,5,"grid 2183273515","grid 2183271187",1,1,false,0,0,0,20.4
+"Franklin St",WB,10,"grid 2183273515","grid 10561545329",1,1,false,0,0,0,20.1
+"Franklin St",EB,11,"grid 2183273515","grid 13747116207",1,1,false,0,0,0,0.4
+"Franklin St",EB,8,"grid 2183290179","grid 2183273514",1,1,false,24,12,12,9.4
+"Swanston St",NB,6,"grid 2187770692","grid 2383211199",1,1,false,0,0,0,14.9
+"La Trobe St",WB,20,"grid 2187770692","grid 2841675062",2,2,false,36,36,0,1.4
+"Little Bourke St",WB,17,"grid 2187770693","grid 2190483586",1,1,false,0,0,0,53.7
+"Swanston St",NB,7,"grid 2187770693","grid 9086096512",2,2,false,0,0,0,26.5
+"A'Beckett St",WB,10,"grid 2187770699","grid 13759745626",1,1,false,0,0,0,11.4
+"Little La Trobe St",WB,3,"grid 2187770705","grid 313278042",1,1,false,0,0,0,16
+"Swanston St",NB,8,"grid 2187770705","grid 2187770699",1,1,false,0,0,0,5.9
+"Swanston St",NB,9,"grid 2187874240","grid 2187874242",1,1,false,0,0,0,26.4
+"Collins St",EB,12,"grid 2187874240","grid 9086096517",1,0,true,0,60,-60,33.4
+"Little Collins St",WB,17,"grid 2187874242","grid 174792823",1,1,false,0,0,0,27.1
+"Swanston St",SB,9,"grid 2187874242","grid 2187874240",1,1,false,0,0,0,26.4
+"Swanston St",NB,10,"grid 2187874242","grid 2188339979",2,2,false,0,0,0,10.3
+"Bourke St",EB,15,"grid 2187983874","grid 2187983888",2,2,false,0,0,0,15.9
+"Bourke St",WB,16,"grid 2187983875","grid 2187983885",2,2,false,24,0,24,32.6
+"Exhibition St",NB,24,"grid 2187983875","grid 2187983886",2,2,false,24,0,24,17.3
+"Russell St",SB,26,"grid 2187983881","grid 2187983885",1,1,false,0,0,0,14.3
+"Bourke St",EB,17,"grid 2187983881","grid 2187983886",2,2,false,0,0,0,32.8
+"Russell St",NB,27,"grid 2187983882","grid 2187983891",2,2,false,12,12,0,16.2
+"Bourke St",WB,18,"grid 2187983882","grid 2188404536",2,2,false,12,0,12,3.8
+"Russell St",SB,28,"grid 2187983885","grid 1985557931",2,2,false,0,0,0,23.3
+"Bourke St",WB,19,"grid 2187983885","grid 2187983882",2,2,false,24,0,24,10.8
+"Bourke St",EB,20,"grid 2187983886","grid 2187983887",2,2,false,0,0,0,14.3
+"Exhibition St",NB,25,"grid 2187983886","grid 6206786040",1,1,false,24,0,24,19.8
+"Bourke St",EB,21,"grid 2187983887","grid 2187983874",2,2,false,0,0,0,19.1
+"Exhibition St",SB,26,"grid 2187983887","grid 2187983890",2,2,false,0,0,0,14.3
+"Liverpool St",NB,1,"grid 2187983888","grid 588876889",1,1,false,0,0,0,23.1
+"Bourke St",EB,22,"grid 2187983888","grid 2189497200",2,2,false,0,0,0,24.8
+"Bourke St",WB,23,"grid 2187983890","grid 2187983875",2,2,false,60,0,60,6.2
+"Exhibition St",SB,27,"grid 2187983890","grid 6775862758",1,1,false,0,0,0,17.3
+"Bourke St",EB,24,"grid 2187983891","grid 2187983881",1,1,false,0,0,0,14.6
+"Russell St",NB,29,"grid 2187983891","grid 6381512709",2,2,false,24,12,12,18.6
+"Swanston St",SB,10,"grid 2188339979","grid 2187874242",2,2,false,0,0,0,23.5
+"Swanston St",NB,11,"grid 2188339979","grid 2188339982",1,1,false,0,0,0,3.6
+"Swanston St",SB,11,"grid 2188339982","grid 2188339979",1,1,false,0,0,0,3.6
+"Bourke St",WB,25,"grid 2188404536","grid 2188404539",1,1,false,12,0,12,19.6
+"Bourke St",EB,26,"grid 2188404536","grid 2188404540",1,1,false,12,0,12,2.1
+"Bourke St",WB,1,"grid 2188404539","grid 176721287",1,1,false,12,0,12,21.8
+"Bourke St",EB,25,"grid 2188404539","grid 2188404536",1,1,false,12,0,12,4.8
+"Bourke St",EB,27,"grid 2188404540","grid 2187983891",2,2,false,12,0,12,16.5
+"Peel St",NB,5,"grid 2189143649","grid 8961968363",1,1,false,12,12,0,2.4
+"Little Collins St",WB,18,"grid 2189145378","grid 145210375",1,1,false,12,12,0,32.2
+"William St",NB,16,"grid 2189145378","grid 2189145399",1,1,false,24,12,12,23.1
+"Bourke St",EB,28,"grid 2189145380","grid 2189145397",2,2,false,84,24,60,5.5
+"William St",NB,17,"grid 2189145380","grid 2189145401",1,1,false,108,72,36,12.9
+"Collins St",WB,13,"grid 2189145381","grid 2189145394",1,0,true,0,36,-36,14.6
+"William St",SB,18,"grid 2189145381","grid 8955976490",1,1,false,12,0,12,21.3
+"Little Lonsdale St",EB,10,"grid 2189145384","grid 2189145402",1,1,false,0,12,-12,15.9
+"William St",NB,19,"grid 2189145384","grid 2291073994",1,1,false,24,0,24,9.8
+"La Trobe St",WB,21,"grid 2189145385","grid 2181268833",2,2,false,0,0,0,25.1
+"William St",NB,20,"grid 2189145385","grid 2189145388",1,1,false,24,0,24,10.3
+"William St",SB,21,"grid 2189145386","grid 2189145408",1,1,false,36,36,0,11.3
+"La Trobe St",EB,22,"grid 2189145386","grid 6167279392",1,1,false,132,108,24,3.8
+"Lonsdale St",WB,24,"grid 2189145387","grid 2189145392",2,2,false,0,0,0,14.6
+"William St",SB,22,"grid 2189145387","grid 10754679961",1,1,false,12,0,12,8.8
+"La Trobe St",EB,23,"grid 2189145388","grid 2189145386",2,2,false,120,84,36,3.9
+"William St",NB,23,"grid 2189145388","grid 2189149376",1,1,false,24,12,12,24.3
+"William St",NB,24,"grid 2189145389","grid 2189145384",1,1,false,24,12,12,19.1
+"Lonsdale St",EB,25,"grid 2189145389","grid 2189145391",2,2,false,72,60,12,5.3
+"Collins St",EB,14,"grid 2189145390","grid 2180822307",1,0,true,0,144,-144,32.9
+"William St",SB,25,"grid 2189145390","grid 2189145381",1,1,false,12,36,-24,12.5
+"Lonsdale St",EB,26,"grid 2189145391","grid 2020813869",2,2,false,72,60,12,29.4
+"William St",SB,26,"grid 2189145391","grid 2189145387",1,1,false,12,0,12,17.8
+"Lonsdale St",WB,27,"grid 2189145392","grid 595594367",2,2,false,12,0,12,17.4
+"William St",NB,27,"grid 2189145392","grid 2189145389",1,1,false,96,72,24,3.4
+"Collins St",WB,15,"grid 2189145394","grid 2180491134",1,0,true,0,24,-24,40.2
+"William St",NB,28,"grid 2189145394","grid 2189145403",1,1,false,36,12,24,8.5
+"Bourke St",EB,29,"grid 2189145397","grid 2177115239",1,1,false,60,12,48,17
+"William St",SB,29,"grid 2189145397","grid 2189145404",1,1,false,24,12,12,10.2
+"Bourke St",WB,30,"grid 2189145399","grid 2177124617",2,2,false,0,0,0,22.5
+"William St",NB,30,"grid 2189145399","grid 2189145380",1,1,false,24,12,12,10.4
+"Little Bourke St",WB,18,"grid 2189145401","grid 633912993",1,1,false,0,0,0,36.8
+"William St",NB,31,"grid 2189145401","grid 2189145392",1,1,false,108,72,36,11.8
+"Little Lonsdale St",EB,11,"grid 2189145402","grid 2020813883",1,1,false,12,0,12,58
+"William St",SB,32,"grid 2189145402","grid 2189145391",1,1,false,12,0,12,28.6
+"William St",NB,33,"grid 2189145403","grid 2189145378",1,1,false,36,24,12,22.6
+"Collins St",EB,16,"grid 2189145403","grid 2189145390",1,0,true,0,192,-192,14.6
+"William St",SB,34,"grid 2189145404","grid 26034544",1,1,false,24,12,12,18.3
+"Bourke St",WB,31,"grid 2189145404","grid 2189145399",1,1,false,0,0,0,14.6
+"La Trobe St",WB,24,"grid 2189145408","grid 2189145385",2,2,false,0,0,0,14.6
+"William St",SB,35,"grid 2189145408","grid 4520380512",1,1,false,36,36,0,0.7
+"William St",SB,36,"grid 2189145409","grid 2189145386",1,1,false,48,60,-12,22.6
+"Unnamed road",WB,29,"grid 2189145409","grid 2189149376",1,1,false,0,0,0,14.6
+"A'Beckett St",EB,11,"grid 2189145409","grid 12149195617",1,1,false,24,0,24,2.7
+"William St",NB,37,"grid 2189149376","grid 2189143649",1,1,false,12,12,0,10.9
+"Unnamed road",EB,29,"grid 2189149376","grid 2189145409",1,1,false,12,0,12,17.9
+"Flinders Ln",EB,12,"grid 2189156618","grid 2189156622",2,2,false,12,0,12,12.8
+"Flinders Ln",WB,13,"grid 2189156618","grid 9561515023",1,1,false,0,0,0,14.3
+"Flinders Ln",WB,12,"grid 2189156622","grid 2189156618",2,2,false,0,0,0,12.8
+"Flinders Ln",EB,14,"grid 2189156622","grid 9561515045",1,1,false,12,0,12,11.7
+"Flinders St",WB,25,"grid 2189272905","grid 11982946469",2,2,false,60,48,12,9.4
+"Brunswick St",SB,2,"grid 2189358929","grid 30287465",1,1,false,36,48,-12,16
+"Brunswick St",NB,3,"grid 2189358929","grid 11986833669",1,1,false,36,48,-12,3.3
+"Gisborne St",NB,2,"grid 2189377511","grid 30945324",2,2,false,0,0,0,17.6
+"Victoria Parade",WB,13,"grid 2189377511","grid 2096319051",3,3,false,120,108,12,20.4
+"Gisborne St",NB,3,"grid 2189398724","grid 2189377511",1,1,false,0,0,0,24.1
+"Albert St",EB,7,"grid 2189398724","grid 2189398733",2,2,false,0,0,0,14.5
+"Gisborne St",SB,4,"grid 2189398733","grid 2189398750",2,2,false,48,60,-12,7.3
+"Albert St",EB,8,"grid 2189398733","grid 5899300185",2,2,false,0,0,0,1.1
+"Gisborne St",NB,5,"grid 2189398745","grid 2189398724",1,1,false,0,0,0,14.3
+"Albert St",WB,9,"grid 2189398745","grid 6226013487",2,2,false,48,60,-12,2.7
+"Albert St",WB,10,"grid 2189398750","grid 2189398745",2,2,false,48,60,-12,7.1
+"Gisborne St",SB,6,"grid 2189398750","grid 8872118096",1,1,false,0,0,0,22.8
+"Bourke St",EB,32,"grid 2189497200","grid 2189497232",1,1,false,0,0,0,14.3
+"Spring St",NB,18,"grid 2189497200","grid 2189497233",1,1,false,48,84,-36,4.1
+"Spring St",SB,19,"grid 2189497204","grid 2189497232",2,2,false,24,60,-36,13.1
+"Bourke St",WB,33,"grid 2189497210","grid 2187983890",2,2,false,60,0,60,27.3
+"Spring St",NB,20,"grid 2189497210","grid 2189497200",1,1,false,48,84,-36,8.1
+"Nicholson St",SB,11,"grid 2189497215","grid 2189497204",2,2,false,24,60,-36,5.4
+"Little Bourke St",WB,19,"grid 2189497215","grid 2189497243",1,1,false,0,0,0,15.5
+"Unnamed road",WB,30,"grid 2189497226","grid 2189497210",1,1,false,12,36,-24,12
+"Spring St",SB,21,"grid 2189497226","grid 4746121968",2,2,false,12,12,0,20.7
+"Spring St",SB,22,"grid 2189497232","grid 2189497226",2,2,false,24,60,-36,17.6
+"Nicholson St",NB,12,"grid 2189497233","grid 2189497243",1,1,false,48,84,-36,11.5
+"Little Bourke St",WB,20,"grid 2189497243","grid 26034671",1,1,false,0,36,-36,16.5
+"Nicholson St",NB,13,"grid 2189497243","grid 6167359501",1,1,false,48,48,0,9.8
+"Collins St",EB,17,"grid 2190478922","grid 2190478924",1,0,true,0,180,-180,14.4
+"Elizabeth St",NB,10,"grid 2190478922","grid 2190478934",1,1,false,48,24,24,34.2
+"Collins St",EB,18,"grid 2190478924","grid 2187874240",1,0,true,0,60,-60,33.5
+"Elizabeth St",SB,11,"grid 2190478924","grid 2190478928",1,1,false,0,0,0,14.4
+"Elizabeth St",NB,12,"grid 2190478926","grid 2190483580",1,1,false,60,24,36,14.2
+"Bourke St",EB,34,"grid 2190478926","grid 2190561011",2,2,false,0,0,0,14.4
+"Collins St",WB,19,"grid 2190478928","grid 2190478932",1,0,true,0,12,-12,14.4
+"Elizabeth St",SB,13,"grid 2190478928","grid 2190478940",1,1,false,0,0,0,23.2
+"Elizabeth St",SB,14,"grid 2190478930","grid 2190478924",1,1,false,0,0,0,23.1
+"Little Collins St",WB,19,"grid 2190478930","grid 2190478934",1,1,false,0,0,0,15.6
+"Collins St",WB,20,"grid 2190478932","grid 2180785617",1,0,true,0,0,0,32.9
+"Elizabeth St",NB,15,"grid 2190478932","grid 2190478922",1,1,false,72,84,-12,20.2
+"Little Collins St",WB,20,"grid 2190478934","grid 145261423",1,1,false,0,0,0,40.6
+"Elizabeth St",NB,16,"grid 2190478934","grid 2190478936",1,1,false,48,24,24,16.7
+"Bourke St",WB,35,"grid 2190478936","grid 2177124606",2,2,false,0,0,0,26.9
+"Elizabeth St",NB,17,"grid 2190478936","grid 2190478926",1,1,false,48,24,24,6.6
+"Flinders Ln",WB,15,"grid 2190478937","grid 113536277",1,1,false,0,0,0,44.7
+"Elizabeth St",NB,18,"grid 2190478937","grid 2190478932",1,1,false,72,72,0,21.5
+"Flinders Ln",WB,16,"grid 2190478940","grid 2190478937",1,1,false,0,0,0,15.5
+"Little Lonsdale St",EB,12,"grid 2190483577","grid 2190483597",1,1,false,12,0,12,13.1
+"Elizabeth St",NB,19,"grid 2190483577","grid 2291073979",1,1,false,0,0,0,9.8
+"Therry St",EB,3,"grid 2190483578","grid 775942455",1,1,false,0,0,0,9.4
+"Elizabeth St",SB,20,"grid 2190483578","grid 2190483585",2,2,false,12,12,0,21.8
+"Therry St",WB,5,"grid 2190483578","grid 2190483598",1,1,false,24,12,12,10.5
+"Franklin St",WB,12,"grid 2190483579","grid 227508487",2,2,false,0,0,0,25.7
+"Elizabeth St",NB,21,"grid 2190483579","grid 2190483581",2,2,false,0,12,-12,14.5
+"Little Bourke St",WB,21,"grid 2190483580","grid 131238672",1,1,false,0,0,0,18.5
+"Elizabeth St",NB,22,"grid 2190483580","grid 2190483600",1,1,false,60,24,36,24.7
+"Franklin St",EB,13,"grid 2190483581","grid 2190483585",2,2,false,12,12,0,11.9
+"Elizabeth St",NB,23,"grid 2190483581","grid 2190483598",2,2,false,0,0,0,23.9
+"La Trobe St",WB,25,"grid 2190483583","grid 2190483590",2,2,false,0,0,0,14.4
+"Elizabeth St",SB,24,"grid 2190483583","grid 2190483597",1,1,false,12,12,0,21.1
+"Elizabeth St",SB,25,"grid 2190483585","grid 2190483589",2,2,false,12,12,0,12
+"Franklin St",EB,14,"grid 2190483585","grid 7919262062",1,1,false,12,12,0,7.6
+"Little Bourke St",WB,22,"grid 2190483586","grid 2190483580",1,1,false,0,0,0,15.6
+"Elizabeth St",SB,26,"grid 2190483586","grid 2190561011",1,1,false,0,0,0,23.1
+"Elizabeth St",SB,27,"grid 2190483587","grid 2190483583",2,2,false,24,0,24,10
+"La Trobe St",EB,26,"grid 2190483587","grid 6167279401",2,2,false,24,12,12,1
+"La Trobe St",EB,27,"grid 2190483588","grid 2190483587",2,2,false,48,12,36,6.8
+"Elizabeth St",NB,28,"grid 2190483588","grid 9086096503",1,1,false,12,12,0,21.5
+"Franklin St",WB,15,"grid 2190483589","grid 2190483579",2,2,false,0,0,0,14.5
+"Elizabeth St",SB,29,"grid 2190483589","grid 9086096504",1,1,false,12,12,0,23.2
+"La Trobe St",WB,28,"grid 2190483590","grid 2181268844",2,2,false,0,0,0,16.5
+"Elizabeth St",NB,30,"grid 2190483590","grid 2190483588",2,2,false,0,0,0,14.4
+"Elizabeth St",NB,31,"grid 2190483591","grid 2190483577",1,1,false,12,12,0,20.4
+"Lonsdale St",EB,28,"grid 2190483591","grid 2190483594",2,2,false,24,12,12,15.3
+"Elizabeth St",SB,32,"grid 2190483592","grid 2190483586",1,1,false,12,12,0,20.8
+"Lonsdale St",WB,29,"grid 2190483592","grid 2190483600",2,2,false,0,0,0,14.4
+"Elizabeth St",SB,33,"grid 2190483594","grid 2190483592",1,1,false,12,12,0,12
+"Lonsdale St",EB,30,"grid 2190483594","grid 9086096511",2,2,false,12,12,0,31.4
+"Little La Trobe St",EB,2,"grid 2190483595","grid 313278047",1,1,false,0,0,0,22.4
+"Elizabeth St",SB,34,"grid 2190483595","grid 2190483587",1,1,false,12,12,0,20.9
+"Elizabeth St",SB,35,"grid 2190483597","grid 2190483594",1,1,false,12,12,0,24.2
+"Little Lonsdale St",EB,13,"grid 2190483597","grid 7912946298",1,1,false,12,0,12,51
+"Elizabeth St",NB,36,"grid 2190483598","grid 774508242",2,2,false,24,12,12,19.7
+"Therry St",EB,5,"grid 2190483598","grid 2190483578",1,1,false,0,0,0,14.5
+"Elizabeth St",NB,37,"grid 2190483600","grid 2190483591",1,1,false,60,24,36,8.8
+"Lonsdale St",WB,31,"grid 2190483600","grid 6381558801",2,2,false,0,0,0,20.7
+"Elizabeth St",SB,38,"grid 2190561008","grid 2190478930",1,1,false,0,0,0,23.1
+"Bourke St",WB,36,"grid 2190561008","grid 2190478936",2,2,false,0,0,0,14.4
+"Elizabeth St",SB,39,"grid 2190561011","grid 2190561008",1,1,false,0,0,0,14.3
+"Unnamed road",WB,13,"grid 2200514710","grid 566892220",1,1,false,24,24,0,26
+"Unnamed road",EB,31,"grid 2200514710","grid 2200514713",1,1,false,192,192,0,12.1
+"Gertrude St",EB,3,"grid 2200514713","grid 233314824",1,1,false,12,12,0,18.7
+"Nicholson St",SB,14,"grid 2200514713","grid 233315285",2,2,false,192,204,-12,40.4
+"Unnamed road",WB,31,"grid 2200514713","grid 2200514710",1,1,false,12,12,0,14.9
+"Dudley St",EB,2,"grid 2266563639","grid 2266563642",2,2,false,0,0,0,16.4
+"Dudley St",WB,3,"grid 2266563639","grid 9086085407",2,2,false,0,0,0,10.7
+"Milton St",NB,1,"grid 2266563642","grid 35354279",1,1,false,0,0,0,19.3
+"Dudley St",EB,4,"grid 2266563642","grid 2266563663",2,2,false,72,84,-12,19.7
+"Dudley St",WB,5,"grid 2266563656","grid 2266563639",2,2,false,0,0,0,12
+"Unnamed road",WB,32,"grid 2266563656","grid 2266563663",1,1,false,0,0,0,16.2
+"Dudley St",EB,6,"grid 2266563661","grid 30467855",2,2,false,72,72,0,29.4
+"William St",NB,38,"grid 2266563663","grid 777788322",1,1,false,0,0,0,19.3
+"Dudley St",EB,7,"grid 2266563663","grid 2266563661",2,2,false,48,60,-12,8.3
+"Little Collins St",WB,21,"grid 2279153639","grid 589402289",1,1,false,12,0,12,50.3
+"Spring St",NB,23,"grid 2279153639","grid 2189497210",1,1,false,96,84,12,28.8
+"Macarthur St",NB,2,"grid 2279153650","grid 8873674108",1,1,false,0,0,0,20.5
+"La Trobe St",WB,29,"grid 2291073957","grid 2181268826",2,2,false,72,60,12,17.2
+"Exhibition St",SB,28,"grid 2291073957","grid 11135234156",2,2,false,12,12,0,19.7
+"Elizabeth St",NB,40,"grid 2291073979","grid 2190483590",1,1,false,0,0,0,13.4
+"William St",NB,39,"grid 2291073994","grid 2189145385",1,1,false,24,0,24,12.7
+"Spencer St",SB,25,"grid 2291074006","grid 5063475565",2,2,false,12,36,-24,14.8
+"La Trobe St",EB,30,"grid 2291074006","grid 11347834846",2,2,false,144,108,36,37
+"Cathedral Place",WB,2,"grid 2318307716","grid 268533992",1,1,false,0,0,0,15.4
+"Cathedral Place",NB,3,"grid 2318307716","grid 2318307719",1,1,false,0,0,0,1.1
+"Cathedral Place",WB,4,"grid 2318307717","grid 2318307716",1,1,false,0,0,0,7
+"Cathedral Place",NB,5,"grid 2318307717","grid 2318307718",1,1,false,0,0,0,1.1
+"Cathedral Place",SB,5,"grid 2318307718","grid 2318307717",1,1,false,0,0,0,1.1
+"Cathedral Place",SB,3,"grid 2318307719","grid 2318307716",1,1,false,0,0,0,1.1
+"Cathedral Place",EB,6,"grid 2318307719","grid 2318307718",1,1,false,0,0,0,6.9
+"Albert St",EB,11,"grid 2324975789","grid 6167359507",2,2,false,0,0,0,0.4
+"Swanston St",SB,12,"grid 2383211191","grid 2181268832",1,1,false,0,0,0,14.9
+"La Trobe St",EB,31,"grid 2383211191","grid 2181275340",2,2,false,0,0,0,33
+"Swanston St",NB,13,"grid 2383211199","grid 2187770705",1,1,false,0,0,0,19.7
+"La Trobe St",EB,32,"grid 2383211199","grid 2383211191",2,2,false,12,12,0,20
+"Elm Tree Place",NB,1,"grid 2384091371","grid 319157922",1,1,false,0,0,0,14.1
+"Queensberry St",WB,7,"grid 2384091371","grid 767737811",2,2,false,0,0,0,4.1
+"Mackenzie St",NB,6,"grid 2384091372","grid 30287324",1,1,false,12,0,12,12
+"Victoria St",WB,40,"grid 2384091372","grid 3933094371",3,3,false,0,0,0,9.9
+"Mackenzie St",SB,7,"grid 2384091373","grid 30287404",1,1,false,12,12,0,2.6
+"Victoria St",WB,41,"grid 2384091373","grid 2384091372",4,4,false,0,0,0,14.4
+"Godfrey St",SB,1,"grid 2469456589","grid 145196475",1,1,false,0,0,0,18.7
+"Mackenzie St",WB,8,"grid 2615827667","grid 30287404",1,1,false,0,0,0,4.8
+"Victoria St",WB,42,"grid 2615827667","grid 2384091373",4,4,false,0,0,0,16.6
+"Rathdowne St",SB,5,"grid 2766300603","grid 30220444",2,2,false,0,0,0,18.5
+"Unnamed road",WB,33,"grid 2766300603","grid 2766300604",1,1,false,0,0,0,14.3
+"Rathdowne St",NB,6,"grid 2766300604","grid 767670317",2,2,false,0,0,0,28.1
+"Unnamed road",EB,33,"grid 2766300604","grid 2766300603",1,1,false,0,0,0,14.3
+"Princes St",WB,2,"grid 2797967113","grid 233315285",1,1,false,0,0,0,26
+"Regent St",NB,1,"grid 2797967113","grid 248838949",1,1,false,0,0,0,26.1
+"La Trobe St",WB,33,"grid 2841675045","grid 10274506386",1,1,false,72,60,12,12.5
+"La Trobe St",WB,34,"grid 2841675054","grid 2181268832",2,2,false,36,36,0,26.1
+"La Trobe St",WB,35,"grid 2841675062","grid 3394697024",2,2,false,12,12,0,24.4
+"Eades Place",SB,2,"grid 2905756476","grid 26034577",1,1,false,0,0,0,8.3
+"Eades Place",WB,6,"grid 2905756476","grid 8977295941",1,1,false,0,0,0,14.5
+"St Andrews Place",WB,1,"grid 3146813285","grid 268533991",1,1,false,0,0,0,25.9
+"Unnamed road",NB,34,"grid 3161948899","grid 30467863",2,2,false,12,12,0,10.9
+"Victoria St",WB,43,"grid 3199584806","grid 2615827667",3,3,false,0,0,0,17.1
+"Cardigan St",EB,6,"grid 3208518294","grid 3208518295",1,1,false,72,108,-36,1
+"Cardigan St",SB,7,"grid 3208518295","grid 1725216810",1,1,false,72,108,-36,16.7
+"Cardigan St",WB,6,"grid 3208518295","grid 3208518294",1,1,false,0,0,0,1.1
+"Spencer St",NB,26,"grid 3211909915","grid 2174950856",2,2,false,348,132,216,13.3
+"Franklin St",WB,16,"grid 3213448168","grid 2190483589",2,2,false,0,0,0,18.9
+"A'Beckett St",EB,5,"grid 3213448174","grid 313278197",1,1,false,0,0,0,22.4
+"A'Beckett St",WB,12,"grid 3213448174","grid 7919262077",1,1,false,0,0,0,0.8
+"Unnamed road",SB,35,"grid 3213448174","grid 11296496408",1,1,false,0,0,0,3
+"Spencer St",EB,27,"grid 3215106461","grid 3215106462",1,1,false,0,0,0,1.1
+"Spencer St",WB,27,"grid 3215106462","grid 3215106461",1,1,false,0,0,0,1.1
+"Spencer St",SB,28,"grid 3215106462","grid 6943763840",2,2,false,0,0,0,18.5
+"Unnamed road",NB,36,"grid 3215106498","grid 8960001647",1,1,false,12,0,12,18.7
+"Unnamed road",WB,37,"grid 3215191990","grid 3215191991",1,1,false,0,0,0,14.4
+"Chetwynd St",SB,5,"grid 3215191990","grid 8927996681",1,1,false,0,0,0,19.9
+"Unnamed road",EB,37,"grid 3215191991","grid 3215191990",1,1,false,0,0,0,14.4
+"Chetwynd St",NB,6,"grid 3215191991","grid 9086096487",2,2,false,0,0,0,16.1
+"Unnamed road",WB,38,"grid 3306900957","grid 3306900958",1,1,false,0,0,0,14.1
+"William St",SB,40,"grid 3306900957","grid 6167247287",1,1,false,0,0,0,3.4
+"Unnamed road",EB,38,"grid 3306900958","grid 3306900957",1,1,false,0,0,0,14.1
+"William St",NB,41,"grid 3306900958","grid 9561515025",1,1,false,12,12,0,16.2
+"Victoria St",WB,44,"grid 3345190173","grid 2183271188",4,4,false,60,60,0,8.2
+"La Trobe St",EB,36,"grid 3367904421","grid 2383211199",2,2,false,12,12,0,18
+"La Trobe St",WB,37,"grid 3394697024","grid 2190483583",2,2,false,12,12,0,12.8
+"Albert St",WB,12,"grid 3419354756","grid 2189398750",2,2,false,0,0,0,14.4
+"Victoria St",WB,45,"grid 3933086391","grid 1725216922",4,4,false,0,0,0,14.3
+"Victoria St",EB,46,"grid 3933094370","grid 1985549822",4,4,false,48,60,-12,13.2
+"Victoria St",WB,47,"grid 3933094371","grid 1833110319",4,4,false,0,0,0,14.1
+"Brunswick St",SB,4,"grid 4283908119","grid 170219402",1,1,false,216,192,24,3
+"Gisborne St",NB,7,"grid 4283908160","grid 2189398745",1,1,false,0,0,0,22.6
+"Cathedral Place",EB,7,"grid 4283908160","grid 8872118096",1,1,false,0,0,0,14.1
+"William St",SB,42,"grid 4520380512","grid 2189145402",1,1,false,36,24,12,18
+"Unnamed road",NB,6,"grid 4544002877","grid 245537592",1,1,false,0,0,0,14.3
+"Lonsdale St",WB,32,"grid 4544002877","grid 9756035309",2,2,false,0,0,0,18.2
+"Sargood Ln",WB,1,"grid 4544096366","grid 663497749",1,1,false,0,0,0,88.6
+"Little Collins St",WB,22,"grid 4746121968","grid 2279153639",1,1,false,0,0,0,15.2
+"Spring St",SB,24,"grid 4746121968","grid 6167357881",2,2,false,12,12,0,16.1
+"Spencer St",SB,29,"grid 4996764092","grid 2291074006",2,2,false,12,0,12,22.1
+"Jeffcott St",WB,3,"grid 4996764092","grid 9561530847",1,1,false,0,0,0,14.1
+"La Trobe St",WB,38,"grid 5063475565","grid 1492145844",2,2,false,0,0,0,14.6
+"Spencer St",SB,30,"grid 5063475565","grid 1492150956",2,2,false,12,24,-12,28.2
+"Unnamed road",NB,39,"grid 5232347251","grid 5232347252",1,1,false,0,0,0,14.5
+"Unnamed road",SB,39,"grid 5232347252","grid 5232347251",1,1,false,0,0,0,14.5
+"Batman St",EB,4,"grid 5232347252","grid 6943763839",2,2,false,0,0,0,14.6
+"Peel St",NB,6,"grid 5642440936","grid 777701894",2,2,false,12,12,0,40.6
+"Unnamed road",EB,40,"grid 5642440936","grid 13205910709",1,1,false,72,72,0,3.6
+"Flinders St",WB,26,"grid 5880339363","grid 591392066",2,2,false,60,48,12,5.3
+"William St",NB,43,"grid 5880339363","grid 9105320418",2,2,false,0,0,0,15
+"Albert St",EB,13,"grid 5899300185","grid 381825173",1,1,false,0,0,0,18.9
+"William St",SB,44,"grid 6167247287","grid 1833110275",2,2,false,0,0,0,13.9
+"La Trobe St",EB,39,"grid 6167279392","grid 2181275333",2,2,false,108,84,24,13.9
+"La Trobe St",EB,40,"grid 6167279401","grid 2181275329",2,2,false,12,12,0,14.5
+"La Trobe St",WB,41,"grid 6167279414","grid 6167279417",1,1,false,0,0,0,9.9
+"La Trobe St",WB,42,"grid 6167279417","grid 2189145408",2,2,false,0,0,0,19
+"Spring St",SB,25,"grid 6167357881","grid 1449431467",2,2,false,12,12,0,19.2
+"Unnamed road",EB,41,"grid 6167357881","grid 7388133845",1,1,false,0,0,0,15.6
+"Nicholson St",NB,15,"grid 6167359501","grid 589472357",2,2,false,48,48,0,6.3
+"Albert St",EB,14,"grid 6167359507","grid 767586831",2,2,false,0,0,0,13.9
+"Queen St",SB,34,"grid 6167489382","grid 2020813887",3,3,false,0,0,0,14.1
+"Queen St",NB,35,"grid 6167489383","grid 12280427075",1,1,false,0,12,-12,16
+"Exhibition St",SB,29,"grid 6206786039","grid 2187983887",1,1,false,0,0,0,18.5
+"Unnamed road",WB,42,"grid 6206786039","grid 6206786040",1,1,false,0,0,0,14.2
+"Exhibition St",NB,30,"grid 6206786040","grid 26034672",1,1,false,12,0,12,21.8
+"Unnamed road",EB,42,"grid 6206786040","grid 6206786039",1,1,false,0,0,0,14.2
+"Unnamed road",WB,43,"grid 6206949955","grid 6206949956",1,1,false,0,0,0,14.4
+"Russell St",SB,30,"grid 6206949955","grid 8633729236",2,2,false,0,0,0,19
+"Russell St",NB,31,"grid 6206949956","grid 26051949",2,2,false,12,24,-12,13.1
+"Unnamed road",EB,43,"grid 6206949956","grid 6206949955",1,1,false,0,0,0,14.4
+"Earl St",WB,1,"grid 6206967737","grid 291210712",1,1,false,0,0,0,14.4
+"Lygon St",SB,3,"grid 6206967737","grid 10302475142",2,2,false,60,48,12,4.3
+"Unnamed road",EB,16,"grid 6206971382","grid 607756866",1,1,false,0,0,0,14.5
+"Queen St",NB,36,"grid 6206971382","grid 2180785597",1,1,false,84,72,12,39.7
+"Unnamed road",NB,44,"grid 6207022858","grid 6207022859",1,1,false,0,0,0,14.4
+"Lonsdale St",WB,33,"grid 6207022858","grid 6207022860",2,2,false,0,0,0,18.4
+"Lonsdale St",EB,34,"grid 6207022859","grid 26034668",2,2,false,0,0,0,21.8
+"Unnamed road",SB,44,"grid 6207022859","grid 6207022858",1,1,false,0,0,0,14.4
+"Lonsdale St",WB,35,"grid 6207022860","grid 595594347",2,2,false,0,0,0,19.2
+"Unnamed road",NB,45,"grid 6207022860","grid 6207022861",1,1,false,0,0,0,14.3
+"Lonsdale St",EB,36,"grid 6207022861","grid 6207022859",2,2,false,0,0,0,18.4
+"Unnamed road",SB,45,"grid 6207022861","grid 6207022860",1,1,false,0,0,0,14.3
+"Unnamed road",WB,46,"grid 6207070036","grid 6207070037",1,1,false,0,0,0,14.5
+"Russell St",NB,32,"grid 6207070037","grid 26034662",2,2,false,12,0,12,17.6
+"Unnamed road",EB,46,"grid 6207070037","grid 6207070036",1,1,false,0,0,0,14.5
+"Victoria Parade",EB,14,"grid 6207152062","grid 2096319043",3,3,false,36,36,0,16.4
+"Victoria Parade",WB,15,"grid 6207152063","grid 767587066",3,3,false,72,60,12,30.1
+"Unnamed road",NB,47,"grid 6207152063","grid 6207152062",1,1,false,0,0,0,16.8
+"Russell St",SB,33,"grid 6207229685","grid 2181275335",2,2,false,72,60,12,10.5
+"Unnamed road",WB,48,"grid 6207229685","grid 6207229686",1,1,false,0,0,0,14.5
+"Russell St",NB,34,"grid 6207229686","grid 319157074",2,2,false,0,0,0,18.8
+"Unnamed road",EB,48,"grid 6207229686","grid 6207229685",1,1,false,0,0,0,14.5
+"Unnamed road",NB,49,"grid 6207245783","grid 6207245784",1,1,false,0,0,0,14.2
+"Albert St",WB,15,"grid 6207245783","grid 6226013488",1,1,false,48,60,-12,10.5
+"Unnamed road",SB,49,"grid 6207245784","grid 6207245783",1,1,false,0,0,0,14.2
+"Albert St",EB,16,"grid 6207245784","grid 8189021211",2,2,false,0,0,0,15.9
+"Nicholson St",NB,16,"grid 6212705501","grid 767584876",2,2,false,48,48,0,20.6
+"Albert St",WB,17,"grid 6226013487","grid 10286800838",1,1,false,48,60,-12,11
+"Albert St",WB,18,"grid 6226013488","grid 589472358",2,2,false,48,60,-12,13.3
+"Unnamed road",SB,15,"grid 6381291673","grid 595594367",1,1,false,0,0,0,14.3
+"Lonsdale St",EB,37,"grid 6381291673","grid 2189145389",2,2,false,0,0,0,18
+"Unnamed road",NB,50,"grid 6381291675","grid 6381291676",1,1,false,0,0,0,14.3
+"Lonsdale St",WB,38,"grid 6381291675","grid 9765780337",2,2,false,0,0,0,37.1
+"Lonsdale St",EB,39,"grid 6381291676","grid 6381291673",2,2,false,0,0,0,15.3
+"Unnamed road",SB,50,"grid 6381291676","grid 6381291675",1,1,false,0,0,0,14.3
+"Lonsdale St",EB,40,"grid 6381474060","grid 26034670",2,2,false,0,0,0,22.6
+"Unnamed road",SB,51,"grid 6381474060","grid 6381474061",1,1,false,0,0,0,14.3
+"Unnamed road",NB,51,"grid 6381474061","grid 6381474060",1,1,false,0,0,0,14.3
+"Lonsdale St",WB,41,"grid 6381474061","grid 6696274751",2,2,false,0,0,0,17.6
+"Russell St",SB,35,"grid 6381512708","grid 2187983881",1,1,false,0,0,0,20.7
+"Unnamed road",WB,52,"grid 6381512708","grid 6381512709",1,1,false,0,0,0,14.2
+"Russell St",NB,36,"grid 6381512709","grid 26034673",2,2,false,24,12,12,14.9
+"Unnamed road",EB,52,"grid 6381512709","grid 6381512708",1,1,false,0,0,0,14.2
+"Lonsdale St",WB,42,"grid 6381558801","grid 595594361",2,2,false,0,0,0,17.6
+"Unnamed road",NB,53,"grid 6381558801","grid 6381558802",1,1,false,0,0,0,14.2
+"Lonsdale St",EB,43,"grid 6381558802","grid 2190483591",2,2,false,12,0,12,22.2
+"Unnamed road",SB,53,"grid 6381558802","grid 6381558801",1,1,false,0,0,0,14.2
+"Unnamed road",NB,54,"grid 6695923950","grid 6695923951",1,1,false,0,0,0,14.2
+"Rosslyn St",WB,5,"grid 6695923950","grid 8960001660",1,1,false,12,0,12,21
+"Rosslyn St",EB,6,"grid 6695923951","grid 777788328",1,1,false,72,48,24,27.4
+"Unnamed road",SB,54,"grid 6695923951","grid 6695923950",1,1,false,12,0,12,18.6
+"Milton St",SB,2,"grid 6695934646","grid 35354279",1,1,false,60,84,-24,17.7
+"Walsh St",EB,3,"grid 6695934646","grid 6695934651",1,1,false,12,12,0,15.4
+"Milton St",NB,3,"grid 6695934646","grid 8960001660",1,1,false,0,0,0,20.8
+"William St",NB,45,"grid 6695934648","grid 777788326",1,1,false,0,0,0,22.2
+"Unnamed road",NB,55,"grid 6695934649","grid 6695934650",1,1,false,0,0,0,13.8
+"Walsh St",EB,4,"grid 6695934650","grid 6695934646",1,1,false,0,0,0,25
+"Unnamed road",SB,55,"grid 6695934650","grid 6695934649",1,1,false,0,0,0,13.8
+"Walsh St",EB,5,"grid 6695934651","grid 6695934648",1,1,false,0,0,0,14.7
+"Unnamed road",SB,56,"grid 6695934651","grid 6695934652",1,1,false,12,12,0,14.6
+"Walsh St",WB,6,"grid 6695934652","grid 35354279",1,1,false,12,12,0,16.1
+"Unnamed road",NB,56,"grid 6695934652","grid 6695934651",1,1,false,0,0,0,14
+"Unnamed road",NB,57,"grid 6696274751","grid 6696274752",1,1,false,0,0,0,14.3
+"Lonsdale St",WB,44,"grid 6696274751","grid 9756035317",2,2,false,0,0,0,17.7
+"Lonsdale St",EB,45,"grid 6696274752","grid 6381474060",2,2,false,0,0,0,17.7
+"Unnamed road",SB,57,"grid 6696274752","grid 6696274751",1,1,false,0,0,0,14.3
+"Exhibition St",NB,31,"grid 6775859250","grid 26034663",2,2,false,0,0,0,17.6
+"Unnamed road",EB,58,"grid 6775859250","grid 6775859251",1,1,false,0,0,0,14.5
+"Unnamed road",WB,58,"grid 6775859251","grid 6775859250",1,1,false,0,0,0,14.5
+"Exhibition St",SB,32,"grid 6775859251","grid 11135234154",2,2,false,0,0,0,17.1
+"Exhibition St",NB,33,"grid 6775862757","grid 2187983875",1,1,false,24,0,24,13.7
+"Unnamed road",EB,59,"grid 6775862757","grid 6775862758",1,1,false,12,0,12,13.9
+"Exhibition St",SB,34,"grid 6775862758","grid 589402289",1,1,false,12,0,12,17.2
+"Unnamed road",WB,59,"grid 6775862758","grid 6775862757",1,1,false,0,0,0,14.7
+"Unnamed road",EB,14,"grid 6775862775","grid 588194334",1,1,false,0,0,0,14.3
+"Exhibition St",NB,35,"grid 6775862775","grid 13976139572",1,1,false,48,48,0,12.2
+"Exhibition St",NB,36,"grid 6775862780","grid 6775862775",1,1,false,48,48,0,29.6
+"Unnamed road",EB,60,"grid 6775862780","grid 6775862781",1,1,false,0,0,0,14.3
+"Unnamed road",WB,60,"grid 6775862781","grid 6775862780",1,1,false,0,0,0,14.3
+"Exhibition St",SB,37,"grid 6775862781","grid 13976139570",2,2,false,0,0,0,15.5
+"Unnamed road",EB,17,"grid 6775870290","grid 663497749",1,1,false,0,12,-12,14.4
+"Exhibition St",NB,38,"grid 6775870290","grid 13976139568",2,2,false,60,96,-36,26.8
+"Queen St",NB,37,"grid 6804242153","grid 2020813891",2,2,false,84,36,48,12.8
+"Unnamed road",EB,61,"grid 6804242153","grid 6804242154",1,1,false,0,0,0,14.4
+"Queen St",SB,38,"grid 6804242154","grid 2180785582",2,2,false,0,0,0,17
+"Unnamed road",WB,61,"grid 6804242154","grid 6804242153",1,1,false,0,0,0,14.4
+"Queen St",NB,39,"grid 6804266285","grid 2020813831",2,2,false,24,24,0,28.6
+"Unnamed road",EB,62,"grid 6804266285","grid 6804266286",1,1,false,0,0,0,14.4
+"Queen St",SB,40,"grid 6804266286","grid 2177124610",3,3,false,0,0,0,15.3
+"Unnamed road",WB,62,"grid 6804266286","grid 6804266285",1,1,false,0,0,0,14.4
+"Orr St",SB,1,"grid 6930998717","grid 291210710",1,1,false,0,12,-12,21.5
+"Earl St",EB,2,"grid 6930998717","grid 291210712",1,1,false,60,48,12,19.7
+"Spencer St",NB,31,"grid 6943763839","grid 3215106461",2,2,false,0,0,0,5.2
+"Batman St",EB,5,"grid 6943763839","grid 6943763840",1,1,false,0,0,0,14.3
+"Spencer St",SB,32,"grid 6943763840","grid 332544860",2,2,false,0,0,0,14.5
+"Batman St",EB,6,"grid 6943763840","grid 6943763857",1,1,false,0,0,0,18.6
+"Unnamed road",SB,63,"grid 6943763857","grid 6943763858",1,1,false,0,0,0,14.5
+"Batman St",EB,7,"grid 6943763857","grid 6943763859",1,1,false,0,0,0,16
+"Unnamed road",NB,63,"grid 6943763858","grid 6943763857",1,1,false,0,0,0,14.5
+"Batman St",WB,8,"grid 6943763858","grid 11974771931",1,1,false,0,0,0,3.7
+"Unnamed road",SB,64,"grid 6943763859","grid 6943763860",1,1,false,0,0,0,14.5
+"Batman St",EB,9,"grid 6943763859","grid 6943763861",1,1,false,0,0,0,16.6
+"Batman St",WB,10,"grid 6943763860","grid 6943763858",1,1,false,0,0,0,16
+"Unnamed road",NB,64,"grid 6943763860","grid 6943763859",1,1,false,0,0,0,14.5
+"Unnamed road",SB,65,"grid 6943763861","grid 6943763862",1,1,false,0,0,0,14.5
+"Batman St",EB,11,"grid 6943763861","grid 6943763863",1,1,false,0,0,0,17.8
+"Batman St",WB,12,"grid 6943763862","grid 6943763860",1,1,false,0,0,0,16.6
+"Unnamed road",NB,65,"grid 6943763862","grid 6943763861",1,1,false,0,0,0,14.5
+"Unnamed road",SB,9,"grid 6943763863","grid 289597248",1,1,false,0,0,0,14.5
+"Macarthur St",NB,3,"grid 7388133845","grid 2279153650",1,1,false,0,0,0,4.5
+"Queensberry St",EB,8,"grid 7759495227","grid 34160610",2,2,false,0,0,0,14.9
+"Unnamed road",SB,66,"grid 7759495227","grid 7759495228",1,1,false,0,0,0,14.1
+"Queensberry St",WB,9,"grid 7759495228","grid 767671059",2,2,false,0,0,0,15.8
+"Unnamed road",NB,66,"grid 7759495228","grid 7759495227",1,1,false,0,0,0,14.1
+"Little Lonsdale St",EB,14,"grid 7912946298","grid 26034662",1,1,false,0,0,0,53.8
+"Swanston St",SB,14,"grid 7912946298","grid 9086096511",2,2,false,0,0,0,26.4
+"Franklin St",SB,17,"grid 7919262062","grid 3213448168",1,1,false,0,0,0,2.3
+"Franklin St",EB,18,"grid 7919262062","grid 10561545329",1,1,false,0,12,-12,18.3
+"A'Beckett St",EB,12,"grid 7919262077","grid 3213448174",1,1,false,0,0,0,14
+"A'Beckett St",WB,13,"grid 7919262077","grid 13205964387",2,2,false,0,0,0,3
+"Unnamed road",SB,67,"grid 8189021211","grid 10286800838",1,1,false,0,0,0,14.2
+"Albert St",EB,19,"grid 8189021211","grid 11655178899",2,2,false,0,0,0,4.9
+"Unnamed road",EB,68,"grid 8633729231","grid 8633729232",1,1,false,0,0,0,14.4
+"Russell St",NB,37,"grid 8633729231","grid 9086096516",2,2,false,12,24,-12,12.8
+"Unnamed road",WB,68,"grid 8633729232","grid 8633729231",1,1,false,0,0,0,14.4
+"Russell St",SB,38,"grid 8633729232","grid 8633729234",2,2,false,0,0,0,15.5
+"Russell St",NB,39,"grid 8633729233","grid 8633729231",2,2,false,12,24,-12,12.8
+"Unnamed road",EB,69,"grid 8633729233","grid 8633729234",1,1,false,0,0,0,14.4
+"Russell St",SB,40,"grid 8633729234","grid 1985557921",2,2,false,0,0,0,18.7
+"Unnamed road",WB,69,"grid 8633729234","grid 8633729233",1,1,false,0,0,0,14.4
+"Russell St",NB,41,"grid 8633729235","grid 6206949956",2,2,false,12,24,-12,17
+"Unnamed road",EB,70,"grid 8633729235","grid 8633729236",1,1,false,0,0,0,14.4
+"Russell St",SB,42,"grid 8633729236","grid 1985557938",2,2,false,0,0,0,14.7
+"Unnamed road",WB,70,"grid 8633729236","grid 8633729235",1,1,false,0,0,0,14.4
+"Victoria Parade",EB,16,"grid 8869200174","grid 30287465",3,3,false,180,144,36,3.2
+"Brunswick St",NB,5,"grid 8869200174","grid 2189358929",1,1,false,36,48,-12,9.7
+"Victoria Parade",EB,17,"grid 8869200234","grid 30945324",3,3,false,216,180,36,7.5
+"Fitzroy St",NB,2,"grid 8869200234","grid 266734181",1,1,false,48,84,-36,30.5
+"Boundary access",SB,0,"grid 8869200234","gate 711",1,1,false,36,36,0,3.2
+"Victoria Parade",WB,18,"grid 8870964254","grid 277089910",3,3,false,12,0,12,13.5
+"La Trobe St",WB,43,"grid 8870964254","grid 11974535032",1,1,false,120,120,0,11.5
+"Cathedral Place",EB,8,"grid 8872118096","grid 2318307719",1,1,false,0,0,0,3.3
+"Macarthur St",SB,4,"grid 8872118096","grid 8873674099",1,1,false,0,0,0,15.6
+"St Andrews Place",EB,2,"grid 8873674098","grid 268533991",1,1,false,0,0,0,18.1
+"St Andrews Place",WB,3,"grid 8873674098","grid 8873674108",1,1,false,0,0,0,14
+"Macarthur St",SB,5,"grid 8873674099","grid 8873674098",1,1,false,0,0,0,24.7
+"Cathedral Place",WB,9,"grid 8873674099","grid 8873674102",1,1,false,0,0,0,14.1
+"Macarthur St",NB,6,"grid 8873674102","grid 4283908160",1,1,false,0,0,0,15.5
+"St Andrews Place",EB,3,"grid 8873674108","grid 8873674098",1,1,false,0,0,0,14
+"Macarthur St",NB,7,"grid 8873674108","grid 8873674102",1,1,false,0,0,0,25
+"Chetwynd St",NB,7,"grid 8927996680","grid 3215191991",1,1,false,0,0,0,19.9
+"Stanley St",EB,4,"grid 8927996680","grid 8927996681",1,1,false,0,0,0,14.1
+"Chetwynd St",SB,8,"grid 8927996681","grid 8927996684",1,1,false,0,0,0,14.3
+"Stanley St",WB,5,"grid 8927996682","grid 572039368",1,1,false,0,0,0,1.1
+"Chetwynd St",NB,9,"grid 8927996682","grid 8927996680",1,1,false,0,0,0,14.3
+"Chetwynd St",SB,10,"grid 8927996684","grid 387153087",1,1,false,0,0,0,1.8
+"Stanley St",WB,6,"grid 8927996684","grid 8927996682",1,1,false,0,0,0,13.7
+"Unnamed road",SB,11,"grid 8927996695","grid 387153086",1,1,false,0,0,0,14.3
+"Stanley St",EB,7,"grid 8927996695","grid 572039322",1,1,false,0,0,0,3.7
+"Flinders St",EB,27,"grid 8955976410","grid 122705653",3,3,false,0,12,-12,2.9
+"Flinders St",WB,28,"grid 8955976422","grid 8955976423",4,4,false,0,12,-12,0.8
+"Unnamed road",NB,71,"grid 8955976423","grid 589747750",2,2,false,0,12,-12,2.1
+"Flinders Ln",WB,5,"grid 8955976461","grid 144699879",1,1,false,0,0,0,36
+"Flinders Ln",EB,17,"grid 8955976461","grid 8955976465",2,2,false,24,0,24,14.7
+"William St",NB,46,"grid 8955976465","grid 2189145394",1,1,false,36,12,24,26
+"Flinders Ln",EB,18,"grid 8955976465","grid 8955976490",1,1,false,0,0,0,15.4
+"Flinders Ln",EB,19,"grid 8955976490","grid 2189156618",1,1,false,12,0,12,1
+"William St",SB,47,"grid 8955976490","grid 9561515023",1,1,false,0,0,0,13.4
+"Flinders Ln",EB,20,"grid 8959936632","grid 642420359",1,1,false,0,0,0,5.9
+"Spencer St",SB,33,"grid 8959936632","grid 2174950798",2,2,false,0,12,-12,14.5
+"Rosslyn St",EB,7,"grid 8960001647","grid 26034627",1,1,false,168,168,0,13
+"Unnamed road",SB,36,"grid 8960001647","grid 3215106498",1,1,false,12,12,0,11.9
+"Unnamed road",NB,1,"grid 8960001660","grid 26034627",1,1,false,0,0,0,14.2
+"Rosslyn St",WB,8,"grid 8960001660","grid 3215106498",1,1,false,0,0,0,22.3
+"Milton St",SB,3,"grid 8960001660","grid 6695934646",1,1,false,72,96,-24,16.6
+"Peel St",NB,7,"grid 8961968363","grid 3161948899",2,2,false,12,12,0,19.5
+"Victoria St",EB,48,"grid 8976031240","grid 774546374",2,2,false,24,48,-24,9.5
+"Capel St",NB,6,"grid 8977274903","grid 777721749",1,1,false,0,0,0,16.7
+"Unnamed road",EB,23,"grid 8977274903","grid 777789012",1,1,false,0,0,0,14.3
+"Eades Place",WB,7,"grid 8977295941","grid 8977295943",1,1,false,0,0,0,1.2
+"Roden St",NB,3,"grid 8977295943","grid 777776726",1,1,false,0,0,0,13.4
+"Spencer St",NB,34,"grid 9002590993","grid 30942265",2,2,false,0,0,0,15.9
+"Unnamed road",EB,72,"grid 9002590993","grid 9002590994",1,1,false,0,0,0,14.3
+"Spencer St",SB,35,"grid 9002590994","grid 332544861",2,2,false,0,0,0,21.1
+"Unnamed road",WB,72,"grid 9002590994","grid 9002590993",1,1,false,0,0,0,14.3
+"Spencer St",NB,36,"grid 9086085383","grid 1492150985",2,2,false,48,48,0,16.8
+"Spencer St",SB,37,"grid 9086085384","grid 2174963245",2,2,false,12,48,-36,21.1
+"Little Bourke St",WB,23,"grid 9086085384","grid 9086085383",1,1,false,0,0,0,15.7
+"Dudley St",EB,3,"grid 9086085407","grid 2266563639",2,2,false,0,0,0,10.7
+"Unnamed road",NB,73,"grid 9086096441","grid 9086096444",1,1,false,12,12,0,11.6
+"Victoria St",WB,49,"grid 9086096441","grid 9086096486",1,1,false,12,0,12,22
+"William St",SB,48,"grid 9086096442","grid 703557084",1,1,false,0,0,0,18.5
+"Victoria St",WB,50,"grid 9086096442","grid 9086096441",1,1,false,12,0,12,16.8
+"Victoria St",EB,51,"grid 9086096443","grid 777721838",1,1,false,12,12,0,23.9
+"Unnamed road",SB,74,"grid 9086096443","grid 9086096442",1,1,false,0,0,0,14.2
+"Victoria St",EB,52,"grid 9086096444","grid 9086096443",1,1,false,12,12,0,11.7
+"Chetwynd St",NB,11,"grid 9086096484","grid 777781264",1,1,false,0,0,0,15.1
+"Victoria St",EB,53,"grid 9086096484","grid 9086096485",1,1,false,0,0,0,14.3
+"Victoria St",EB,54,"grid 9086096485","grid 9086096444",1,1,false,0,0,0,23.9
+"Chetwynd St",SB,12,"grid 9086096485","grid 9086096486",1,1,false,0,0,0,14.2
+"Chetwynd St",SB,13,"grid 9086096486","grid 3215191990",1,1,false,0,0,0,16.1
+"Victoria St",WB,55,"grid 9086096486","grid 9086096487",1,1,false,0,0,0,14.3
+"Chetwynd St",NB,14,"grid 9086096487","grid 9086096484",1,1,false,0,0,0,14.2
+"Victoria St",WB,56,"grid 9086096487","grid 9086096488",1,1,false,0,0,0,23.9
+"Roden St",SB,4,"grid 9086096488","grid 26034576",1,1,false,0,0,0,16.1
+"Victoria St",WB,57,"grid 9086096488","grid 9086096489",1,1,false,0,0,0,14.4
+"Roden St",NB,5,"grid 9086096489","grid 9086096490",1,1,false,0,0,0,1
+"Victoria St",EB,58,"grid 9086096490","grid 9086096491",1,1,false,0,0,0,14.3
+"Victoria St",EB,59,"grid 9086096491","grid 9086096484",1,1,false,0,0,0,23.9
+"Roden St",SB,6,"grid 9086096491","grid 9086096488",1,1,false,0,0,0,14.2
+"Elizabeth St",NB,41,"grid 9086096503","grid 2190483579",1,1,false,0,12,-12,23.9
+"A'Beckett St",EB,14,"grid 9086096503","grid 9086096504",1,1,false,0,0,0,14.4
+"A'Beckett St",WB,15,"grid 9086096503","grid 13205964386",1,1,false,12,0,12,0.4
+"Elizabeth St",SB,42,"grid 9086096504","grid 2190483595",1,1,false,12,12,0,16.6
+"A'Beckett St",WB,14,"grid 9086096504","grid 9086096503",1,1,false,0,0,0,14.4
+"A'Beckett St",EB,16,"grid 9086096504","grid 13205964387",1,1,false,0,0,0,0.4
+"Swanston St",NB,14,"grid 9086096511","grid 7912946298",2,2,false,0,12,-12,26.4
+"Swanston St",SB,15,"grid 9086096511","grid 9086096512",2,2,false,0,0,0,14.7
+"Lonsdale St",EB,46,"grid 9086096511","grid 9756035310",2,2,false,12,0,12,15.6
+"Swanston St",SB,7,"grid 9086096512","grid 2187770693",2,2,false,0,0,0,26.5
+"Lonsdale St",WB,47,"grid 9086096512","grid 2190483592",2,2,false,0,0,0,33.5
+"Swanston St",NB,15,"grid 9086096512","grid 9086096511",2,2,false,0,0,0,14.7
+"Collins St",WB,21,"grid 9086096516","grid 2190478928",1,0,true,0,12,-12,53.7
+"Russell St",NB,43,"grid 9086096516","grid 9086096517",1,1,false,12,24,-12,11.6
+"Russell St",NB,44,"grid 9086096517","grid 26051952",2,2,false,0,12,-12,23.1
+"Collins St",EB,22,"grid 9086096517","grid 9086096518",1,0,true,0,60,-60,14.5
+"Russell St",SB,45,"grid 9086096518","grid 9086096519",1,1,false,0,0,0,14.2
+"Collins St",EB,23,"grid 9086096518","grid 13976139571",1,0,true,0,48,-48,33
+"Russell St",SB,46,"grid 9086096519","grid 8633729232",2,2,false,0,0,0,15.4
+"Collins St",WB,24,"grid 9086096519","grid 9086096516",1,0,true,0,36,-36,14.5
+"Russell St",SB,6,"grid 9086096520","grid 247417082",1,1,false,60,60,0,17.6
+"Russell St",NB,10,"grid 9086096520","grid 741702228",1,1,false,48,36,12,7.1
+"Flinders St",EB,29,"grid 9105247458","grid 8955976410",2,2,false,0,12,-12,0.7
+"Unnamed road",SB,75,"grid 9105247458","grid 8955976422",1,1,false,0,0,0,15.3
+"Flinders St",EB,30,"grid 9105320418","grid 1833110275",2,2,false,0,0,0,13.3
+"Queen St",NB,41,"grid 9105320426","grid 1833110288",1,1,false,216,240,-24,8.1
+"Flinders St",WB,31,"grid 9105320426","grid 2189272905",2,2,false,60,48,12,26.9
+"Boundary access",SB,0,"grid 9105320426","gate 713",1,1,false,0,0,0,2.5
+"Flinders St",WB,32,"grid 9105320429","grid 9105320426",2,2,false,96,84,12,23.3
+"Little Collins St",WB,5,"grid 9146197604","grid 145196475",1,1,false,12,12,0,46.7
+"Little Bourke St",WB,24,"grid 9146197622","grid 9086085384",1,1,false,0,0,0,54.4
+"Little Lonsdale St",EB,15,"grid 9146197650","grid 9146197651",3,3,false,0,0,0,2.3
+"Little Lonsdale St",EB,16,"grid 9146197651","grid 103121662",1,1,false,0,0,0,29.2
+"William St",SB,49,"grid 9146197756","grid 2189145409",1,1,false,60,60,0,22.1
+"Market St",NB,4,"grid 9393412318","grid 591408716",1,1,false,0,0,0,14
+"Fitzroy St",NB,3,"grid 9494147820","grid 233275077",2,2,false,36,72,-36,16.1
+"Flinders St",WB,33,"grid 9512482841","grid 741702228",2,2,false,120,72,48,14.8
+"Russell St",SB,47,"grid 9512482841","grid 9086096520",1,1,false,48,48,0,1.2
+"Swanston St",NB,2,"grid 9512482857","grid 1838361782",1,1,false,0,0,0,25.6
+"William St",SB,50,"grid 9561515023","grid 3306900957",1,1,false,0,0,0,18.5
+"Flinders Ln",WB,21,"grid 9561515025","grid 8955976461",1,1,false,0,0,0,6
+"William St",NB,51,"grid 9561515025","grid 8955976465",1,1,false,12,12,0,11.1
+"Flinders Ln",EB,22,"grid 9561515025","grid 9561515023",1,1,false,0,0,0,15.4
+"Market St",SB,5,"grid 9561515031","grid 591408731",1,1,false,0,0,0,22.1
+"Flinders Ln",WB,14,"grid 9561515045","grid 2189156622",1,1,false,0,0,0,1.1
+"Flinders Ln",EB,23,"grid 9561515045","grid 9561515031",1,1,false,12,0,12,14
+"Jeffcott St",EB,4,"grid 9561530846","grid 332544861",1,1,false,12,0,12,19.1
+"Spencer St",NB,38,"grid 9561530846","grid 9002590993",2,2,false,0,0,0,21
+"Jeffcott St",WB,5,"grid 9561530847","grid 289597163",1,1,false,0,0,0,0.8
+"Spencer St",NB,39,"grid 9561530847","grid 9561530846",2,2,false,12,0,12,14.3
+"Lonsdale St",WB,48,"grid 9756035309","grid 9086096512",2,2,false,0,0,0,16
+"Unnamed road",NB,76,"grid 9756035309","grid 9756035310",1,1,false,0,0,0,14.3
+"Lonsdale St",EB,49,"grid 9756035310","grid 245537592",2,2,false,12,0,12,16.5
+"Unnamed road",SB,76,"grid 9756035310","grid 9756035309",1,1,false,0,0,0,14.3
+"Lonsdale St",EB,50,"grid 9756035315","grid 26034669",2,2,false,0,0,0,23.1
+"Unnamed road",SB,77,"grid 9756035315","grid 9756035316",1,1,false,0,0,0,14.3
+"Lonsdale St",WB,51,"grid 9756035316","grid 4544002877",2,2,false,0,0,0,15.9
+"Unnamed road",NB,77,"grid 9756035316","grid 9756035315",1,1,false,0,0,0,14.3
+"Lonsdale St",WB,52,"grid 9756035317","grid 1985557927",2,2,false,0,0,0,14.5
+"Unnamed road",NB,78,"grid 9756035317","grid 9756035318",1,1,false,0,0,0,14.3
+"Lonsdale St",EB,53,"grid 9756035318","grid 6696274752",2,2,false,0,0,0,17.7
+"Unnamed road",SB,78,"grid 9756035318","grid 9756035317",1,1,false,0,0,0,14.3
+"Lonsdale St",EB,54,"grid 9765780336","grid 6381291676",2,2,false,0,0,0,37.1
+"Unnamed road",SB,79,"grid 9765780336","grid 9765780337",1,1,false,0,0,0,14.2
+"Lonsdale St",WB,55,"grid 9765780337","grid 1492150982",2,2,false,0,0,0,23.2
+"Unnamed road",NB,79,"grid 9765780337","grid 9765780336",1,1,false,0,0,0,14.2
+"Queen St",NB,42,"grid 9765780356","grid 607756857",1,1,false,72,96,-24,12.5
+"Unnamed road",EB,80,"grid 9765780356","grid 9765780357",1,1,false,36,12,24,8.7
+"Queen St",SB,43,"grid 9765780357","grid 591426700",1,1,false,36,12,24,18.3
+"Unnamed road",WB,80,"grid 9765780357","grid 9765780356",1,1,false,0,0,0,14.5
+"Franklin St",EB,19,"grid 9981007238","grid 1725216895",1,1,false,24,12,12,13.4
+"Franklin St",WB,9,"grid 9981007238","grid 2183273514",1,1,false,24,12,12,16.5
+"Spring St",SB,26,"grid 9991984389","grid 277089929",1,1,false,0,0,0,13.8
+"Lonsdale St",WB,56,"grid 9991984390","grid 317537930",2,2,false,0,0,0,14.4
+"La Trobe St",WB,44,"grid 10274506386","grid 2181268830",2,2,false,72,60,12,10.5
+"Albert St",WB,20,"grid 10286800838","grid 6207245783",1,1,false,48,60,-12,18.6
+"Unnamed road",NB,67,"grid 10286800838","grid 8189021211",1,1,false,0,0,0,14.2
+"Little William St",NB,2,"grid 10302346941","grid 2177115239",1,1,false,0,0,0,15.4
+"Bourke St",WB,37,"grid 10302346941","grid 2189145404",2,2,false,0,0,0,16.9
+"Russell St",NB,48,"grid 10302452296","grid 1985557960",4,4,false,0,12,-12,17.6
+"Lygon St",SB,4,"grid 10302475142","grid 1985551133",4,4,false,60,48,12,8.9
+"Stewart St",SB,1,"grid 10561545329","grid 313278197",1,1,false,0,0,0,25.6
+"Franklin St",EB,10,"grid 10561545329","grid 2183273515",1,1,false,0,12,-12,20.1
+"Franklin St",WB,18,"grid 10561545329","grid 7919262062",1,1,false,0,0,0,5.1
+"William St",SB,52,"grid 10754679961","grid 26034534",2,2,false,12,0,12,12.4
+"Victoria St",EB,60,"grid 10904440439","grid 1492410147",2,2,false,24,24,0,12.8
+"Nicholson St",SB,17,"grid 10964455898","grid 2189497215",2,2,false,24,60,-36,11.2
+"Gisborne St",SB,8,"grid 10990568694","grid 2189398733",2,2,false,48,60,-12,21.8
+"Exhibition St",NB,39,"grid 11135234153","grid 6775859250",2,2,false,12,0,12,15.1
+"Unnamed road",EB,81,"grid 11135234153","grid 11135234154",1,1,false,0,0,0,14.5
+"Exhibition St",SB,40,"grid 11135234154","grid 589402311",2,2,false,0,0,0,14.9
+"Unnamed road",WB,81,"grid 11135234154","grid 11135234153",1,1,false,0,0,0,14.5
+"Exhibition St",NB,41,"grid 11135234155","grid 2181268826",2,2,false,0,0,0,21.8
+"Unnamed road",EB,82,"grid 11135234155","grid 11135234156",1,1,false,0,0,0,14.5
+"Exhibition St",SB,42,"grid 11135234156","grid 589403294",2,2,false,12,12,0,16.1
+"Unnamed road",WB,82,"grid 11135234156","grid 11135234155",1,1,false,0,0,0,14.5
+"Queen St",SB,4,"grid 11140069162","grid 33675555",1,1,false,0,0,0,22.1
+"Queen St",NB,44,"grid 11140069162","grid 55722470",1,1,false,0,0,0,2.6
+"Unnamed road",NB,35,"grid 11296496408","grid 3213448174",1,1,false,0,0,0,16.2
+"Park St",SB,2,"grid 11347834846","grid 2181268833",1,1,false,0,0,0,14.3
+"La Trobe St",EB,45,"grid 11347834846","grid 2189145388",2,2,false,132,96,36,20.6
+"Albert St",EB,21,"grid 11655178899","grid 2189398724",2,2,false,0,0,0,14.4
+"Albert St",WB,22,"grid 11655178916","grid 3419354756",1,1,false,0,0,0,0.5
+"Jeffcott St",EB,2,"grid 11961603221","grid 289597163",1,1,false,0,0,0,5.6
+"La Trobe St",WB,46,"grid 11974535032","grid 2291073957",2,2,false,120,108,12,17
+"Batman St",WB,13,"grid 11974771931","grid 332544860",2,2,false,0,0,0,14.9
+"Flinders St",WB,34,"grid 11982946469","grid 591392087",2,2,false,60,48,12,13.1
+"Queens Bridge St",NB,1,"grid 11982946469","grid 9393412318",1,1,false,0,0,0,0.7
+"Brunswick St",SB,3,"grid 11986833669","grid 2189358929",1,1,false,36,48,-12,3.8
+"Queen St",NB,45,"grid 12148870173","grid 2020813893",3,3,false,0,12,-12,15.1
+"A'Beckett St",EB,2,"grid 12149195617","grid 33085559",2,2,false,0,0,0,20
+"A'Beckett St",WB,11,"grid 12149195617","grid 2189145409",2,2,false,0,0,0,15.4
+"Franklin St",WB,20,"grid 12280427075","grid 319159699",1,1,false,0,0,0,18.8
+"Queen St",NB,46,"grid 12280427075","grid 703554592",1,1,false,0,12,-12,7
+"Queen St",SB,47,"grid 12280427079","grid 13266422657",1,1,false,0,0,0,4.4
+"Flinders Ln",WB,24,"grid 12514091450","grid 2189156622",1,1,false,0,0,0,4.2
+"Market St",SB,6,"grid 12514091450","grid 9561515031",1,1,false,0,0,0,14.2
+"Bond St",NB,2,"grid 12860214799","grid 113536277",1,1,false,36,0,36,11.4
+"Bond St",SB,1,"grid 12860214799","grid 1833110282",1,1,false,0,0,0,18.4
+"Unnamed road",WB,83,"grid 13205873861","grid 3161948899",1,1,false,0,0,0,15.3
+"Unnamed road",SB,84,"grid 13205910709","grid 387153106",2,2,false,72,60,12,26.7
+"A'Beckett St",EB,15,"grid 13205964386","grid 9086096503",1,1,false,0,0,0,13.5
+"A'Beckett St",WB,17,"grid 13205964386","grid 13253252673",1,1,false,12,0,12,3
+"A'Beckett St",EB,13,"grid 13205964387","grid 7919262077",1,1,false,0,0,0,3
+"A'Beckett St",WB,16,"grid 13205964387","grid 9086096504",1,1,false,0,0,0,13.7
+"Little Bourke St",WB,25,"grid 13240105553","grid 9146197622",2,2,false,0,0,0,5.1
+"A'Beckett St",WB,3,"grid 13253252673","grid 227508496",1,1,false,12,0,12,19.7
+"A'Beckett St",EB,17,"grid 13253252673","grid 13205964386",2,2,false,0,0,0,3
+"A'Beckett St",EB,4,"grid 13253263257","grid 227508496",1,1,false,0,0,0,18.7
+"A'Beckett St",WB,9,"grid 13253263257","grid 2020813887",2,2,false,0,0,0,14.8
+"Queen St",SB,48,"grid 13266422657","grid 6167489382",2,2,false,0,0,0,4.7
+"Franklin St",WB,11,"grid 13747116207","grid 2183273515",1,1,false,0,0,0,13.6
+"Leicester St",NB,4,"grid 13747663098","grid 1725216788",1,1,false,0,0,0,1.5
+"Leicester St",SB,5,"grid 13747665507","grid 1953969337",1,1,false,0,0,0,22.1
+"Berkeley St",WB,2,"grid 13747665507","grid 13747663098",1,1,false,0,0,0,14.6
+"Rosslyn St",EB,9,"grid 13751647373","grid 8960001647",1,1,false,168,168,0,13.1
+"Boundary access",SB,0,"grid 13751647373","gate 708",1,1,false,0,0,0,2.5
+"A'Beckett St",WB,6,"grid 13759745626","grid 313278197",1,1,false,0,0,0,15.6
+"Carson Place",NB,1,"grid 13780588543","grid 174812829",1,1,false,0,0,0,36.6
+"Russell St",NB,49,"grid 13807338303","grid 595594352",2,2,false,24,0,24,21.7
+"Unnamed road",EB,85,"grid 13807338303","grid 13807338304",1,1,false,0,0,0,14.4
+"Russell St",SB,50,"grid 13807338304","grid 1985557912",2,2,false,0,0,0,16.4
+"Unnamed road",WB,85,"grid 13807338304","grid 13807338303",1,1,false,0,0,0,14.4
+"Flinders Ln",WB,25,"grid 13976139568","grid 1985557921",1,1,false,24,24,0,50.9
+"Exhibition St",NB,43,"grid 13976139568","grid 6775862780",2,2,false,60,72,-12,12.6
+"Exhibition St",SB,44,"grid 13976139570","grid 663497749",2,2,false,48,48,0,10.5
+"Flinders Ln",WB,26,"grid 13976139570","grid 13976139568",1,1,false,36,36,0,16.9
+"Exhibition St",NB,45,"grid 13976139571","grid 26051950",1,1,false,48,36,12,15.4
+"Collins St",EB,25,"grid 13976139571","grid 13976139573",1,0,true,0,36,-36,14.5
+"Collins St",WB,26,"grid 13976139572","grid 9086096519",1,0,true,0,36,-36,33
+"Exhibition St",NB,46,"grid 13976139572","grid 13976139571",1,1,false,48,36,12,6.4
+"Collins St",EB,27,"grid 13976139573","grid 1449431476",1,0,true,0,12,-12,33.4
+"Exhibition St",SB,47,"grid 13976139573","grid 13976139575",1,1,false,0,0,0,14.2
+"Exhibition St",SB,48,"grid 13976139575","grid 588194334",2,2,false,0,0,0,18.8
+"Collins St",WB,28,"grid 13976139575","grid 13976139572",1,0,true,0,48,-48,14.4
+"Lonsdale St",EB,57,"grid 14084735336","grid 9765780336",2,2,false,0,0,0,16.5
+"Unnamed road",NB,86,"grid 14084735336","grid 14084735340",1,1,false,0,0,0,5.3
+"Little Lonsdale St",EB,17,"grid 14084735337","grid 9146197650",1,1,false,0,0,0,26
+"Unnamed road",SB,86,"grid 14084735340","grid 14084735336",1,1,false,0,0,0,18.6
+"Unnamed road",NB,87,"grid 14084735340","grid 14084735337",1,1,false,0,0,0,17.6
+"Boundary access",SB,0,"gate 706","grid 2174950793",1,1,false,180,180,0,13.7
+"Boundary access",SB,0,"gate 707","grid 1492150978",1,1,false,180,180,0,13.8
+"Boundary access",SB,0,"gate 708","grid 13751647373",1,1,false,156,156,0,4
+"Boundary access",SB,0,"gate 709","grid 54562179",1,1,false,204,204,0,15
+"Boundary access",SB,0,"gate 710","grid 1449431464",1,1,false,180,180,0,4.3
+"Boundary access",SB,0,"gate 711","grid 8869200234",1,1,false,216,216,0,10.6
+"Boundary access",SB,0,"gate 712","grid 60072264",1,1,false,228,228,0,10.2
+"Boundary access",SB,0,"gate 713","grid 9105320426",1,1,false,216,240,-24,23.6
+"Boundary access",SB,0,"gate 714","grid 252588540",1,1,false,168,156,12,69.9
+"Boundary access",SB,0,"gate 715","grid 777701894",1,1,false,204,204,0,12.7
+"Boundary access",SB,0,"gate 716","grid 291210792",1,1,false,120,144,-24,14.7
+"Boundary access",SB,0,"gate 717","grid 566892220",1,1,false,204,204,0,4

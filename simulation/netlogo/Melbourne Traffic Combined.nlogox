@@ -21,6 +21,8 @@ breed [ painters painter ]
 directed-link-breed [ roads road ]   ;; one directed link = one direction of one block
 
 globals [
+  observed-weekday observed-weekend observed-signal-points observed-data-version
+  active-demand-profile active-profile-start-hour observed-signal-count
   selected-street selected-block baseline-signature baseline-summary
   generated-total completed-total run-finished? active-network demand-seed
   ;; ---- physical constants ----
@@ -110,6 +112,7 @@ to setup
   set demand-seed ifelse-value fixed-seed? [seed] [random 1000000]
   if not is-string? selected-street [set selected-street "Collins St"]
   setup-constants
+  load-observed-data
   set gates no-turtles
   set carparks no-turtles
   set signals no-turtles
@@ -587,7 +590,7 @@ end
 to generate-demand
   with-local-randomness [
     random-seed (demand-seed + ticks * 104729)
-    let rate demand-veh-per-hour / 3600
+    let rate effective-arrivals-per-hour / 3600
     foreach sort gates [g -&gt; ask g [
       repeat random-poisson (rate * weight / gate-weight-sum) [
         set generated-total generated-total + 1
@@ -1062,7 +1065,7 @@ to-report seg-distance [px py]
 end
 
 to-report scenario-signature
-  report (list active-network demand-veh-per-hour through-traffic-% informed-drivers-% speed-limit-kmh cycle-length ew-green-share signal-coordination hook-turns? fixed-seed? seed route-noise reroute-interval warm-up-s measure-s)
+  report (list observed-data-version demand-profile profile-start-hour use-observed-signals? active-network demand-veh-per-hour through-traffic-% informed-drivers-% speed-limit-kmh cycle-length ew-green-share signal-coordination hook-turns? fixed-seed? seed route-noise reroute-interval warm-up-s measure-s)
 end
 
 ;; =====================================================================
@@ -1248,6 +1251,7 @@ to build-osm-network
     let names remove-duplicates [street] of my-links
     set signalised? count link-neighbors &gt;= 3 and length names &gt;= 2 and any? my-links with [road-kind = "main"]
   ]
+  apply-observed-signals
   ; Twelve synthetic boundary entry/exit gates, attached to the nearest road node.
   let chosen []
   foreach [[-108 -65] [-108 0] [-108 65] [108 -65] [108 0] [108 65] [-70 -90] [0 -90] [70 -90] [-70 90] [0 90] [70 90]] [xy -&gt;
@@ -1301,6 +1305,45 @@ to draw-osm-roads
     ]
     die
   ]
+end
+
+; Public DTP data supplies relative demand timing and conservative signal matches.
+; Absolute CBD entry demand, routes and signal phases remain assumptions.
+to load-observed-data
+  file-open "data/observed/profiles.txt"
+  set observed-weekday file-read
+  set observed-weekend file-read
+  set observed-signal-points file-read
+  set observed-data-version file-read
+  file-close
+  set active-demand-profile demand-profile
+  set active-profile-start-hour profile-start-hour
+  set observed-signal-count 0
+end
+
+to apply-observed-signals
+  if use-observed-signals? [
+    foreach observed-signal-points [point -&gt;
+      let target min-one-of nodes [distancexy item 0 point item 1 point]
+      if target != nobody [
+        if [distancexy item 0 point item 1 point] of target &lt; 0.01 [
+          ask target [set signalised? true]
+          set observed-signal-count observed-signal-count + 1
+        ]
+      ]
+    ]
+  ]
+end
+
+to-report observed-demand-factor
+  if active-demand-profile = "Flat (synthetic)" [report 1]
+  let index floor (((active-profile-start-hour * 3600 + ticks) mod 86400) / 900)
+  if active-demand-profile = "SCATS weekday" [report item index observed-weekday]
+  report item index observed-weekend
+end
+
+to-report effective-arrivals-per-hour
+  report demand-veh-per-hour * observed-demand-factor
 end
 </code>
   <widgets>
@@ -1362,6 +1405,13 @@ end
     <note x="815" y="806" width="480" height="65" fontSize="11" markdown="false" textColorLight="-16777216" textColorDark="-1" backgroundLight="0" backgroundDark="0">Red thick = closed | Magenta = lane reduced
 D = synthetic destination | Signals/demand are illustrative
 Choose a map, then Setup. Closures can be changed live.</note>
+    <chooser x="10" y="888" width="300" height="58" display="demand-profile" variable="demand-profile" current="0">
+      <choice type="string" value="Flat (synthetic)" />
+      <choice type="string" value="SCATS weekday" />
+      <choice type="string" value="SCATS weekend" />
+    </chooser>
+    <slider x="330" y="888" width="300" height="48" display="profile-start-hour" variable="profile-start-hour" min="0" max="23" step="1" default="8" direction="Horizontal" />
+    <switch x="650" y="888" width="300" height="38" display="use-observed-signals?" variable="use-observed-signals?" on="false" />
   </widgets>
   <info>## COMBINED MELBOURNE TRAFFIC LAB
 Combines the supplied Hoddle Grid lane-based traffic engine with our cached real OpenStreetMap map, polyline rendering and reliable street/map selection. Both source models are preserved in originals/.
@@ -1374,8 +1424,11 @@ All closures accumulate. Choose section narrows the scope; section 0 means whole
 ## BASELINE
 Run with no closures, wait through warm-up plus at least 60 seconds of measurement, Save baseline, then Setup and apply closures. The baseline survives Setup only with matching configuration; changing network or demand/signal/measurement settings clears it. Change-vs-baseline is grey until a baseline is saved. Demand generation uses an independent tick-seeded random stream, so baseline and closure runs receive the same arrivals and OD requests with the same seed. Travel-time averages include trips completed in the measurement window, even if they started in warm-up. Always compare waiting, stranded, active and completed counts together. CSV is written beside the model as combined-link-results.csv.
 
+## PUBLIC DATA
+Optional SCATS weekday/weekend profiles supply relative time-of-day demand from August 2026 CBD detector observations. The demand slider is an assumed peak entry scale when a profile is selected, not measured CBD arrivals. Start hour is AEST; profiles repeat daily. Optional matched DTP intersection sites supplement inferred signals; phase timings stay synthetic. Press Setup after changing profile, start hour or signal locations. See docs/data-and-limitations.md and data/observed/summary.json. Data © Department of Transport and Planning, Victoria, CC BY 4.0.
+
 ## LIMITS
-This is an exploratory traffic simulation, not a calibrated forecast or safety assessment. No actual SCATS counts, turn restrictions, time-dependent access, real parking capacities, trams, buses or pedestrians. Signals are inferred/synthetic and turn conflicts simplified. Geometry-chain compression retains all OSM shape points; movement carries overshoot to the next link but advances at most one link per second. Destination gates D are illustrative, not real car parks. Continuous congestion-based route choice may produce loops; road closures can strand trips. Green-wave offsets in OSM mode are an approximation. Setup is required after changing controls that affect speed, signal plans, random seed, demand comparison or network source.
+This is an exploratory traffic simulation, not a calibrated forecast or safety assessment. No calibrated absolute entry counts, turn restrictions, time-dependent access, real parking capacities, trams, buses or pedestrians. Signals are inferred/synthetic and turn conflicts simplified. Geometry-chain compression retains all OSM shape points; movement carries overshoot to the next link but advances at most one link per second. Destination gates D are illustrative, not real car parks. Continuous congestion-based route choice may produce loops; road closures can strand trips. Green-wave offsets in OSM mode are an approximation. Setup is required after changing controls that affect speed, signal plans, random seed, demand comparison or network source.
 
 ## CREDITS
 Hoddle Grid Traffic prototype supplied by the user's groupmate; its Info tab credits Wilensky (2003), NetLogo Traffic Grid. Original files are preserved. Real-map data © OpenStreetMap contributors, https://www.openstreetmap.org/copyright ; ODbL https://opendatacommons.org/licenses/odbl/1-0/ . Public extract downloaded 2026-09-29. Runtime is offline.

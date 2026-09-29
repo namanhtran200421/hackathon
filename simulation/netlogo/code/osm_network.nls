@@ -41,6 +41,7 @@ to build-osm-network
     let names remove-duplicates [street] of my-links
     set signalised? count link-neighbors >= 3 and length names >= 2 and any? my-links with [road-kind = "main"]
   ]
+  apply-observed-signals
   ; Twelve synthetic boundary entry/exit gates, attached to the nearest road node.
   let chosen []
   foreach [[-108 -65] [-108 0] [-108 65] [108 -65] [108 0] [108 65] [-70 -90] [0 -90] [70 -90] [-70 90] [0 90] [70 90]] [xy ->

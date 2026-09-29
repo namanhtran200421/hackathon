@@ -15,6 +15,10 @@ export interface BaselineSummary {
 
 /** The latest numbers from the model. */
 export interface Metrics {
+  demandFactor: number;
+  effectiveArrivalsPerHour: number;
+  observedSignalCount: number;
+  observedDataVersion: string;
   /** Seconds of traffic so far. */
   ticks: number;
   /** Cars driving in the city now. */

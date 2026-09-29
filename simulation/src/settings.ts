@@ -17,6 +17,9 @@ export type ClosureType = "Both directions" | "East / north direction" | "One la
 
 /** The value of every setting, keyed by its NetLogo name. */
 export interface Settings {
+  "demand-profile": "Flat (synthetic)" | "SCATS weekday" | "SCATS weekend";
+  "profile-start-hour": number;
+  "use-observed-signals?": boolean;
   "network-source": NetworkName;
   "demand-veh-per-hour": number;
   "through-traffic-%": number;
@@ -56,6 +59,9 @@ export type ChoiceSettingName = Exclude<SettingName, NumberSettingName | SwitchS
 
 /** The starting value of every setting, as in the desktop model. */
 export const DEFAULT_SETTINGS: Settings = {
+  "demand-profile": "Flat (synthetic)",
+  "profile-start-hour": 8,
+  "use-observed-signals?": false,
   "network-source": "Real OSM map",
   "demand-veh-per-hour": 2500,
   "through-traffic-%": 50,
@@ -91,6 +97,7 @@ export interface NumberRule {
 
 /** The range of every slider. */
 export const NUMBER_RULES: Record<NumberSettingName, NumberRule> = {
+  "profile-start-hour": { min: 0, max: 23, step: 1, whole: true },
   "demand-veh-per-hour": { min: 0, max: 12000, step: 250, whole: true },
   "through-traffic-%": { min: 0, max: 100, step: 5, whole: true },
   "informed-drivers-%": { min: 0, max: 100, step: 5, whole: true },
@@ -108,6 +115,7 @@ export const NUMBER_RULES: Record<NumberSettingName, NumberRule> = {
 
 /** The options of every chooser. */
 export const CHOICE_OPTIONS: { [Name in ChoiceSettingName]: readonly Settings[Name][] } = {
+  "demand-profile": ["Flat (synthetic)", "SCATS weekday", "SCATS weekend"],
   "network-source": ["Real OSM map", "Schematic Hoddle grid"],
   "signal-coordination": ["random offsets", "green wave (east-west)"],
   "view-mode": ["congestion", "volume", "change vs baseline"],
@@ -116,6 +124,7 @@ export const CHOICE_OPTIONS: { [Name in ChoiceSettingName]: readonly Settings[Na
 
 /** The on/off switches. */
 export const SWITCHES: readonly SwitchSettingName[] = [
+  "use-observed-signals?",
   "fixed-seed?",
   "hook-turns?",
   "close-whole-street?",
@@ -127,6 +136,9 @@ export const SWITCHES: readonly SwitchSettingName[] = [
  * one of these only takes effect after a restart.
  */
 export const SETUP_ONLY: readonly SettingName[] = [
+  "demand-profile",
+  "profile-start-hour",
+  "use-observed-signals?",
   "network-source",
   "seed",
   "fixed-seed?",

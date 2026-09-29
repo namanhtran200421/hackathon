@@ -9,6 +9,9 @@ import type { BaselineRecording } from "../simulation/types";
 
 /** Settings that shape a run, with the names people see. */
 const COMPARED: [SettingName, string][] = [
+  ["demand-profile", "Traffic demand profile"],
+  ["profile-start-hour", "Start hour in Melbourne"],
+  ["use-observed-signals?", "Matched DTP signal locations"],
   ["network-source", "Road map"],
   ["demand-veh-per-hour", "Cars arriving per hour"],
   ["through-traffic-%", "Cars just passing through"],
@@ -33,6 +36,9 @@ export interface Difference {
 
 /** A setting's value as people should read it, such as "2,500 cars/hour" or "On". */
 export function describeSetting(name: SettingName, value: unknown): string {
+  if (value === undefined) {
+    return "Not recorded";
+  }
   if (typeof value === "boolean") {
     if (value) {
       return "On";

@@ -26,3 +26,6 @@ simulation/netlogo/combined-link-results.csv
 
 # Left over from the old Next.js version
 .next/
+
+# Optional large source download; retained CBD rows are committed.
+simulation/netlogo/data/observed/*.zip
