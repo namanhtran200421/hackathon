@@ -1,0 +1,97 @@
+; Real road geometry, directed topology and available OSM lane/speed tags.
+; Signal locations, gate demand and destination sites remain illustrative.
+to build-osm-network
+  file-open "data/map.txt"
+  let node-data file-read
+  let edge-data file-read
+  file-close
+  foreach node-data [row-data ->
+    create-nodes 1 [
+      init-node "grid"
+      set map-id item 0 row-data
+      setxy item 1 row-data item 2 row-data
+      set col (xcor + 120) / 20
+      set row (ycor + 102) / 10
+      hide-turtle
+    ]
+  ]
+  foreach edge-data [entry ->
+    let a node item 0 entry let b node item 1 entry
+    let nm item 2 entry
+    let h [towards b] of a
+    let ax ifelse-value (abs (sin h) > abs (cos h)) ["EW"] ["NS"]
+    let little? (position "Little " nm = 0) or nm = "Flinders Ln"
+    make-road a b nm ax (ifelse-value little? ["little"] ["main"]) false (item 5 entry) true 0
+    ask road [who] of a [who] of b [
+      set len item 3 entry
+      set posted-speed item 4 entry
+      set geometry item 6 entry
+    ]
+  ]
+  ; Assign repeatable section IDs; opposite directions share the same section.
+  foreach sort remove-duplicates [street] of roads [nm ->
+    let keys [] let index 0
+    foreach sort roads with [street = nm] [L ->
+      let pair sort (list [who] of [end1] of L [who] of [end2] of L)
+      if not member? pair keys [set keys lput pair keys set index index + 1]
+      ask L [set seg 1 + position pair keys]
+    ]
+  ]
+  ask nodes [
+    let names remove-duplicates [street] of my-links
+    set signalised? count link-neighbors >= 3 and length names >= 2 and any? my-links with [road-kind = "main"]
+  ]
+  ; Twelve synthetic boundary entry/exit gates, attached to the nearest road node.
+  let chosen []
+  foreach [[-108 -65] [-108 0] [-108 65] [108 -65] [108 0] [108 65] [-70 -90] [0 -90] [70 -90] [-70 90] [0 90] [70 90]] [xy ->
+    let used chosen
+    let n min-one-of nodes with [node-kind = "grid" and not member? self used] [distancexy item 0 xy item 1 xy]
+    set chosen lput n chosen
+    let dx-g ifelse-value [xcor] of n > 0 [-2] [2]
+    let dy-g ifelse-value [ycor] of n > 0 [-2] [2]
+    make-gate n dx-g dy-g "Boundary access" "EW" false 1 1
+  ]
+  ; Six explicitly synthetic destination sites, not claims about real car parks.
+  foreach [[-65 -45] [-30 25] [15 -35] [35 45] [65 10] [-55 55]] [xy ->
+    let n min-one-of nodes with [node-kind = "grid"] [distancexy item 0 xy item 1 xy]
+    let p nobody
+    create-nodes 1 [
+      init-node "carpark"
+      setxy ([xcor] of n + 1.5) ([ycor] of n + 1.5)
+      set weight 1 set shape "square" set size 1.5 set color sky
+      set label "D" set label-color white set p self
+    ]
+    make-road p n "Destination access" "access" "access" false 1 true 0
+    make-road n p "Destination access" "access" "access" false 1 true 0
+  ]
+  set gates nodes with [node-kind = "gate"]
+  set carparks nodes with [node-kind = "carpark"]
+  set gate-weight-sum sum [weight] of gates
+  set dests sort (turtle-set gates carparks)
+  foreach range length dests [k -> ask item k dests [set dest-id k]]
+  ask roads [set partner road [who] of end2 [who] of end1 hide-link]
+  foreach ["Flinders St" "Collins St" "Bourke St" "Lonsdale St" "La Trobe St" "Spencer St" "William St" "Queen St" "Elizabeth St" "Russell St" "Exhibition St" "Spring St"] [nm ->
+    let L max-one-of roads with [street = nm] [len]
+    if L != nobody [
+      let pt point-along [geometry] of L ([len] of L / 2)
+      create-map-labels 1 [setxy item 0 pt item 1 pt set size 0 set label nm set label-color white]
+    ]
+  ]
+  create-map-labels 1 [setxy 116 -98 set size 0 set label "© OpenStreetMap contributors | D = synthetic destination | N ↑" set label-color gray]
+end
+
+to draw-osm-roads
+  clear-drawing
+  create-painters 1 [
+    hide-turtle
+    foreach sort roads [L ->
+      let pts [geometry] of L
+      set color [color] of L
+      set pen-size max list 1 ([thickness] of L * 3)
+      pen-up setxy item 0 first pts item 1 first pts pen-down
+      foreach but-first pts [pt -> setxy item 0 pt item 1 pt]
+      pen-up
+    ]
+    die
+  ]
+end

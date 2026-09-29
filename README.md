@@ -1,3 +1,7 @@
+## Combined simulator (new)
+
+Open [Melbourne Traffic Combined](combined/Melbourne%20Traffic%20Combined.nlogox) for the merged real-map and Hoddle Grid simulator. See its [guide](combined/README.md) and [validation](combined/TESTING.md). The previous simulator below remains unchanged.
+
 # Melbourne CBD traffic playground
 
 ## Run it
