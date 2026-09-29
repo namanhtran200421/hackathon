@@ -42,7 +42,7 @@ All reads from the model run on a cloned random generator, the same mechanism as
 
 The web runtime may use a different random sequence from desktop NetLogo. Compare seeds within the same runtime; do not assume web and desktop runs are numerically identical.
 
-The app has no authentication, persistence or server state. The baseline lives in the model in the open tab and is lost on reload. Simulations contain public map data and synthetic vehicles only. The model's limitations in `combined/README.md` still apply.
+The app has no authentication or server state. A saved baseline is kept in this browser (localStorage) and restored into the model after a reload, so it only needs saving once. It is reused for every later run, even after Setup or a settings change, until you press Replace baseline or Clear baseline. The page lists every setting that differs from the baseline, because those changes affect the results as much as a closure does. This is a deliberate web change: the desktop model clears the baseline at Setup when settings differ. Simulations contain public map data and synthetic vehicles only. The model's limitations in `combined/README.md` still apply.
 
 ## Validation
 

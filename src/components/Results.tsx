@@ -2,6 +2,7 @@
 import { useMemo, useState } from "react";
 import { ArrowDownRight, ArrowUpRight, BarChart3, Minus } from "lucide-react";
 import { Bars, LineChart, type Line } from "./Charts";
+import type { Difference } from "@/lib/baseline";
 import {
   STYLE,
   type BaselineRun,
@@ -251,10 +252,12 @@ export default function Results({
   snapshot,
   baselineRun,
   running,
+  differences,
 }: {
   snapshot: Snapshot | null;
   baselineRun: BaselineRun | null;
   running: boolean;
+  differences: Difference[];
 }) {
   const [allStreets, setAllStreets] = useState(false);
   const m = snapshot?.metrics ?? null;
@@ -271,6 +274,11 @@ export default function Results({
   const rows = runAt
     ? summaryRows(runAt, b, hasBaseline && !b ? m!.baseline : null)
     : [];
+  const sameNetwork =
+    !baselineRun?.settings ||
+    !snapshot ||
+    baselineRun.settings["network-source"] === snapshot.world.network;
+  const streetBaseline = hasBaseline && sameNetwork;
   const streets = useMemo(
     () =>
       snapshot
@@ -279,13 +287,13 @@ export default function Results({
     [snapshot],
   );
   const ranked = [...streets].sort((x, y) =>
-    hasBaseline ? Math.abs(y.change) - Math.abs(x.change) : y.flow - x.flow,
+    streetBaseline ? Math.abs(y.change) - Math.abs(x.change) : y.flow - x.flow,
   );
   const shownStreets = allStreets ? ranked : ranked.slice(0, 10);
   const barRows = ranked.slice(0, 10).map((s) => ({
     label: s.street,
-    value: hasBaseline ? s.change : s.flow,
-    detail: hasBaseline
+    value: streetBaseline ? s.change : s.flow,
+    detail: streetBaseline
       ? `${whole.format(s.flow)} veh/h now · ${whole.format(s.base)} in baseline`
       : `${one.format(s.travel)} s mean link travel time`,
   }));
@@ -401,6 +409,22 @@ export default function Results({
               some baseline values are unavailable.
             </p>
           )}
+          {differences.length > 0 && (
+            <p className="help results-note">
+              <strong>Settings differ from the baseline:</strong>{" "}
+              {differences
+                .map((d) => `${d.label} ${d.from} → ${d.to}`)
+                .join("; ")}
+              . Differences in results come from these changes as well as any
+              closures.
+            </p>
+          )}
+          {hasBaseline && !sameNetwork && (
+            <p className="help results-note">
+              The baseline was saved on a different road network, so street
+              flows are shown without a baseline comparison.
+            </p>
+          )}
           {b && runAt && (
             <p className="help results-note">
               Both runs are compared at {clock(Math.min(runAt.t, b.t))}{" "}
@@ -423,7 +447,7 @@ export default function Results({
           </div>
 
           <h3 className="results-subhead">
-            {hasBaseline ? "Streets that changed most" : "Busiest streets"}
+            {streetBaseline ? "Streets that changed most" : "Busiest streets"}
           </h3>
           <p className="help">
             Average flow per block in both directions, in vehicles per hour,
@@ -432,12 +456,12 @@ export default function Results({
           {barRows.length > 0 && (
             <Bars
               title={
-                hasBaseline
+                streetBaseline
                   ? "Change in flow vs baseline (veh/h)"
                   : "Flow (veh/h)"
               }
               rows={barRows}
-              diverging={hasBaseline}
+              diverging={streetBaseline}
               unit="veh/h"
             />
           )}
@@ -446,9 +470,9 @@ export default function Results({
               <thead>
                 <tr>
                   <th scope="col">Street</th>
-                  {hasBaseline && <th scope="col">Baseline veh/h</th>}
+                  {streetBaseline && <th scope="col">Baseline veh/h</th>}
                   <th scope="col">Flow veh/h</th>
-                  {hasBaseline && <th scope="col">Change</th>}
+                  {streetBaseline && <th scope="col">Change</th>}
                   <th scope="col">Link travel time</th>
                   <th scope="col">Status</th>
                 </tr>
@@ -457,9 +481,9 @@ export default function Results({
                 {shownStreets.map((s) => (
                   <tr key={s.street}>
                     <th scope="row">{s.street}</th>
-                    {hasBaseline && <td>{whole.format(s.base)}</td>}
+                    {streetBaseline && <td>{whole.format(s.base)}</td>}
                     <td>{whole.format(s.flow)}</td>
-                    {hasBaseline && (
+                    {streetBaseline && (
                       <td>
                         {s.change > 0.5 ? "+" : s.change < -0.5 ? "−" : ""}
                         {whole.format(Math.abs(s.change))}

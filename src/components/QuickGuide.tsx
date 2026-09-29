@@ -17,7 +17,7 @@ const steps: [string, string][] = [
   ],
   [
     "Compare with a baseline",
-    "Run with all roads open until the warm-up has passed plus at least one minute, then press Save baseline. Press Setup, which reopens every road, then apply your closure and press Go. Scheduled closure can apply it for you at a set time. Switch the view to Change vs baseline and read the comparison table. Keep the other settings and the run length the same; changing settings clears the baseline at the next Setup.",
+    "Run once with all roads open until the warm-up has passed plus at least one minute, then press Save baseline. You only do this once: the baseline is kept in this browser and every later run is compared with it, even after Setup, a reload or new settings. To test a closure, press Setup (which reopens every road), apply the closure and press Go. Run results lists any settings that differ from the baseline, because those changes affect the results too. Use Replace baseline or Clear baseline to start over.",
   ],
   [
     "Read the map",

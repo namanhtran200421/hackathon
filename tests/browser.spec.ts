@@ -119,6 +119,39 @@ test("baseline, change view, comparison table and CSV export", async ({
   expect(text).toContain('"Collins St"');
 });
 
+test("a baseline is saved once and reused across settings and reloads", async ({
+  page,
+}) => {
+  await ready(page);
+  await page.getByRole("slider", { name: "Simulation speed" }).fill("7");
+  await runUntil(page, 125);
+  await page.getByRole("button", { name: "Save baseline" }).click();
+  await expect(page.locator(".baseline-meta")).toContainText("Baseline:");
+  await page.getByRole("slider", { name: "Traffic demand" }).fill("4000");
+  await page.getByRole("button", { name: "Setup" }).click();
+  await expect(status(page)).toContainText("Ready", { timeout: 60000 });
+  await expect(page.locator(".baseline-diff")).toContainText(
+    "Traffic demand: 2,500 veh/h → 4,000 veh/h",
+  );
+  await page.reload();
+  await expect(status(page)).toContainText("Ready", { timeout: 60000 });
+  await expect(page.locator(".baseline-meta")).toContainText("Baseline:");
+  await expect(
+    page.getByRole("button", { name: "Replace baseline" }),
+  ).toBeVisible();
+  await runUntil(page, 90);
+  await expect(page.locator("#results")).toContainText("Baseline vs this run");
+  await page.getByRole("button", { name: "Clear baseline" }).click();
+  await expect(
+    page.getByRole("button", { name: "Save baseline" }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(status(page)).toContainText("Ready", { timeout: 60000 });
+  await expect(
+    page.getByRole("button", { name: "Save baseline" }),
+  ).toBeVisible();
+});
+
 test("the window ends the run unless Run forever is on", async ({ page }) => {
   await ready(page);
   await page.locator("summary", { hasText: "Measurement" }).click();

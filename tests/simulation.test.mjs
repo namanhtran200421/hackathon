@@ -87,7 +87,7 @@ test("real map runs reproducibly, conserves vehicles and closes streets", () => 
   );
 });
 
-test("baseline uses the model's own guards and survives a matching Setup", () => {
+test("baseline uses the model's guards and is kept across Setup until cleared", () => {
   const sim = started({ "network-source": "Schematic Hoddle grid" });
   run(sim, 90);
   sim.command("save-baseline");
@@ -107,10 +107,51 @@ test("baseline uses the model's own guards and survives a matching Setup", () =>
 
   sim.setup();
   assert.equal(sim.metrics().hasBaseline, true);
+  // Saved once, reused: changing settings keeps the baseline but flags the difference.
   sim.set("demand-veh-per-hour", 3000);
-  assert.equal(sim.metrics().baselineMatches, false);
+  sim.setup();
+  const reused = sim.metrics();
+  assert.equal(reused.hasBaseline, true);
+  assert.equal(reused.baselineMatches, false);
+  assert.equal(reused.baseline.completed, saved.completed);
+
+  sim.command("clear-baseline");
+  assert.equal(sim.metrics().hasBaseline, false);
   sim.setup();
   assert.equal(sim.metrics().hasBaseline, false);
+});
+
+test("a stored baseline restores into a fresh model, as after a reload", () => {
+  const first = started({ "network-source": "Schematic Hoddle grid" });
+  run(first, 150);
+  first.command("save-baseline");
+  const stored = JSON.parse(JSON.stringify(first.exportBaseline()));
+  assert.ok(stored.pairs.length > 0);
+  const baseCounts = (sim) => {
+    const styles = sim.styles();
+    return Array.from(
+      sim.world().roads,
+      (r) => styles[r.index * sim.STYLE_FIELDS + 5],
+    );
+  };
+
+  const fresh = started({ "network-source": "Schematic Hoddle grid" });
+  assert.equal(fresh.metrics().hasBaseline, false);
+  fresh.restoreBaseline(stored);
+  assert.equal(fresh.metrics().hasBaseline, true);
+  assert.equal(fresh.metrics().baselineMatches, true);
+  assert.deepEqual(baseCounts(fresh), baseCounts(first));
+  fresh.setup();
+  assert.deepEqual(baseCounts(fresh), baseCounts(first));
+
+  // Restoring must not disturb the run itself.
+  const plainRun = started({ "network-source": "Schematic Hoddle grid" });
+  run(plainRun, 60);
+  run(fresh, 60);
+  assert.equal(fresh.metrics().ticks, 60);
+  assert.deepEqual([...fresh.cars()], [...plainRun.cars()]);
+  fresh.restoreBaseline({ pairs: "bad", signature: 1 });
+  assert.equal(fresh.metrics().hasBaseline, true);
 });
 
 test("the run stops at the end of the window unless it runs forever", () => {

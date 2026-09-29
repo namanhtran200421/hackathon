@@ -105,5 +105,19 @@ export type Sample = {
   measured: number;
 };
 
+/** The model's own baseline state, as exported for browser storage. */
+export type ModelBaseline = {
+  pairs: [string, number][];
+  summary: number[];
+  signature: (string | number | boolean)[];
+};
+
 /** Everything kept from the run that was saved as the baseline. */
-export type BaselineRun = { metrics: Metrics; history: Sample[] };
+export type BaselineRun = {
+  metrics: Metrics;
+  history: Sample[];
+  settings: Settings;
+  forever: boolean;
+  savedAt: number;
+  saved?: ModelBaseline;
+};

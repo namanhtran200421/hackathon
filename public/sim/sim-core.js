@@ -78,6 +78,7 @@
     "reopen-selection",
     "reopen-all",
     "save-baseline",
+    "clear-baseline",
   ];
 
   const STYLE_FIELDS = 9;
@@ -316,6 +317,23 @@
       csv() {
         const rows = read(reporters.csv);
         return [CSV_HEADER, ...rows.map(String)].join("\n") + "\n";
+      },
+      // The model's baseline, for browser storage: link flows, summary, signature.
+      exportBaseline() {
+        const [pairs, summary, signature] = read(reporters.baseline);
+        if (!Array.isArray(signature)) return null;
+        return JSON.parse(JSON.stringify({ pairs, summary, signature }));
+      },
+      restoreBaseline(saved) {
+        if (!saved || !Array.isArray(saved.pairs) || !Array.isArray(saved.signature)) return;
+        const pairs = saved.pairs
+          .filter((kv) => Array.isArray(kv) && typeof kv[0] === "string" && Number.isFinite(kv[1]))
+          .slice(0, 20000);
+        const summary = Array.isArray(saved.summary) ? saved.summary.filter(Number.isFinite).slice(0, 5) : [];
+        const signature = saved.signature
+          .filter((v) => ["string", "number", "boolean"].includes(typeof v))
+          .slice(0, 32);
+        read(() => procedures.callCommand("restore-baseline", pairs, summary, signature));
       },
       conserved() {
         return read(reporters.conservation) === true;

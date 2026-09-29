@@ -1768,3 +1768,23 @@ main {
     padding: 16px;
   }
 }
+.baseline-meta {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 4px;
+}
+.baseline-diff {
+  margin-top: 14px;
+  background: var(--background);
+  border-left: 4px solid var(--accent);
+  padding: 10px 14px;
+  font-size: 13px;
+}
+.baseline-diff ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.comparison-actions {
+  flex-wrap: wrap;
+}

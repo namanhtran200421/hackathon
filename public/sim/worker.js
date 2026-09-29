@@ -180,6 +180,14 @@ function handle(message) {
       owed = Math.min(owed, 1);
       last = performance.now();
       return;
+    case "export-baseline":
+      post({ type: "baseline", saved: sim.exportBaseline() });
+      return;
+    case "restore-baseline":
+      sim.restoreBaseline(message.saved);
+      stylesDirty = true;
+      if (!running) frame();
+      return;
     case "csv":
       post({ type: "csv", text: sim.csv(), ticks: sim.ticks() });
       return;

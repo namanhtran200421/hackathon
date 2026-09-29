@@ -27,6 +27,7 @@ import {
 import TrafficMap from "./TrafficMap";
 import QuickGuide from "./QuickGuide";
 import Results, { type Snapshot } from "./Results";
+import { differences, savedLabel } from "@/lib/baseline";
 import { Choice, Slider, Toggle } from "./Fields";
 import { useTrafficSim } from "@/lib/useTrafficSim";
 import { CHOICES, SPEEDS } from "@/lib/controls.mjs";
@@ -150,6 +151,9 @@ export default function TrafficLab() {
 
   // Results are read from a frozen copy taken whenever the model is paused
   // or stopped, so tables and charts never shift while the traffic runs.
+  const diffs = m?.hasBaseline
+    ? differences(sim.baselineRun, settings, sim.forever)
+    : [];
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const styles = sim.store.current?.styles ?? null;
   useEffect(() => {
@@ -805,11 +809,14 @@ export default function TrafficLab() {
                     <h2>Compare with a baseline</h2>
                     <p>
                       {!m?.hasBaseline
-                        ? "Run with all roads open past the warm-up plus one minute, then save a baseline."
-                        : m.baselineMatches
-                          ? "Baseline saved. Press Setup, apply a closure, then Go for the same length of time."
-                          : "Settings differ from the baseline. The next Setup will clear it."}
+                        ? "Run with all roads open past the warm-up plus one minute, then save it as your baseline. You only need to do this once."
+                        : "Saved once and reused: every later run is compared with it until you replace or clear it. To test a closure, press Setup, apply the closure, then Go."}
                     </p>
+                    {m?.hasBaseline && sim.baselineRun && (
+                      <p className="baseline-meta">
+                        Baseline: {savedLabel(sim.baselineRun)}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="comparison-actions">
@@ -817,9 +824,26 @@ export default function TrafficLab() {
                     className="button secondary"
                     disabled={!ready}
                     onClick={() => sim.command("save-baseline")}
+                    title={
+                      m?.hasBaseline
+                        ? "Save the current open-road run as the new baseline"
+                        : undefined
+                    }
                   >
-                    {m?.hasBaseline ? <Check size={16} /> : null} Save baseline
+                    {m?.hasBaseline ? "Replace baseline" : "Save baseline"}
                   </button>
+                  {m?.hasBaseline && (
+                    <button
+                      className="button secondary"
+                      disabled={!ready}
+                      onClick={() => {
+                        sim.clearBaseline();
+                        sim.setStatus("Baseline cleared.");
+                      }}
+                    >
+                      Clear baseline
+                    </button>
+                  )}
                   <button
                     className="button secondary"
                     disabled={!ready}
@@ -829,6 +853,23 @@ export default function TrafficLab() {
                   </button>
                 </div>
               </div>
+              {m?.hasBaseline && diffs.length > 0 && (
+                <div className="baseline-diff" role="note">
+                  <strong>
+                    {diffs.length} setting{diffs.length > 1 ? "s" : ""} differ
+                    {diffs.length > 1 ? "" : "s"} from the baseline.
+                  </strong>{" "}
+                  Differences in results come from these changes as well as any
+                  closures.
+                  <ul>
+                    {diffs.map((d) => (
+                      <li key={d.label}>
+                        {d.label}: {d.from} → {d.to}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {m?.hasBaseline && (
                 <p className="help results-link">
                   <a href="#results">
@@ -879,6 +920,7 @@ export default function TrafficLab() {
               snapshot={snapshot}
               baselineRun={sim.baselineRun}
               running={running}
+              differences={diffs}
             />
           </section>
         </div>

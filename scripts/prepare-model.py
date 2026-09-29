@@ -16,6 +16,39 @@ for name in ['choose-street', 'choose-section', 'export-link-results']:
 for name in ['draw-background', 'draw-osm-roads']:
     code, count = re.subn(r'^to ' + name + r'\n.*?^end', f'to {name}\nend', code, flags=re.S | re.M)
     assert count == 1
+# The web keeps a saved baseline across Setup, even when settings change, so one
+# open-road run can be reused as the reference for later scenarios. The page lists
+# any settings that differ from the baseline's. A different network simply has no
+# matching links, so street comparisons show zero there.
+old = """  if baseline-signature != scenario-signature [
+    set baseline table:make
+    set baseline-signature ""
+    set baseline-summary []
+  ]
+"""
+assert old in code, 'Baseline invalidation in setup changed; review the adapter.'
+code = code.replace(old, '')
+# Browser storage restores a saved baseline after a reload; Clear baseline removes it.
+code += """
+
+to restore-baseline [pairs summary signature]
+  set baseline table:make
+  foreach pairs [kv -> table:put baseline item 0 kv item 1 kv]
+  set baseline-summary summary
+  set baseline-signature signature
+  ask roads [ set base-count ifelse-value table:has-key? baseline link-key [ table:get baseline link-key ] [ 0 ] ]
+  update-link-colors
+end
+
+to clear-baseline
+  set baseline table:make
+  set baseline-signature ""
+  set baseline-summary []
+  ask roads [ set base-count 0 ]
+  update-link-colors
+  output-print "Baseline cleared."
+end
+"""
 model.find('code').text = 'WEB_CODE_PLACEHOLDER'
 xml = E.tostring(model, encoding='unicode').replace('WEB_CODE_PLACEHOLDER', '<![CDATA[' + code + ']]>')
 (root / 'simulation-runtime/model.nlogox').write_text(xml)

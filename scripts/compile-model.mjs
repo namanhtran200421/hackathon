@@ -28,6 +28,8 @@ const expressions = {
   labels: "[ (list xcor ycor label) ] of map-labels",
   bounds: "(list min-pxcor max-pxcor min-pycor max-pycor)",
   csv: `map [L -> [(word "\\"" street "\\"," direction-name "," seg ",\\"" node-name end1 "\\",\\"" node-name end2 "\\"," lanes "," lanes-open "," closed? "," precision (win-count / ${hours}) 1 "," precision base-count 1 "," precision ((win-count / ${hours}) - base-count) 1 "," precision tt-ema 1)] of L] filter [L -> [cars-allowed? and road-kind != "access"] of L] sort roads`,
+  baseline:
+    "(list (ifelse-value is-list? baseline-signature [table:to-list baseline] [[]]) baseline-summary baseline-signature)",
   conservation:
     "generated-total = completed-total + stranded-count + count cars + queued-at-gates",
 };

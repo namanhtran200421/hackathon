@@ -4,6 +4,7 @@ import { DEFAULTS, DEFAULT_SPEED, FOREVER, SETUP_ONLY } from "./controls.mjs";
 import {
   CAR_FIELDS,
   type BaselineRun,
+  type ModelBaseline,
   type Metrics,
   type Sample,
   type RenderStore,
@@ -13,6 +14,37 @@ import {
 } from "./types";
 
 const MAX_OUTPUT_LINES = 400;
+const BASELINE_KEY = "melbourne-traffic-lab:baseline:v1";
+
+/** The saved baseline lives in this browser, so it survives reloads. */
+function loadBaseline(): BaselineRun | null {
+  try {
+    const raw = localStorage.getItem(BASELINE_KEY);
+    const value = raw ? (JSON.parse(raw) as BaselineRun) : null;
+    return value && value.metrics && Array.isArray(value.history)
+      ? value
+      : null;
+  } catch {
+    return null;
+  }
+}
+function storeBaseline(run: BaselineRun | null) {
+  try {
+    if (!run) localStorage.removeItem(BASELINE_KEY);
+    else
+      try {
+        localStorage.setItem(BASELINE_KEY, JSON.stringify(run));
+      } catch {
+        // Too large for storage: keep the comparison, drop the time series.
+        localStorage.setItem(
+          BASELINE_KEY,
+          JSON.stringify({ ...run, history: [] }),
+        );
+      }
+  } catch {
+    // Storage unavailable (private window): the baseline lasts for this tab only.
+  }
+}
 const MAX_SAMPLES = 3000;
 
 function emptyStore(): RenderStore {
@@ -64,7 +96,13 @@ export function useTrafficSim() {
   const [baselineRun, setBaselineRun] = useState<BaselineRun | null>(null);
   const samples = useRef<Sample[]>([]);
   const sampleStep = useRef(1);
-  const baselineRequested = useRef(false);
+  const baselineRequested = useRef<{
+    settings: Settings;
+    forever: boolean;
+  } | null>(null);
+  const pendingBaseline = useRef<BaselineRun | null>(null);
+  const restored = useRef(false);
+  const foreverRef = useRef(false);
   const [running, setRunning] = useState(false);
   const [output, setOutput] = useState<string[]>([]);
   const [speed, setSpeedState] = useState(DEFAULT_SPEED);
@@ -88,6 +126,7 @@ export function useTrafficSim() {
       "(prefers-reduced-motion: reduce)",
     ).matches;
     const w = new Worker("/sim/worker.js");
+    restored.current = false;
     worker.current = w;
     store.current = emptyStore();
     setPhase("loading");
@@ -120,6 +159,19 @@ export function useTrafficSim() {
           break;
         }
         case "world":
+          // Bring back a baseline saved earlier in this browser, once per engine.
+          if (!restored.current) {
+            restored.current = true;
+            const stored = loadBaseline();
+            if (stored) {
+              setBaselineRun(stored);
+              if (stored.saved)
+                w.postMessage({
+                  type: "restore-baseline",
+                  saved: stored.saved,
+                });
+            }
+          }
           samples.current = [];
           sampleStep.current = 1;
           s.world = message.world;
@@ -189,18 +241,27 @@ export function useTrafficSim() {
           }
           // Keep a full copy of the run when the model accepts Save baseline.
           if (baselineRequested.current && !message.running) {
-            baselineRequested.current = false;
+            const asked = baselineRequested.current;
+            baselineRequested.current = null;
             const b = m.baseline;
             if (
               m.hasBaseline &&
               b &&
               b.measured === m.measured &&
               b.completed === m.completed
-            )
-              setBaselineRun({ metrics: m, history: samples.current.slice() });
+            ) {
+              const run: BaselineRun = {
+                metrics: m,
+                history: samples.current.slice(),
+                settings: asked.settings,
+                forever: asked.forever,
+                savedAt: Date.now(),
+              };
+              setBaselineRun(run);
+              pendingBaseline.current = run;
+              w.postMessage({ type: "export-baseline" });
+            }
           }
-          if (!m.hasBaseline)
-            setBaselineRun((current) => (current ? null : current));
           if (!message.running) {
             if (commitTimer.current !== null) clearTimeout(commitTimer.current);
             commit();
@@ -233,6 +294,17 @@ export function useTrafficSim() {
           break;
         case "notice":
           setStatus(message.message);
+          break;
+        case "baseline":
+          if (pendingBaseline.current) {
+            const run = {
+              ...pendingBaseline.current,
+              saved: message.saved as ModelBaseline,
+            };
+            pendingBaseline.current = null;
+            storeBaseline(run);
+            setBaselineRun(run);
+          }
           break;
         case "csv":
           csvRequest.current?.(message.text);
@@ -303,6 +375,7 @@ export function useTrafficSim() {
   const setForever = useCallback(
     (on: boolean) => {
       setForeverState(on);
+      foreverRef.current = on;
       send({
         type: "set",
         name: "measure-s",
@@ -362,11 +435,21 @@ export function useTrafficSim() {
     run: (on: boolean) => send({ type: "run", run: on }),
     step: () => send({ type: "step" }),
     command: (name: string) => {
-      if (name === "save-baseline") baselineRequested.current = true;
+      // Record the settings as they are at the click, before any later change.
+      if (name === "save-baseline")
+        baselineRequested.current = {
+          settings: settingsRef.current,
+          forever: foreverRef.current,
+        };
       send({ type: "command", name });
     },
     history,
     baselineRun,
+    clearBaseline: () => {
+      send({ type: "command", name: "clear-baseline" });
+      storeBaseline(null);
+      setBaselineRun(null);
+    },
     select: (street: string, block: number) =>
       send({ type: "select", street, block }),
     click: (x: number, y: number) => send({ type: "click", x, y }),

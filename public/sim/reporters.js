@@ -52,6 +52,9 @@ self.TRAFFIC_REPORTERS = {
   });
 }, "[ L -> [ cars-allowed? and road-kind != \"access\" ] of L ]", true, false), PrimChecks.list.sort(world.linkManager.linksOfBreed("ROADS")))));
   },
+  "baseline": function () {
+    return (ListPrims.list((Prims.ifElseValueBooleanCheck(NLType.checks.isList(world.observer.getGlobal("baseline-signature"))) ? Extensions["TABLE"].prims["TO-LIST"](world.observer.getGlobal("baseline")) : []), world.observer.getGlobal("baseline-summary"), world.observer.getGlobal("baseline-signature")));
+  },
   "conservation": function () {
     return (Prims.equality(world.observer.getGlobal("generated-total"), PrimChecks.math.plus(113, 114, PrimChecks.math.plus(100, 101, PrimChecks.math.plus(83, 84, PrimChecks.validator.checkArg('+', 83, 84, 1, world.observer.getGlobal("completed-total")), PrimChecks.validator.checkArg('+', 83, 84, 1, world.observer.getGlobal("stranded-count"))), PrimChecks.agentset.count(world.turtleManager.turtlesOfBreed("CARS"))), PrimChecks.validator.checkArg('+', 113, 114, 1, PrimChecks.procedure.callReporter(115, 130, "queued-at-gates")))));
   }
