@@ -1,0 +1,12 @@
+{
+  "nodes": 4265,
+  "directed_edges": 5069,
+  "street_names": 95,
+  "discarded_nodes": 1267,
+  "bbox": [
+    144.95,
+    -37.823,
+    144.977,
+    -37.805
+  ]
+}

@@ -1,0 +1,105 @@
+to choose-street
+  if not any? roads [user-message "Click Setup first." stop]
+  let names sort remove-duplicates [street] of roads with [road-kind != "gate" and road-kind != "access" and cars-allowed?]
+  let picked user-one-of "Select a street" names
+  if picked != false [set selected-street picked set selected-block 0]
+end
+
+to choose-section
+  if not any? roads [stop]
+  let numbers sort remove-duplicates [seg] of roads with [street = selected-street and road-kind != "gate" and road-kind != "access"]
+  let options fput "Whole street" map [n -> word "Section " n] numbers
+  let picked user-one-of (word selected-street ": choose extent (or click the map)") options
+  if picked != false [
+    ifelse picked = "Whole street" [set selected-block 0]
+      [set selected-block item (position picked options - 1) numbers]
+  ]
+end
+
+to-report selected-links
+  report roads with [street = selected-street and cars-allowed? and road-kind != "gate" and road-kind != "access" and (selected-block = 0 or seg = selected-block)]
+end
+
+to-report selection-label
+  report word selected-street (ifelse-value selected-block = 0 [" / whole street"] [word " / section " selected-block])
+end
+
+to apply-scenario-closure
+  set closure-applied? true
+  close-selection
+end
+
+to close-selection
+  let targets selected-links
+  if not any? targets [set closure-desc "No drivable road selected" stop]
+  (ifelse
+    closure-type = "Both directions" [ask targets [set closed? true set lanes-open 0]]
+    closure-type = "East / north direction" [
+      ask targets with [link-heading >= 315 or link-heading < 135] [set closed? true set lanes-open 0]
+    ]
+    [ask targets [set lanes-open max list 0 (lanes - 1) set closed? lanes-open = 0]])
+  output-print (word "t=" ticks "s: " selection-label " / " closure-type)
+  network-changed
+end
+
+to reopen-selection
+  ask selected-links [set closed? false set lanes-open lanes]
+  network-changed
+end
+
+to reopen-all
+  ask roads [set closed? false set lanes-open lanes]
+  set closure-applied? true
+  network-changed
+end
+
+to network-changed
+  compute-distances "free"
+  update-live-costs
+  compute-distances "live"
+  ask cars [set plan-for nobody]
+  set closure-desc (word count roads with [closed?] " closed directions; " count roads with [not closed? and lanes-open < lanes] " reduced lanes")
+  update-link-colors
+  display
+end
+
+; No STOP in the polling procedure: it must remain active between clicks.
+to click-to-close
+  handle-map-pointer mouse-down? mouse-inside? mouse-xcor mouse-ycor
+end
+
+to handle-map-pointer [pressed? inside? mx my]
+  ifelse pressed? [
+    if mouse-was-down? != true [
+      set mouse-was-down? true
+      if inside? and any? roads [
+        let L min-one-of roads with [cars-allowed? and road-kind != "gate" and road-kind != "access"] [seg-distance mx my]
+        if L != nobody [if [seg-distance mx my] of L < 2.5 [toggle-closure L]]
+      ]
+    ]
+  ] [set mouse-was-down? false]
+end
+
+to toggle-closure [L]
+  set selected-street [street] of L
+  set selected-block ifelse-value close-whole-street? [0] [[seg] of L]
+  ifelse [closed? or lanes-open < lanes] of L [reopen-selection] [close-selection]
+end
+
+to-report seg-distance [px py]
+  let best 1.0E20
+  let pts geometry
+  (foreach (but-last pts) (but-first pts) [[a b] ->
+    let x1 item 0 a let y1 item 1 a
+    let ddx item 0 b - x1 let ddy item 1 b - y1
+    let l2 ddx * ddx + ddy * ddy
+    let t ifelse-value l2 = 0 [0] [((px - x1) * ddx + (py - y1) * ddy) / l2]
+    set t max list 0 (min list 1 t)
+    set best min list best sqrt ((px - x1 - t * ddx) ^ 2 + (py - y1 - t * ddy) ^ 2)
+  ])
+  report best
+end
+
+to-report scenario-signature
+  report (list active-network demand-veh-per-hour through-traffic-% informed-drivers-% speed-limit-kmh cycle-length ew-green-share signal-coordination hook-turns? fixed-seed? seed route-noise reroute-interval warm-up-s measure-s)
+end

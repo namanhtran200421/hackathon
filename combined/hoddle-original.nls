@@ -1,0 +1,1111 @@
+;; =====================================================================
+;;  HODDLE GRID TRAFFIC MODEL  -  prototype v0.1
+;;  Melbourne CBD road network, origin-destination demand, signals,
+;;  hook turns, dynamic re-routing and road-closure scenarios.
+;;
+;;  Units: 1 tick = 1 second, 1 patch = 10 metres.
+;;  Internally all distances are metres and speeds are metres/second.
+;;
+;;  Everything marked  [VERIFY]  is a placeholder assumption that should
+;;  be replaced with real data (OSM / City of Melbourne / DTP SCATS).
+;; =====================================================================
+
+extensions [ table ]
+
+breed [ nodes node ]            ;; intersections, entry/exit gates, car parks
+breed [ cars car ]
+directed-link-breed [ roads road ]   ;; one directed link = one direction of one block
+
+globals [
+  ;; ---- physical constants ----
+  M-PER-PATCH        ;; metres per patch
+  BLOCK-W            ;; centre-line distance between north-south streets (m)
+  ROW-H              ;; centre-line distance between east-west streets incl. little streets (m)
+  VEH-LEN            ;; vehicle length + standstill gap (m)
+  ACCEL DECEL        ;; m/s^2
+  INTERGREEN         ;; amber + all-red (s) between signal phases
+  BIG                ;; "infinity"
+  LITTLE-ST-KMH      ;; speed on little streets / laneways (km/h)   [VERIFY]
+  GIVE-WAY-DELAY     ;; expected wait when giving way at an unsignalised junction (s)
+  vmax               ;; speed limit (m/s)
+
+  ;; ---- network configuration ----
+  ew-config ns-config carpark-config no-car-segments
+  node-grid          ;; node-grid: item col -> item row -> node
+  dests              ;; list of destination nodes; index = dest-id
+  gates carparks signals
+  gate-weight-sum
+
+  ;; ---- scenario state ----
+  closure-applied? closure-desc
+  baseline           ;; table link-key -> veh/h, survives SETUP so runs can be compared
+
+  ;; ---- statistics (measurement window only) ----
+  trips-done trip-time-sum delay-sum veh-seconds stranded-count
+  recent-delays
+  mouse-was-down?
+]
+
+nodes-own [
+  node-kind          ;; "grid" "gate" "carpark"
+  col row            ;; grid indices, -1 for non-grid nodes
+  signalised?
+  cycle-offset
+  green-axis         ;; "EW" "NS" or "none" (intergreen)
+  last-green
+  dest-id            ;; index in DESTS, -1 if not a destination
+  weight             ;; demand weight for gates and car parks
+  gate-queue         ;; vehicles waiting to enter the CBD: list of [tick dest]
+  hook-box           ;; cars waiting in the intersection to complete a hook turn
+  dist-live dist-free dist-base   ;; travel time (s) from this node to every destination
+  tmp-dist tmp-done?
+]
+
+roads-own [
+  street axis        ;; street name, "EW" / "NS" / "access"
+  road-kind          ;; "main" "little" "gate" "access"
+  rank               ;; priority at unsignalised junctions (higher = priority)
+  trams?
+  cars-allowed?
+  seg                ;; block number along the street, 1..8 (0 for gate/access links)
+  len                ;; metres
+  lanes lanes-open closed?
+  free-tt            ;; free-flow travel time incl. average signal delay (s)
+  cost-live          ;; current estimated travel time (s)
+  tt-ema             ;; smoothed observed travel time (s)
+  lane-cars          ;; list (one per lane, 0 = kerbside) of lists of cars, front car first
+  win-count          ;; vehicles that left this link during the measurement window
+  base-count         ;; baseline veh/h for this link (from SAVE-BASELINE)
+  partner            ;; the opposite-direction link, if any
+]
+
+cars-own [
+  cur-link next-link lane pos speed
+  dest informed?
+  t-start t-link ff-time
+  moved-at
+  hooking            ;; node whose hook-box this car is waiting in, else nobody
+  plan-next plan-for plan-lane
+]
+
+;; =====================================================================
+;;  SETUP
+;; =====================================================================
+
+to setup
+  ;; not CLEAR-ALL: the baseline table must survive between runs
+  clear-ticks clear-turtles clear-patches clear-drawing clear-all-plots clear-output
+  if fixed-seed? [ random-seed seed ]
+  setup-constants
+  set gates no-turtles
+  set carparks no-turtles
+  set signals no-turtles
+  reset-ticks
+  if baseline = 0 [ set baseline table:make ]
+  set trips-done 0 set trip-time-sum 0 set delay-sum 0 set veh-seconds 0 set stranded-count 0
+  set recent-delays []
+  set mouse-was-down? false
+  set closure-applied? false
+  set closure-desc "none"
+  setup-config
+  draw-background
+  build-network
+  setup-signals
+  setup-routing
+  ask roads [ set base-count ifelse-value table:has-key? baseline link-key [ table:get baseline link-key ] [ 0 ] ]
+  if closure-street != "none" and closure-start-min = 0 [ apply-scenario-closure ]
+  update-link-colors
+  output-print "Hoddle Grid prototype ready."
+  output-print (word "Closure: " closure-desc)
+end
+
+to setup-constants
+  set M-PER-PATCH 10
+  set BLOCK-W 201.2
+  set ROW-H 100.6
+  set VEH-LEN 7
+  set ACCEL 1.5
+  set DECEL 3.5
+  set INTERGREEN 6
+  set BIG 1000000000
+  set LITTLE-ST-KMH 20
+  set GIVE-WAY-DELAY 6
+  set vmax speed-limit-kmh / 3.6
+end
+
+to setup-config
+  ;; East-west streets, south (row 0) to north (row 8).
+  ;; [ name  main?  direction  trams?  lanes-per-direction  entry-weight ]
+  ;; [VERIFY] little-street directions, lane counts and entry weights.
+  set ew-config [
+    [ "Flinders St"        true  "two-way" true  2 3   ]
+    [ "Flinders Ln"        false "east"    false 1 0   ]
+    [ "Collins St"         true  "two-way" true  1 1.5 ]
+    [ "Little Collins St"  false "west"    false 1 0   ]
+    [ "Bourke St"          true  "two-way" true  1 1   ]
+    [ "Little Bourke St"   false "east"    false 1 0   ]
+    [ "Lonsdale St"        true  "two-way" false 2 2   ]
+    [ "Little Lonsdale St" false "west"    false 1 0   ]
+    [ "La Trobe St"        true  "two-way" true  2 3   ]
+  ]
+  ;; North-south streets, west (col 0) to east (col 8).
+  ;; [ name  direction  trams?  lanes-per-direction  entry-weight ]
+  ;; Swanston St is modelled as closed to general traffic (trams, bikes, pedestrians).
+  set ns-config [
+    [ "Spencer St"    "two-way" true  2 3   ]
+    [ "King St"       "two-way" false 2 3   ]
+    [ "William St"    "two-way" true  2 2.5 ]
+    [ "Queen St"      "two-way" false 1 1   ]
+    [ "Elizabeth St"  "two-way" true  1 2   ]
+    [ "Swanston St"   "no-cars" true  1 0   ]
+    [ "Russell St"    "two-way" false 2 1.5 ]
+    [ "Exhibition St" "two-way" false 2 2.5 ]
+    [ "Spring St"     "two-way" true  2 2   ]
+  ]
+  ;; Blocks with no general traffic: Bourke St Mall (Elizabeth - Swanston).
+  set no-car-segments [ [ "Bourke St" 5 ] ]
+  ;; Car parks: [ col row weight ]; attached to little-street intersections.
+  ;; [VERIFY] illustrative locations - replace with real car parks and capacities.
+  set carpark-config [
+    [ 1 1 2 ] [ 2 3 1.5 ] [ 2 5 2 ] [ 3 3 1.5 ] [ 3 7 2 ]
+    [ 4 5 1 ] [ 6 3 3 ] [ 6 7 2 ] [ 7 1 2 ] [ 7 5 2.5 ]
+  ]
+end
+
+to draw-background
+  ask patches [ set pcolor 9.4 ]
+  ask patches with [ pxcor >= -1 and pxcor <= 162 and pycor >= -1 and pycor <= 81 ] [ set pcolor 8.4 ]
+  ask patches with [ pycor <= -12 ] [ set pcolor 97 ]
+  ask patch 40 -13 [ set plabel "Yarra River" set plabel-color 94 ]
+  foreach range 9 [ r ->
+    ask patch -10 round (r * ROW-H / M-PER-PATCH) [
+      set plabel short-name item 0 item r ew-config
+      set plabel-color 2
+    ]
+  ]
+  foreach range 9 [ c ->
+    ask patch (round (c * BLOCK-W / M-PER-PATCH) + 5) 91 [
+      set plabel item 0 item c ns-config
+      set plabel-color 2
+    ]
+  ]
+end
+
+to-report short-name [nm]
+  if nm = "Little Collins St" [ report "Lt Collins" ]
+  if nm = "Little Bourke St" [ report "Lt Bourke" ]
+  if nm = "Little Lonsdale St" [ report "Lt Lonsdale" ]
+  report nm
+end
+
+;; ---------------------------------------------------------------------
+;;  network construction
+;; ---------------------------------------------------------------------
+
+to build-network
+  set node-grid []
+  foreach range 9 [ c ->
+    let column []
+    foreach range 9 [ r ->
+      create-nodes 1 [
+        init-node "grid"
+        setxy (c * BLOCK-W / M-PER-PATCH) (r * ROW-H / M-PER-PATCH)
+        set col c
+        set row r
+        set signalised? (r mod 2 = 0)   ;; main street x main street
+        hide-turtle
+        set column lput self column
+      ]
+    ]
+    set node-grid lput column node-grid
+  ]
+
+  ;; east-west blocks
+  foreach range 9 [ r ->
+    let cfg item r ew-config
+    let nm item 0 cfg
+    let kind ifelse-value item 1 cfg [ "main" ] [ "little" ]
+    let dir item 2 cfg
+    foreach range 8 [ c ->
+      let a node-at c r
+      let b node-at (c + 1) r
+      let ok? not member? (list nm (c + 1)) no-car-segments
+      if dir = "two-way" or dir = "east" [ make-road a b nm "EW" kind (item 3 cfg) (item 4 cfg) ok? (c + 1) ]
+      if dir = "two-way" or dir = "west" [ make-road b a nm "EW" kind (item 3 cfg) (item 4 cfg) ok? (c + 1) ]
+    ]
+  ]
+
+  ;; north-south blocks
+  foreach range 9 [ c ->
+    let cfg item c ns-config
+    let nm item 0 cfg
+    let dir item 1 cfg
+    foreach range 8 [ r ->
+      let a node-at c r
+      let b node-at c (r + 1)
+      let ok? (dir != "no-cars") and not member? (list nm (r + 1)) no-car-segments
+      if dir = "two-way" or dir = "north" or dir = "no-cars" [ make-road a b nm "NS" "main" (item 2 cfg) (item 3 cfg) ok? (r + 1) ]
+      if dir = "two-way" or dir = "south" or dir = "no-cars" [ make-road b a nm "NS" "main" (item 2 cfg) (item 3 cfg) ok? (r + 1) ]
+    ]
+  ]
+
+  ;; entry / exit gates at the edge of the grid
+  foreach range 9 [ r ->
+    let cfg item r ew-config
+    if item 1 cfg and item 5 cfg > 0 [
+      make-gate (node-at 0 r) -8 0 (item 0 cfg) "EW" (item 3 cfg) (item 4 cfg) (item 5 cfg)
+      make-gate (node-at 8 r) 8 0 (item 0 cfg) "EW" (item 3 cfg) (item 4 cfg) (item 5 cfg)
+    ]
+  ]
+  foreach range 9 [ c ->
+    let cfg item c ns-config
+    if item 1 cfg != "no-cars" and item 4 cfg > 0 [
+      make-gate (node-at c 0) 0 -8 (item 0 cfg) "NS" (item 2 cfg) (item 3 cfg) (item 4 cfg)
+      make-gate (node-at c 8) 0 8 (item 0 cfg) "NS" (item 2 cfg) (item 3 cfg) (item 4 cfg)
+    ]
+  ]
+
+  ;; car parks
+  foreach carpark-config [ cpk ->
+    let n node-at (item 0 cpk) (item 1 cpk)
+    let p nobody
+    create-nodes 1 [
+      init-node "carpark"
+      setxy ([xcor] of n + 4) ([ycor] of n + 3.5)
+      set weight item 2 cpk
+      set shape "square" set size 2.4 set color 104
+      set label "P" set label-color white
+      set p self
+    ]
+    make-road p n "car park access" "access" "access" false 1 true 0
+    make-road n p "car park access" "access" "access" false 1 true 0
+  ]
+
+  set gates nodes with [ node-kind = "gate" ]
+  set carparks nodes with [ node-kind = "carpark" ]
+  set gate-weight-sum sum [ weight ] of gates
+  set dests sort (turtle-set gates carparks)
+  foreach range length dests [ k -> ask item k dests [ set dest-id k ] ]
+
+  ask roads [
+    set partner road [who] of end2 [who] of end1
+    ;; draw two-way streets once: hide the westbound / southbound twin
+    if partner != nobody and link-heading > 135 and link-heading < 315 [ hide-link ]
+  ]
+end
+
+to init-node [kind]
+  set node-kind kind
+  set col -1 set row -1
+  set signalised? false
+  set green-axis "none" set last-green "none"
+  set dest-id -1 set weight 0
+  set gate-queue [] set hook-box []
+  set cycle-offset 0
+  set shape "circle" set size 1 set color gray
+  set label ""
+end
+
+to-report node-at [c r]
+  report item r (item c node-grid)
+end
+
+to make-road [a b nm ax kind tr? nl ok? sg]
+  ask a [
+    create-road-to b [
+      set street nm
+      set axis ax
+      set road-kind kind
+      set rank (ifelse-value kind = "little" [ 1 ] kind = "access" [ 0 ] [ 2 ])
+      set trams? tr?
+      set cars-allowed? ok?
+      set seg sg
+      set len link-length * M-PER-PATCH
+      set lanes nl
+      set lanes-open nl
+      set closed? false
+      set lane-cars n-values nl [ [] ]
+      set win-count 0
+      set base-count 0
+      set partner nobody
+      set thickness base-thickness
+      set color gray
+    ]
+  ]
+end
+
+to make-gate [n ddx ddy nm ax tr? nl w]
+  let g nobody
+  create-nodes 1 [
+    init-node "gate"
+    setxy ([xcor] of n + ddx) ([ycor] of n + ddy)
+    set weight w
+    set shape "square" set size 2 set color 3
+    set g self
+  ]
+  make-road g n nm ax "gate" tr? nl true 0
+  make-road n g nm ax "gate" tr? nl true 0
+end
+
+to-report base-thickness  ;; link reporter
+  report (ifelse-value road-kind = "main" or road-kind = "gate" [ 0.7 ] road-kind = "little" [ 0.35 ] [ 0.2 ])
+end
+
+;; ---------------------------------------------------------------------
+;;  signals
+;; ---------------------------------------------------------------------
+
+to setup-signals
+  set signals nodes with [ signalised? ]
+  ask signals [
+    set cycle-offset ifelse-value signal-coordination = "green wave (east-west)"
+      [ (cycle-length * 100 - round (col * BLOCK-W / vmax)) mod cycle-length ]
+      [ random cycle-length ]
+  ]
+  update-signals
+  ask roads [
+    set free-tt compute-free-tt
+    set tt-ema free-tt
+    set cost-live free-tt
+  ]
+end
+
+to-report green-time-for [ax]
+  let g-ew (cycle-length - 2 * INTERGREEN) * ew-green-share / 100
+  report ifelse-value ax = "EW" [ g-ew ] [ cycle-length - 2 * INTERGREEN - g-ew ]
+end
+
+to-report compute-free-tt  ;; link reporter
+  let t len / link-vmax
+  if [signalised?] of end2 and axis != "access" [
+    let red-frac 1 - green-time-for axis / cycle-length
+    set t t + red-frac * red-frac * cycle-length / 2   ;; uniform-arrival delay (Webster, 1st term)
+  ]
+  let r rank
+  if not [signalised?] of end2 and any? ([my-in-roads] of end2) with [ rank > r ] [
+    set t t + GIVE-WAY-DELAY                            ;; expected wait to find a gap
+  ]
+  report t
+end
+
+to-report link-vmax  ;; link reporter
+  report (ifelse-value
+    road-kind = "access" [ 15 / 3.6 ]
+    road-kind = "little" [ min list vmax (LITTLE-ST-KMH / 3.6) ]
+    [ vmax ])
+end
+
+to update-signals
+  let g-ew green-time-for "EW"
+  let g-ns green-time-for "NS"
+  ask signals [
+    let t (ticks + cycle-offset) mod cycle-length
+    set green-axis (ifelse-value
+      t < g-ew [ "EW" ]
+      t < g-ew + INTERGREEN [ "none" ]
+      t < g-ew + INTERGREEN + g-ns [ "NS" ]
+      [ "none" ])
+    if green-axis != "none" [ set last-green green-axis ]
+  ]
+end
+
+;; ---------------------------------------------------------------------
+;;  routing: shortest travel time from every node to every destination
+;; ---------------------------------------------------------------------
+
+to setup-routing
+  let D length dests
+  ask nodes [
+    set dist-live n-values D [ BIG ]
+    set dist-free n-values D [ BIG ]
+    set dist-base n-values D [ BIG ]
+  ]
+  compute-distances "base"   ;; network as built, no closures: reference for delay
+  compute-distances "free"
+  compute-distances "live"
+end
+
+;; mode: "base" ignores closures, "free" uses free-flow times, "live" uses current travel times
+to compute-distances [mode]
+  foreach range length dests [ k ->
+    let target item k dests
+    ask nodes [ set tmp-dist BIG set tmp-done? false ]
+    ask target [ set tmp-dist 0 ]
+    let open-set (turtle-set target)
+    while [ any? open-set ] [
+      let u min-one-of open-set [ tmp-dist ]
+      set open-set open-set with [ self != u ]
+      ask u [ set tmp-done? true ]
+      ;; never route THROUGH a gate or a car park
+      if u = target or [node-kind] of u = "grid" [
+        let du [tmp-dist] of u
+        ask [my-in-roads] of u [
+          if mode-usable? mode [
+            let v end1
+            let nd du + (ifelse-value mode = "live" [ cost-live ] [ free-tt ])
+            if not [tmp-done?] of v and nd < [tmp-dist] of v [
+              ask v [ set tmp-dist nd ]
+              set open-set (turtle-set open-set v)
+            ]
+          ]
+        ]
+      ]
+    ]
+    (ifelse
+      mode = "live" [ ask nodes [ set dist-live replace-item k dist-live tmp-dist ] ]
+      mode = "free" [ ask nodes [ set dist-free replace-item k dist-free tmp-dist ] ]
+      [ ask nodes [ set dist-base replace-item k dist-base tmp-dist ] ])
+  ]
+end
+
+to-report mode-usable? [mode]  ;; link reporter
+  if mode = "base" [ report cars-allowed? ]
+  report usable?
+end
+
+to-report usable?  ;; link reporter
+  report cars-allowed? and not closed? and lanes-open > 0
+end
+
+to update-live-costs
+  ask roads [
+    let q 0
+    foreach lane-cars [ lst -> set q q + length filter [ c -> [speed] of c < 1 ] lst ]
+    let queue-delay 2.0 * q / max list 1 lanes-open
+    set cost-live free-tt + max (list 0 (tt-ema - free-tt) queue-delay)
+  ]
+end
+
+;; car reporter: best link to take at the downstream end of IN-L (nobody if IN-L ends at my destination)
+to-report choose-from [in-l]
+  let n [end2] of in-l
+  if n = dest [ report nobody ]
+  let d dest
+  let k [dest-id] of dest
+  let back-node [end1] of in-l
+  let cands ([my-out-roads] of n) with [ usable? and ([node-kind] of end2 = "grid" or end2 = d) ]
+  if any? cands with [ end2 != back-node ] [ set cands cands with [ end2 != back-node ] ]   ;; no U-turns unless forced
+  if not any? cands [ report nobody ]
+  let live? informed?
+  let best min-one-of cands [ choice-cost in-l live? k ]
+  let dd ifelse-value live? [ item k [dist-live] of [end2] of best ] [ item k [dist-free] of [end2] of best ]
+  if dd >= BIG [ report nobody ]
+  report best
+end
+
+to-report choice-cost [in-l live? k]  ;; link reporter
+  let c ifelse-value live? [ cost-live ] [ free-tt ]
+  let d ifelse-value live? [ item k [dist-live] of end2 ] [ item k [dist-free] of end2 ]
+  report (c + d + turn-penalty in-l self) * (1 + random-float route-noise)
+end
+
+to-report turn-type [in-l out-l]
+  if in-l = nobody or out-l = nobody [ report "straight" ]
+  let a subtract-headings ([link-heading] of out-l) ([link-heading] of in-l)
+  if abs a < 30 [ report "straight" ]
+  if abs a > 150 [ report "uturn" ]
+  report ifelse-value a > 0 [ "right" ] [ "left" ]
+end
+
+to-report is-hook? [in-l out-l]
+  if not hook-turns? or out-l = nobody [ report false ]
+  report [trams?] of in-l and [signalised?] of [end2] of in-l and turn-type in-l out-l = "right"
+end
+
+to-report turn-penalty [in-l out-l]
+  let tt turn-type in-l out-l
+  if tt = "straight" [ report 0 ]
+  if tt = "left" [ report 3 ]
+  if tt = "uturn" [ report 90 ]
+  report ifelse-value is-hook? in-l out-l [ 25 ] [ 10 ]
+end
+
+;; =====================================================================
+;;  GO
+;; =====================================================================
+
+to go
+  if ticks >= warm-up-s + measure-s [ final-report stop ]
+  if not closure-applied? and closure-street != "none" and ticks >= closure-start-min * 60 [
+    apply-scenario-closure
+  ]
+  if ticks mod reroute-interval = 0 [
+    update-live-costs
+    compute-distances "live"
+  ]
+  update-signals
+  generate-demand
+  ask roads [ process-link ]
+  process-hook-boxes
+  if measuring? [ set veh-seconds veh-seconds + count cars + queued-at-gates ]
+  if ticks mod 5 = 0 [ update-link-colors ]
+  tick
+end
+
+to-report measuring?
+  report ticks >= warm-up-s and ticks < warm-up-s + measure-s
+end
+
+to-report measured-seconds
+  report max list 0 (min list (ticks - warm-up-s) measure-s)
+end
+
+;; ---------------------------------------------------------------------
+;;  demand
+;; ---------------------------------------------------------------------
+
+to generate-demand
+  let rate demand-veh-per-hour / 3600
+  ask gates [
+    let n random-poisson (rate * weight / gate-weight-sum)
+    repeat n [
+      let d pick-dest self
+      ifelse d = nobody
+        [ set stranded-count stranded-count + 1 ]
+        [ set gate-queue lput (list ticks d) gate-queue ]
+    ]
+    if not empty? gate-queue [ try-release ]
+  ]
+end
+
+to-report pick-dest [g]
+  repeat 5 [
+    let d ifelse-value random-float 100 < through-traffic-%
+      [ weighted-pick gates with [ self != g ] ]
+      [ weighted-pick carparks ]
+    if item ([dest-id] of d) ([dist-free] of g) < BIG [ report d ]
+  ]
+  report nobody
+end
+
+to-report weighted-pick [agset]
+  let r random-float sum [ weight ] of agset
+  let chosen nobody
+  foreach sort agset [ a ->
+    if chosen = nobody [
+      set r r - [weight] of a
+      if r < 0 [ set chosen a ]
+    ]
+  ]
+  if chosen = nobody [ set chosen one-of agset ]
+  report chosen
+end
+
+to try-release  ;; gate procedure
+  let out one-of my-out-roads
+  if not [any-lane-room?] of out [ stop ]
+  let entry first gate-queue
+  set gate-queue but-first gate-queue
+  let g self
+  hatch-cars 1 [
+    init-car g (item 1 entry) (item 0 entry)
+    set next-link choose-from out
+    ifelse next-link = nobody [
+      set stranded-count stranded-count + 1
+      die
+    ] [
+      let li entry-lane out next-link
+      put-on-link out (max list 0 li) 0
+    ]
+  ]
+end
+
+to init-car [g d t0]
+  set dest d
+  set informed? random-float 100 < informed-drivers-%
+  set t-start t0
+  set ff-time item ([dest-id] of d) ([dist-base] of g)
+  if ff-time >= BIG [ set ff-time item ([dest-id] of d) ([dist-free] of g) ]
+  set moved-at ticks
+  set hooking nobody
+  set plan-for nobody
+  set plan-next nobody
+  set plan-lane 0
+  set speed vmax * 0.6
+  set shape "default"
+  set size 1.3
+  set label ""
+  show-turtle
+end
+
+;; ---------------------------------------------------------------------
+;;  vehicle movement
+;; ---------------------------------------------------------------------
+
+to process-link  ;; link procedure: move cars front-to-back in every lane
+  let L self
+  foreach lane-cars [ lst ->
+    let leader nobody
+    foreach lst [ c ->
+      if c != nobody [
+        if [moved-at] of c != ticks [ ask c [ step-car leader ] ]
+        set leader c
+      ]
+    ]
+  ]
+end
+
+to step-car [leader]  ;; car procedure
+  set moved-at ticks
+  let L cur-link
+  let Llen [len] of L
+  if leader != nobody [ if [cur-link] of leader != L [ set leader nobody ] ]
+  let limit BIG
+  let can-go? false
+  let turn-cap BIG
+  ifelse leader != nobody [
+    set limit [pos] of leader - pos - VEH-LEN
+  ] [
+    let d-end Llen - pos
+    if d-end < speed + 40 [
+      ifelse may-pass? [
+        set can-go? true
+        if next-link != nobody and turn-type L next-link != "straight" [
+          set turn-cap sqrt (36 + 2 * DECEL * d-end)   ;; slow to ~6 m/s for turns
+        ]
+      ] [
+        set limit d-end - 0.5
+      ]
+    ]
+  ]
+  let v min (list (speed + ACCEL) ([link-vmax] of L) turn-cap)
+  if limit < BIG [ set v min (list v (sqrt (2 * DECEL * max list 0 limit)) (max list 0 limit)) ]
+  set speed max list 0 v
+  set pos pos + speed
+  ifelse pos >= Llen [
+    ifelse can-go? [ do-transfer (pos - Llen) ] [ hold-at-line ]
+  ] [
+    place-car
+  ]
+end
+
+;; car reporter: may I cross the stop line at the end of my current link?
+to-report may-pass?
+  let L cur-link
+  let n [end2] of L
+  if next-link = nobody [ report true ]            ;; arriving (or stranded - handled on transfer)
+  if not [usable?] of next-link [                  ;; road closed ahead: pick another way
+    set next-link choose-from L
+    set plan-for nobody
+    if next-link = nobody [ report true ]
+  ]
+  let tt turn-type L next-link
+  let hook? is-hook? L next-link
+  let d-end [len] of L - pos
+
+  ;; traffic signals
+  if [signalised?] of n [
+    let g [green-axis] of n
+    let my-axis [axis] of L
+    if g != my-axis [
+      let committed? g = "none" and [last-green] of n = my-axis and d-end < (speed * speed) / (2 * DECEL)
+      let clearing-right? g = "none" and [last-green] of n = my-axis and tt = "right" and not hook? and d-end < 3
+      if not (committed? or clearing-right?) [ report false ]
+    ]
+  ]
+  ;; give way at unsignalised junctions
+  if not [signalised?] of n [
+    let r [rank] of L
+    if any? ([my-in-roads] of n) with [ rank > r and self != L and approaching-within 30 ] [ report false ]
+  ]
+  ;; right turns (non-hook) give way to oncoming traffic
+  if tt = "right" and not hook? [
+    let h [link-heading] of L
+    let opp one-of ([my-in-roads] of n) with [ abs subtract-headings link-heading ((h + 180) mod 360) < 30 ]
+    if opp != nobody [ if [approaching-within 40] of opp [ report false ] ]
+  ]
+  ;; space downstream (don't block the intersection)
+  if hook? [ report length [hook-box] of n < 3 ]
+  if plan-for != next-link [
+    set plan-next choose-from next-link
+    set plan-for next-link
+  ]
+  set plan-lane entry-lane next-link plan-next
+  report plan-lane >= 0
+end
+
+to-report approaching-within [d]  ;; link reporter: is a moving car within D metres of the end?
+  let result false
+  foreach lane-cars [ lst ->
+    if not empty? lst [
+      let c first lst
+      if c != nobody [
+        if (len - [pos] of c) < d and [speed] of c > 1 [ set result true ]
+      ]
+    ]
+  ]
+  report result
+end
+
+to do-transfer [ov]  ;; car procedure
+  let L cur-link
+  if next-link = nobody [
+    let arrived? [end2] of L = dest
+    leave-current
+    finish-trip arrived?
+    stop
+  ]
+  let n [end2] of L
+  ifelse is-hook? L next-link [
+    if length [hook-box] of n >= 3 [ hold-at-line stop ]
+    leave-current
+    set hooking n
+    ask n [ set hook-box lput myself hook-box ]
+    set speed 0
+    let h [link-heading] of next-link
+    move-to n
+    set heading h
+    setxy (xcor + 1.2 * sin (h - 90)) (ycor + 1.2 * cos (h - 90))
+    set color 15
+  ] [
+    let li entry-lane next-link plan-next
+    if li < 0 [ hold-at-line stop ]
+    leave-current
+    enter-link next-link li ov
+  ]
+end
+
+to hold-at-line
+  set pos [len] of cur-link - 0.01
+  set speed 0
+  place-car
+end
+
+to leave-current  ;; car procedure
+  let L cur-link
+  let li lane
+  let me self
+  let tt ticks - t-link
+  let m? measuring?
+  ask L [
+    set lane-cars replace-item li lane-cars (remove me (item li lane-cars))
+    set tt-ema 0.8 * tt-ema + 0.2 * tt
+    if m? [ set win-count win-count + 1 ]
+  ]
+  set cur-link nobody
+end
+
+to enter-link [L2 li p]  ;; car procedure
+  let nxt ifelse-value plan-for = L2 [ plan-next ] [ choose-from L2 ]
+  put-on-link L2 li p
+  set next-link nxt
+  set plan-for nobody
+  set plan-next nobody
+end
+
+to put-on-link [L li p]  ;; car procedure
+  set cur-link L
+  set lane li
+  set t-link ticks
+  let g entry-gap L li
+  set pos max list 0 (min list p g)
+  ask L [ set lane-cars replace-item li lane-cars (lput myself (item li lane-cars)) ]
+  place-car
+end
+
+to finish-trip [arrived?]
+  ifelse arrived? [
+    if measuring? [
+      let tt ticks - t-start
+      set trips-done trips-done + 1
+      set trip-time-sum trip-time-sum + tt
+      set delay-sum delay-sum + (tt - ff-time)
+      set recent-delays lput (tt - ff-time) recent-delays
+      if length recent-delays > 100 [ set recent-delays but-first recent-delays ]
+    ]
+  ] [
+    set stranded-count stranded-count + 1
+  ]
+  die
+end
+
+;; ---- lanes ----
+
+to-report entry-gap [L li]
+  let lst item li [lane-cars] of L
+  if empty? lst [ report BIG ]
+  report [pos] of last lst - VEH-LEN
+end
+
+to-report lane-room? [L li]
+  report entry-gap L li >= 0
+end
+
+to-report any-lane-room?  ;; link reporter
+  let L self
+  report reduce [ [a b] -> a or b ] (fput false map [ i -> lane-room? L i ] range lanes-open)
+end
+
+;; lane on link L for a car whose next move is N; -1 if no lane has room
+to-report entry-lane [L N]
+  let nl [lanes-open] of L
+  if nl < 1 [ report -1 ]
+  let pref 0
+  if nl > 1 [
+    let tt turn-type L N
+    (ifelse
+      tt = "left" or is-hook? L N [ set pref 0 ]
+      tt = "right" [ set pref nl - 1 ]
+      [ let counts map [ i -> length item i [lane-cars] of L ] range nl
+        set pref position (min counts) counts ])
+  ]
+  if lane-room? L pref [ report pref ]
+  foreach range nl [ i -> if lane-room? L i [ report i ] ]
+  report -1
+end
+
+;; ---- hook turns: wait in the intersection, go when the cross street gets green ----
+
+to process-hook-boxes
+  ask signals with [ not empty? hook-box ] [
+    let n self
+    let c first hook-box
+    ifelse c = nobody [
+      set hook-box but-first hook-box
+    ] [
+      let out [next-link] of c
+      if green-axis = [axis] of out [
+        ask c [
+          ifelse not [usable?] of out [
+            ask n [ set hook-box but-first hook-box ]
+            finish-trip false
+          ] [
+            set plan-next choose-from out
+            set plan-for out
+            let li entry-lane out plan-next
+            if li >= 0 [
+              ask n [ set hook-box but-first hook-box ]
+              set hooking nobody
+              enter-link out li 0
+              set speed 3
+            ]
+          ]
+        ]
+      ]
+    ]
+  ]
+end
+
+to place-car  ;; car procedure: draw the car in its lane (Australia: drive on the left)
+  let L cur-link
+  let a [end1] of L
+  let b [end2] of L
+  let f pos / [len] of L
+  let h [link-heading] of L
+  let off 0.35 + lane * 0.35
+  setxy ([xcor] of a + f * ([xcor] of b - [xcor] of a) + off * sin (h - 90))
+        ([ycor] of a + f * ([ycor] of b - [ycor] of a) + off * cos (h - 90))
+  set heading h
+  set color (ifelse-value speed < 0.5 [ 15 ] speed < vmax * 0.5 [ 25 ] [ 103 ])
+end
+
+;; =====================================================================
+;;  ROAD CLOSURES
+;; =====================================================================
+
+to apply-scenario-closure
+  set closure-applied? true
+  let Ls roads with [ street = closure-street and seg = closure-block and road-kind != "gate" ]
+  if not any? Ls [ set closure-desc "none (no such block)" stop ]
+  (ifelse
+    closure-type = "Full closure (both directions)" [
+      ask Ls [ set closed? true ]
+    ]
+    closure-type = "Full closure (eastbound / northbound only)" [
+      ask Ls with [ abs subtract-headings link-heading 90 < 1 or abs subtract-headings link-heading 0 < 1 ] [ set closed? true ]
+    ]
+    [ ;; one lane closed in each direction
+      ask Ls [
+        set lanes-open lanes - 1
+        if lanes-open < 1 [ set closed? true ]
+      ]
+    ])
+  set closure-desc (word closure-street ", block " closure-block " (" block-description closure-street closure-block ") - " closure-type)
+  output-print (word "t=" ticks "s  closure applied: " closure-desc)
+  network-changed
+end
+
+to-report block-description [nm b]
+  let ew-names map [ x -> item 0 x ] ew-config
+  let ns-names map [ x -> item 0 x ] ns-config
+  if member? nm ew-names [ report (word item (b - 1) ns-names " to " item b ns-names) ]
+  if member? nm ns-names [ report (word item (b - 1) ew-names " to " item b ew-names) ]
+  report "?"
+end
+
+to network-changed
+  compute-distances "free"
+  update-live-costs
+  compute-distances "live"
+  ask cars [ set plan-for nobody ]
+  update-link-colors
+end
+
+;; forever button: click a road to close / reopen that block (both directions)
+to click-to-close
+  ifelse mouse-down? [
+    if not mouse-was-down? [
+      let mx mouse-xcor
+      let yy mouse-ycor
+      let L min-one-of roads with [ road-kind = "main" or road-kind = "little" ] [ seg-distance mx yy ]
+      if L != nobody [
+        if [seg-distance mx yy] of L < 2.5 [ toggle-closure L ]
+      ]
+    ]
+    set mouse-was-down? true
+  ] [
+    set mouse-was-down? false
+  ]
+end
+
+to toggle-closure [L]
+  let new-state not [closed?] of L
+  ask L [ set closed? new-state ]
+  if [partner] of L != nobody [ ask [partner] of L [ set closed? new-state ] ]
+  set closure-desc (word "manual: " [street] of L ", block " [seg] of L (ifelse-value new-state [ " CLOSED" ] [ " reopened" ]))
+  output-print (word "t=" ticks "s  " closure-desc)
+  network-changed
+  display
+end
+
+to-report seg-distance [px py]  ;; link reporter
+  let x1 [xcor] of end1
+  let y1 [ycor] of end1
+  let ddx [xcor] of end2 - x1
+  let ddy [ycor] of end2 - y1
+  let l2 ddx * ddx + ddy * ddy
+  let t ifelse-value l2 = 0 [ 0 ] [ ((px - x1) * ddx + (py - y1) * ddy) / l2 ]
+  set t max list 0 (min list 1 t)
+  report sqrt ((px - x1 - t * ddx) ^ 2 + (py - y1 - t * ddy) ^ 2)
+end
+
+;; =====================================================================
+;;  OUTPUT, BASELINE COMPARISON, DISPLAY
+;; =====================================================================
+
+to save-baseline
+  if measured-seconds < 60 [
+    user-message "Run past the warm-up period first (at least 1 minute of measurement)."
+    stop
+  ]
+  set baseline table:make
+  let hrs measured-seconds / 3600
+  ask roads [
+    table:put baseline link-key (win-count / hrs)
+    set base-count win-count / hrs
+  ]
+  output-print (word "Baseline saved from this run (" closure-desc ").")
+  output-print "Now set a closure, press SETUP and GO, then choose view-mode 'change vs baseline'."
+end
+
+to-report link-key  ;; link reporter
+  report (word [who] of end1 "-" [who] of end2)
+end
+
+to update-link-colors
+  let hrs max list (1 / 60) (measured-seconds / 3600)
+  ask roads with [ not hidden? ] [
+    set thickness base-thickness
+    let p partner
+    (ifelse
+      not cars-allowed? [ set color 117 ]
+      closed? or (p != nobody and [closed?] of p) [ set color 0 set thickness 1.4 ]
+      lanes-open < lanes or (p != nobody and [lanes-open < lanes] of p) [ set color 125 set thickness 1.2 ]
+      road-kind = "access" [ set color 6 ]
+      view-mode = "congestion" [
+        let occ link-occupancy
+        if p != nobody [ set occ max list occ [link-occupancy] of p ]
+        set color (ifelse-value occ < 0.1 [ 55 ] occ < 0.3 [ 44 ] occ < 0.6 [ 25 ] [ 14 ])
+      ]
+      view-mode = "volume" [
+        let vol win-count + ifelse-value p != nobody [ [win-count] of p ] [ 0 ]
+        set vol vol / hrs
+        set color scale-color red vol 1800 0
+        set thickness base-thickness + min list 1.5 (vol / 800)
+      ]
+      [ ;; change vs baseline
+        let vol win-count + ifelse-value p != nobody [ [win-count] of p ] [ 0 ]
+        let base base-count + ifelse-value p != nobody [ [base-count] of p ] [ 0 ]
+        let diff vol / hrs - base
+        set color (ifelse-value diff > 25 [ 15 ] diff < -25 [ 105 ] [ 5 ])
+        set thickness base-thickness + min list 2 (abs diff / 250)
+      ])
+  ]
+end
+
+to-report link-occupancy  ;; link reporter: share of storage space in use
+  let n sum map length lane-cars
+  report n / max list 1 (len * lanes-open / VEH-LEN)
+end
+
+to final-report
+  output-print "------------------------------------------"
+  output-print (word "Run finished. Closure: " closure-desc)
+  output-print (word "Trips completed in window: " trips-done)
+  output-print (word "Mean trip time (min): " precision mean-trip-time-min 2)
+  output-print (word "Mean delay vs free flow (min): " precision mean-delay-min 2)
+  output-print (word "Vehicle-hours in system: " precision vehicle-hours 1)
+  output-print (word "Still waiting to enter: " queued-at-gates)
+  output-print (word "Stranded / unroutable: " stranded-count)
+end
+
+to export-link-results
+  let fname "hoddle-link-results.csv"
+  carefully [ file-delete fname ] [ ]
+  file-open fname
+  file-print "street,direction,block,from,to,lanes,lanes_open,closed,veh_per_hour,baseline_veh_per_hour,change_veh_per_hour,mean_travel_time_s"
+  let hrs max list (1 / 3600) (measured-seconds / 3600)
+  foreach sort roads [ L ->
+    ask L [
+      if cars-allowed? and road-kind != "access" [
+        file-print (word "\"" street "\"," direction-name "," seg ",\"" node-name end1 "\",\"" node-name end2 "\"," lanes "," lanes-open "," closed? ","
+          precision (win-count / hrs) 1 "," precision base-count 1 "," precision (win-count / hrs - base-count) 1 "," precision tt-ema 1)
+      ]
+    ]
+  ]
+  file-close
+  output-print (word "Link results written to " fname " (in the model's folder).")
+end
+
+to-report direction-name  ;; link reporter
+  let h link-heading
+  report (ifelse-value abs subtract-headings h 90 < 45 [ "EB" ] abs subtract-headings h 270 < 45 [ "WB" ] abs subtract-headings h 0 < 45 [ "NB" ] [ "SB" ])
+end
+
+to-report node-name [n]
+  if [node-kind] of n = "grid" [
+    report (word (item 0 (item [col] of n ns-config)) " / " (item 0 (item [row] of n ew-config)))
+  ]
+  report [node-kind] of n
+end
+
+;; ---- reporters for monitors and BehaviorSpace ----
+
+to-report mean-trip-time-min
+  report ifelse-value trips-done > 0 [ trip-time-sum / trips-done / 60 ] [ 0 ]
+end
+
+to-report mean-delay-min
+  report ifelse-value trips-done > 0 [ delay-sum / trips-done / 60 ] [ 0 ]
+end
+
+to-report vehicle-hours
+  report veh-seconds / 3600
+end
+
+to-report queued-at-gates
+  report sum [ length gate-queue ] of gates
+end
+
+to-report sim-clock
+  let s ticks
+  report (word floor (s / 60) " min " (s mod 60) " s")
+end
+
+;; average vehicles per hour through one block of street NM (both directions)
+to-report street-flow [nm]
+  let Ls roads with [ street = nm and road-kind != "gate" and cars-allowed? ]
+  if not any? Ls or measured-seconds = 0 [ report 0 ]
+  let nsegs length remove-duplicates [ seg ] of Ls
+  report (sum [ win-count ] of Ls) / nsegs / (measured-seconds / 3600)
+end
