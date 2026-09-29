@@ -77,18 +77,37 @@ test("baseline, change view, comparison table and CSV export", async ({
   await ready(page);
   await page.getByRole("slider", { name: "Simulation speed" }).fill("7");
   await runUntil(page, 125);
+  await expect(page.locator("#results")).toContainText("Summary");
   await page.getByRole("button", { name: "Save baseline" }).click();
-  await expect(page.locator(".compare-table")).toBeVisible();
+  await expect(page.locator("#results")).toContainText("Baseline vs this run");
   await page.getByRole("button", { name: "Setup" }).click();
   await expect(status(page)).toContainText("Ready", { timeout: 60000 });
-  await expect(page.locator(".compare-table")).toBeVisible();
+  await expect(page.locator(".results-link")).toBeVisible();
   await page.getByRole("button", { name: "Apply closure" }).click();
   await runUntil(page, 125);
   await page
     .getByRole("combobox", { name: "View" })
     .selectOption("change vs baseline");
   await expect(page.locator(".map-legend")).toContainText("More traffic");
-  await expect(page.locator(".compare-table")).toContainText("Completed trips");
+  const results = page.locator("#results");
+  await expect(results).toContainText("Baseline vs this run");
+  await expect(results.locator("tbody").first()).toContainText(
+    "Trips completed",
+  );
+  await expect(results).toContainText("Both runs are compared at");
+  await expect(results.locator(".chart svg")).toHaveCount(3);
+  await expect(results.locator(".streets-table")).toContainText("Collins St");
+  await expect(results.locator(".streets-table")).toContainText("closed");
+  const scan = await new AxeBuilder({ page })
+    .include("#results")
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(
+    scan.violations.map((v) => ({
+      id: v.id,
+      nodes: v.nodes.map((n) => n.target),
+    })),
+  ).toEqual([]);
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export CSV" }).click();
   const file = await download;

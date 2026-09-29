@@ -3,7 +3,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { DEFAULTS, DEFAULT_SPEED, FOREVER, SETUP_ONLY } from "./controls.mjs";
 import {
   CAR_FIELDS,
+  type BaselineRun,
   type Metrics,
+  type Sample,
   type RenderStore,
   type SettingName,
   type Settings,
@@ -11,6 +13,7 @@ import {
 } from "./types";
 
 const MAX_OUTPUT_LINES = 400;
+const MAX_SAMPLES = 3000;
 
 function emptyStore(): RenderStore {
   return {
@@ -57,6 +60,11 @@ export function useTrafficSim() {
   const [applied, setApplied] = useState<Settings>(DEFAULTS);
   const [world, setWorld] = useState<World | null>(null);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [history, setHistory] = useState<Sample[]>([]);
+  const [baselineRun, setBaselineRun] = useState<BaselineRun | null>(null);
+  const samples = useRef<Sample[]>([]);
+  const sampleStep = useRef(1);
+  const baselineRequested = useRef(false);
   const [running, setRunning] = useState(false);
   const [output, setOutput] = useState<string[]>([]);
   const [speed, setSpeedState] = useState(DEFAULT_SPEED);
@@ -89,6 +97,7 @@ export function useTrafficSim() {
     const commit = () => {
       commitTimer.current = null;
       if (latest.current) setMetrics(latest.current);
+      setHistory(samples.current.slice());
     };
 
     w.onmessage = (event: MessageEvent) => {
@@ -111,6 +120,8 @@ export function useTrafficSim() {
           break;
         }
         case "world":
+          samples.current = [];
+          sampleStep.current = 1;
           s.world = message.world;
           s.worldVersion++;
           s.from = new Float32Array(0);
@@ -156,6 +167,40 @@ export function useTrafficSim() {
             s.stylesVersion++;
           }
           latest.current = m;
+          // Time series for the results charts, thinned for very long runs.
+          const last = samples.current[samples.current.length - 1];
+          if (!last || m.ticks >= last.t + sampleStep.current) {
+            samples.current.push({
+              t: m.ticks,
+              cars: m.cars,
+              waiting: m.waiting,
+              completed: m.completed,
+              meanTrip: m.completed ? m.meanTrip : null,
+              meanDelay: m.completed ? m.meanDelay : null,
+              vehicleHours: m.vehicleHours,
+              generated: m.generated,
+              stranded: m.stranded,
+              measured: m.measured,
+            });
+            if (samples.current.length > MAX_SAMPLES) {
+              samples.current = samples.current.filter((_, i) => i % 2 === 0);
+              sampleStep.current *= 2;
+            }
+          }
+          // Keep a full copy of the run when the model accepts Save baseline.
+          if (baselineRequested.current && !message.running) {
+            baselineRequested.current = false;
+            const b = m.baseline;
+            if (
+              m.hasBaseline &&
+              b &&
+              b.measured === m.measured &&
+              b.completed === m.completed
+            )
+              setBaselineRun({ metrics: m, history: samples.current.slice() });
+          }
+          if (!m.hasBaseline)
+            setBaselineRun((current) => (current ? null : current));
           if (!message.running) {
             if (commitTimer.current !== null) clearTimeout(commitTimer.current);
             commit();
@@ -316,7 +361,12 @@ export function useTrafficSim() {
     exportCsv,
     run: (on: boolean) => send({ type: "run", run: on }),
     step: () => send({ type: "step" }),
-    command: (name: string) => send({ type: "command", name }),
+    command: (name: string) => {
+      if (name === "save-baseline") baselineRequested.current = true;
+      send({ type: "command", name });
+    },
+    history,
+    baselineRun,
     select: (street: string, block: number) =>
       send({ type: "select", street, block }),
     click: (x: number, y: number) => send({ type: "click", x, y }),

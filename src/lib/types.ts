@@ -90,3 +90,20 @@ export type RenderStore = {
   measured: number;
   frameVersion: number;
 };
+
+/** One point of the run's time series, sampled every few simulated seconds. */
+export type Sample = {
+  t: number;
+  cars: number;
+  waiting: number;
+  completed: number;
+  meanTrip: number | null;
+  meanDelay: number | null;
+  vehicleHours: number;
+  generated: number;
+  stranded: number;
+  measured: number;
+};
+
+/** Everything kept from the run that was saved as the baseline. */
+export type BaselineRun = { metrics: Metrics; history: Sample[] };

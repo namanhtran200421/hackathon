@@ -19,6 +19,7 @@ Every widget on the desktop interface of `combined/Melbourne Traffic Combined.nl
 - **Signals & driving, Routing, Measurement.** Speed limit, cycle length, east–west green share, signal coordination, hook turns, re-route interval, route noise, warm-up and measurement window.
 - **View.** Congestion, volume, or change vs baseline, as in the desktop view-mode chooser.
 - **Figures, comparison and output.** The desktop monitors plus mean delay and vehicle-hours, a baseline comparison table, Save baseline, Export CSV and the model's output area.
+- **Run results.** When the model is paused or stops, a results section summarises the run: trips, throughput, trip time, delay, vehicle-hours, queues and stranded trips. With a baseline saved it compares both runs at the same simulated time and marks each change as better or worse. Charts show cars on the network and mean trip time over time against the baseline, plus the streets whose flow changed most. A street table lists flow, baseline, change, link travel time and closure status. Street flows use the model's `street-flow` definition: vehicles per hour per block, both directions.
 
 Controls tagged **Setup** are read when the network is built, as in the desktop model. The Setup button shows a dot when one of them has changed. Everything else applies while the model runs, including closures.
 

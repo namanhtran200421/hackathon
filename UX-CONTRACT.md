@@ -20,4 +20,6 @@ Closures apply live, through the model's own procedures. Map clicks select a str
 
 Save baseline uses the model's guards: all roads open and at least one minute measured. Refusals appear in the status region. The baseline survives Setup only when the scenario signature matches; the comparison panel says when settings differ. Report time means only for completed measurement-window trips. Show completed, waiting, stranded and active counts. The baseline is local to the open tab.
 
+Run results are computed from a frozen copy taken when the model pauses or stops, so they never shift while the traffic runs. Baseline and closure runs are compared at the same simulated time, the end of the shorter run. Charts carry a legend, a crosshair or per-bar tooltip, and the same values appear in tables. Series colours pass the palette validator; text never uses a series colour.
+
 CSV export uses the desktop column layout and the model's own rates. All errors have recovery text. If the engine fails to load, the page offers Reload engine. Status updates never move focus. Locale en-AU; numbers use Intl formatting and times are simulated elapsed time. Responsive at 390px with no horizontal page scroll; all controls have visible keyboard focus.

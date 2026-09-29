@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import TrafficMap from "./TrafficMap";
 import QuickGuide from "./QuickGuide";
+import Results, { type Snapshot } from "./Results";
 import { Choice, Slider, Toggle } from "./Fields";
 import { useTrafficSim } from "@/lib/useTrafficSim";
 import { CHOICES, SPEEDS } from "@/lib/controls.mjs";
@@ -147,42 +148,23 @@ export default function TrafficLab() {
             : "Paused";
   const description = `Melbourne traffic map, ${view} view. ${m ? `${whole.format(m.cars)} cars on the network at ${clock(m.ticks)}.` : ""} ${m && m.closureDesc !== "none" ? `Closures: ${m.closureDesc}.` : "All roads open."} Use the Street list to select roads with a keyboard.`;
 
-  const baseline = m?.baseline ?? null;
-  const rows: [string, number | null, number | null, (v: number) => string][] =
-    m
-      ? [
-          [
-            "Completed trips",
-            baseline?.completed ?? null,
-            m.completed,
-            (v) => whole.format(v),
-          ],
-          [
-            "Mean trip time",
-            baseline && baseline.completed ? baseline.meanTrip : null,
-            m.completed ? m.meanTrip : null,
-            (v) => `${number.format(v)} min`,
-          ],
-          [
-            "Waiting at gates",
-            baseline?.waiting ?? null,
-            m.waiting,
-            (v) => whole.format(v),
-          ],
-          [
-            "Stranded",
-            baseline?.stranded ?? null,
-            m.stranded,
-            (v) => whole.format(v),
-          ],
-          [
-            "Measured time",
-            baseline?.measured ?? null,
-            m.measured,
-            (v) => clock(v),
-          ],
-        ]
-      : [];
+  // Results are read from a frozen copy taken whenever the model is paused
+  // or stopped, so tables and charts never shift while the traffic runs.
+  const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
+  const styles = sim.store.current?.styles ?? null;
+  useEffect(() => {
+    if (running || !m || !world || !styles) return;
+    if (m.ticks === 0 || m.measured <= 0) {
+      setSnapshot(null);
+      return;
+    }
+    setSnapshot({
+      metrics: m,
+      history: sim.history,
+      styles: styles.slice(),
+      world,
+    });
+  }, [running, m, world, styles, sim.history]);
 
   async function download() {
     const text = await sim.exportCsv();
@@ -848,58 +830,11 @@ export default function TrafficLab() {
                 </div>
               </div>
               {m?.hasBaseline && (
-                <div className="table-wrap">
-                  <table className="compare-table">
-                    <thead>
-                      <tr>
-                        <th scope="col">Measure</th>
-                        <th scope="col">Baseline</th>
-                        <th scope="col">This run</th>
-                        <th scope="col">Change</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map(([label, base, now, fmt]) => {
-                        const change =
-                          base !== null &&
-                          now !== null &&
-                          label !== "Measured time"
-                            ? now - base
-                            : null;
-                        return (
-                          <tr key={label}>
-                            <th scope="row">{label}</th>
-                            <td>{base === null ? "—" : fmt(base)}</td>
-                            <td>{now === null ? "—" : fmt(now)}</td>
-                            <td
-                              className={
-                                change === null || Math.abs(change) < 1e-9
-                                  ? ""
-                                  : change > 0
-                                    ? "up"
-                                    : "down"
-                              }
-                            >
-                              {change === null
-                                ? "—"
-                                : `${change > 0 ? "+" : change < 0 ? "−" : ""}${fmt(Math.abs(change))}`}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                  {baseline &&
-                    m &&
-                    m.measured > 0 &&
-                    Math.abs(m.measured - baseline.measured) > 30 && (
-                      <p className="help">
-                        This run has measured {clock(m.measured)} and the
-                        baseline {clock(baseline.measured)}. Compare runs of
-                        similar length.
-                      </p>
-                    )}
-                </div>
+                <p className="help results-link">
+                  <a href="#results">
+                    See the full comparison under Run results.
+                  </a>
+                </p>
               )}
             </div>
 
@@ -940,6 +875,11 @@ export default function TrafficLab() {
                 </div>
               )}
             </div>
+            <Results
+              snapshot={snapshot}
+              baselineRun={sim.baselineRun}
+              running={running}
+            />
           </section>
         </div>
       </main>
