@@ -1,0 +1,6 @@
+{
+  "java.project.sourcePaths": ["combined"],
+  "java.project.referencedLibraries": [
+    "/Applications/NetLogo 7.0.4/app/*.jar"
+  ]
+}

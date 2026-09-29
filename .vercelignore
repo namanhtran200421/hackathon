@@ -1,0 +1,10 @@
+.git
+node_modules
+.next
+combined
+data
+simulation-runtime
+tests
+test-results
+playwright-report
+artifacts

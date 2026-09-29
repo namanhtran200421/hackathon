@@ -1,0 +1,10 @@
+{
+  "source": "https://netlogoweb.org",
+  "upstream": "https://github.com/NetLogo/Tortoise",
+  "downloaded": "2026-09-29",
+  "files": {
+    "simulation-runtime/tortoise-compiler.js": "e38d78940830f678683f712fa75afa1c7a486ab64f0105a15e95817ce61fa85f",
+    "public/sim/tortoise-engine.js": "d902ab47a0ff192a3a07792abb61b1cb3639f2d1ffb10bf0ccdb06e4348871d2"
+  },
+  "notes": "The compiler is build-time only (npm run model:build). The engine is served to browsers and runs the model in a Web Worker."
+}

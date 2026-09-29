@@ -2,3 +2,15 @@
 *.class
 *.zip
 data/tile-*.osm
+
+node_modules/
+.next/
+.vercel/
+.env*
+!.env.example
+*.tsbuildinfo
+test-results/
+playwright-report/
+artifacts/
+simulation-runtime/model.nlogox
+.vercel
