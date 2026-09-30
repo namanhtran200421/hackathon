@@ -73,7 +73,14 @@ export default function RunBar({ sim }: { sim: TrafficSimulation }) {
   return (
     <div className="run-bar">
       <div className="run-buttons">
-        <button className={restartClass} disabled={!ready} onClick={sim.restart} title={restartTitle}>
+        <button
+          className={restartClass}
+          disabled={!ready}
+          onClick={function () {
+            sim.restart();
+          }}
+          title={restartTitle}
+        >
           <RotateCcw size={16} /> Restart
           {sim.restartNeeded && <span className="needed-dot" aria-label="(changes waiting)" />}
         </button>

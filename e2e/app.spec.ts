@@ -39,6 +39,11 @@ async function runUntil(page: Page, seconds: number): Promise<void> {
   await expect(page.getByRole("button", { name: "Start", exact: true })).toBeVisible();
 }
 
+/** Switch page with the links in the header. */
+async function openPage(page: Page, name: "Simulator" | "Report"): Promise<void> {
+  await page.getByRole("navigation", { name: "Pages" }).getByRole("link", { name: name }).click();
+}
+
 async function useMaxSpeed(page: Page): Promise<void> {
   await page.getByRole("slider", { name: "Simulation speed" }).fill("7");
 }
@@ -126,28 +131,35 @@ test("baseline, change view, results and CSV download", async function ({ page }
   await openReady(page);
   await useMaxSpeed(page);
   await runUntil(page, 125);
-  await expect(page.locator("#results")).toContainText("Summary");
+  await expect(page.locator(".results-teaser")).toContainText("ready on the Report page");
 
   await page.getByRole("button", { name: "Save baseline" }).click();
-  await expect(page.locator("#results")).toContainText("Baseline compared with this run");
+  await expect(page.locator(".results-link")).toBeVisible();
+  await openPage(page, "Report");
+  await expect(page.locator("#report-results")).toContainText("Baseline compared with this run");
+  await openPage(page, "Simulator");
   await page.getByRole("button", { name: "Restart" }).click();
   await expect(statusLine(page)).toContainText("Ready", { timeout: 60000 });
-  await expect(page.locator(".results-link")).toBeVisible();
 
   await page.getByRole("button", { name: "Close this street" }).click();
   await runUntil(page, 125);
   await page.getByRole("combobox", { name: "View" }).selectOption("change vs baseline");
   await expect(page.locator(".map-legend")).toContainText("More traffic");
 
-  const results = page.locator("#results");
+  // The full comparison link goes straight to the results on the Report page.
+  await page.getByRole("link", { name: "See the full comparison on the Report page." }).click();
+  const results = page.locator("#report-results");
   await expect(results).toContainText("Baseline compared with this run");
   await expect(results.locator("tbody").first()).toContainText("Trips finished");
   await expect(results).toContainText("Both runs are compared at");
   await expect(results.locator(".chart svg")).toHaveCount(3);
   await expect(results.locator(".streets-table")).toContainText("Collins St");
   await expect(results.locator(".streets-table")).toContainText("closed");
-  await checkAccessibility(page, "#results");
+  await checkAccessibility(page, "#report-results");
 
+  // The simulation kept its state while the Report page was open.
+  await openPage(page, "Simulator");
+  expect(await secondsShown(page)).toBeGreaterThanOrEqual(125);
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download CSV" }).click();
   const file = await download;
@@ -178,7 +190,9 @@ test("a baseline is saved once and reused across settings and reloads", async fu
   await expect(page.locator(".baseline-meta")).toContainText("Baseline:");
   await expect(page.getByRole("button", { name: "Replace baseline" })).toBeVisible();
   await runUntil(page, 90);
-  await expect(page.locator("#results")).toContainText("Baseline compared with this run");
+  await openPage(page, "Report");
+  await expect(page.locator("#report-results")).toContainText("Baseline compared with this run");
+  await openPage(page, "Simulator");
 
   await page.getByRole("button", { name: "Clear baseline" }).click();
   await expect(page.getByRole("button", { name: "Save baseline" })).toBeVisible();
@@ -209,7 +223,8 @@ test("quick guide, phone layout, keyboard and accessibility", async function ({ 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openReady(page);
 
-  await page.getByRole("button", { name: "Quick guide" }).first().click();
+  // On phones the guide is opened from the introduction; the header only has the page links.
+  await page.locator(".hero").getByRole("button", { name: "Quick guide" }).click();
   const guide = page.getByRole("dialog", { name: "Run your first scenario" });
   await expect(guide).toBeVisible();
   await expect(guide).toContainText("Where each NetLogo control is");
@@ -229,6 +244,47 @@ test("quick guide, phone layout, keyboard and accessibility", async function ({ 
   });
   expect(fitsScreen).toBe(true);
   await checkAccessibility(page);
+});
+
+test("the works planner finds a time, keeps going between pages, and sets up the simulator", async function ({
+  page,
+}) {
+  test.setTimeout(300000);
+  await openReady(page);
+  await openPage(page, "Report");
+  await expect(
+    page.getByRole("heading", { name: "Find the least disruptive time for road works" }),
+  ).toBeVisible();
+  await page.getByRole("combobox", { name: "Street", exact: true }).selectOption("Collins St");
+  await page.getByRole("combobox", { name: "When can the works happen?" }).selectOption("night");
+  await page.getByRole("button", { name: "Find the best plan" }).click();
+  await expect(page.getByRole("progressbar", { name: "Search progress" })).toBeVisible();
+
+  // Switching page does not stop the search.
+  await openPage(page, "Simulator");
+  await expect(page.locator(".nav-busy")).toBeVisible();
+  await openPage(page, "Report");
+
+  const answer = page.locator(".recommendation");
+  await expect(answer).toBeVisible({ timeout: 240000 });
+  await expect(answer).toContainText("Close Collins St (whole street) on");
+  await expect(answer).toContainText("car-hours in total");
+  await expect(answer.locator(".impact-badge")).toBeVisible();
+  await expect(page.locator(".day-chart svg")).toBeVisible();
+  await expect(page.locator(".options-table tbody tr")).not.toHaveCount(0);
+  await expect(page.locator(".chart-ruled-out")).toHaveCount(1);
+  await checkAccessibility(page, "#report");
+
+  // Searching again with the same works is instant: every test is remembered.
+  await page.getByRole("radio", { name: /Least traffic disruption/ }).check();
+  await expect(page.getByText(/Quick check \(already tested\)/)).toBeVisible();
+  await page.getByRole("button", { name: "Find the best plan" }).click();
+  await expect(answer).toBeVisible({ timeout: 20000 });
+
+  await page.getByRole("button", { name: "Watch it in the simulator" }).click();
+  await expect(statusLine(page)).toContainText("Set up the recommended plan", { timeout: 60000 });
+  await expect(page.getByLabel("Traffic demand profile")).toHaveValue(/SCATS/);
+  await expect(page.locator(".closure-list")).toContainText("Collins St");
 });
 
 test("a simulator that fails to load offers Try again", async function ({ page }) {

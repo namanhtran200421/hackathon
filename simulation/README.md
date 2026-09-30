@@ -64,7 +64,7 @@ All scripts use Python 3 and need no internet connection. Run them from the proj
 
 `build/prepare-model.py` makes a browser copy of the desktop model. It writes the road map straight into the code, because a browser cannot read files from disk, and switches off the desktop pop-up dialogs, file export and drawing, which the web page does itself. It also keeps a saved baseline when Setup is pressed, so the web page can reuse one baseline for many runs, and adds two small procedures to restore and clear it.
 
-`build/compile-model.ts` turns that copy into JavaScript with the NetLogo Web compiler kept in `build/vendor/`. `npm run build` bundles `src/worker.ts` into `runtime/worker.js`. The browser loads these from `/sim`:
+`build/compile-model.ts` turns that copy into JavaScript with the NetLogo Web compiler kept in `build/vendor/`. `npm run build` (`build/build-workers.ts`) bundles `src/worker.ts` into `runtime/worker.js` and `src/batchWorker.ts` into `runtime/batch-worker.js`. The browser loads these from `/sim`:
 
 | File                 | What it is                                                 |
 | -------------------- | ---------------------------------------------------------- |
@@ -72,6 +72,7 @@ All scripts use Python 3 and need no internet connection. Run them from the proj
 | `model.js`           | The compiled model (generated)                             |
 | `reporters.js`       | Read-only questions the page asks the model (generated)    |
 | `worker.js`          | Runs the model on the browser's background thread (built)  |
+| `batch-worker.js`    | Runs the works planner's background tests (built)          |
 | `network-*.json`     | The two road maps, shown while the model loads (generated) |
 
 The TypeScript in `src/`:
@@ -85,6 +86,9 @@ The TypeScript in `src/`:
 | `createTrafficSim.ts` | The only way to control the model; it checks every input                  |
 | `modelScope.ts`       | The parts of the NetLogo engine the controls use                          |
 | `worker.ts`           | The background worker's run loop                                          |
+| `batchWorker.ts`      | A worker that runs whole scenarios for the works planner, without drawing |
+| `scenario.ts`         | Runs one unattended scenario (settings, optional closure) to the end      |
+| `workerSetup.ts`      | Preparation both workers share before loading the engine                  |
 | `loadInNode.ts`       | Runs the model in Node for the tests and the build                        |
 
 Traffic movement, arrivals, traffic lights and route choice are the same code as the desktop model.

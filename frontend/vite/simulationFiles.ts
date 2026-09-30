@@ -2,7 +2,7 @@
  * A small Vite plugin that makes the traffic model available at /sim.
  *
  * The model files (the NetLogo Web engine, the compiled model and the
- * background worker) live in simulation/runtime. While developing, this serves
+ * background workers) live in simulation/runtime. While developing, this serves
  * them straight from there; when building, it copies them into dist/sim so
  * the finished site is one folder of static files.
  */
@@ -46,11 +46,13 @@ export function simulationFiles(runtimeFolder: string): Plugin {
 
     // When building: copy the runtime folder into dist/sim.
     closeBundle: function () {
-      if (!fs.existsSync(path.join(runtimeFolder, "worker.js"))) {
-        throw new Error(
-          "simulation/runtime/worker.js is missing. Run `npm run build` from the project folder.",
-        );
-      }
+      ["worker.js", "batch-worker.js"].forEach(function (name) {
+        if (!fs.existsSync(path.join(runtimeFolder, name))) {
+          throw new Error(
+            "simulation/runtime/" + name + " is missing. Run `npm run build` from the project folder.",
+          );
+        }
+      });
       fs.cpSync(runtimeFolder, path.join(outputFolder, "sim"), { recursive: true });
     },
   };

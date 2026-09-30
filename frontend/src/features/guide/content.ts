@@ -2,7 +2,7 @@
  * The words in the Quick guide.
  */
 
-/** The six steps: [title, explanation]. */
+/** The seven steps: [title, explanation]. */
 export const STEPS: [string, string][] = [
   [
     "Start the traffic",
@@ -18,11 +18,15 @@ export const STEPS: [string, string][] = [
   ],
   [
     "Compare with normal traffic",
-    "First run with every road open until the warm-up is over plus at least one minute, then press Save baseline. You only need to do this once: the baseline is kept in this browser and used for every later run. To test a closure, press Restart (this reopens every road), close your street and press Start. The results below the map compare the two runs.",
+    "First run with every road open until the warm-up is over plus at least one minute, then press Save baseline. You only need to do this once: the baseline is kept in this browser and used for every later run. To test a closure, press Restart (this reopens every road), close your street and press Start. The Report page compares the two runs.",
   ],
   [
     "Read the map",
     "In the Traffic jams view, roads turn yellow, orange and then dark red as they fill up. Traffic volume shows how many cars use each road. Change from baseline shows roads with more traffic than normal in orange and less in blue. Closed roads are red dashes. Hover over a road to see its numbers.",
+  ],
+  [
+    "Plan road works",
+    "On the Report page, describe the works: the street, how it is closed, how many hours of work, and when the crew can work. Find the best plan tests the works at quiet and busy times, each repeated with different random traffic, and recommends when to close the road and over how many shifts, with a range of likely delay. Watch it in the simulator sets the plan up on the map.",
   ],
   [
     "Download the numbers",

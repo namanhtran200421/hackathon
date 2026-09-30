@@ -10,7 +10,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "vite build --config build/vite.worker.config.ts",
+    "build": "tsx build/build-workers.ts",
     "model": "python3 build/prepare-model.py && tsx build/compile-model.ts",
     "test": "node --import tsx --test test/*.test.ts",
     "typecheck": "tsc --noEmit"

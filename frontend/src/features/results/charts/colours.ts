@@ -10,3 +10,6 @@ export const SERIES = { run: "#4a3aa7", baseline: "#008300" } as const;
 export const CHANGE = { more: "#c25e00", less: "#1f66c2" } as const;
 
 export type SeriesKey = keyof typeof SERIES;
+
+/** Planner lines: weekdays and weekends. Checked the same way. */
+export const DAY_SERIES = { weekday: "#4a3aa7", weekend: "#c25e00" } as const;

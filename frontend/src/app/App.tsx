@@ -1,23 +1,24 @@
 /**
- * The whole page: header, introduction, the simulator (settings, map, figures,
- * comparison, log and results) and footer.
+ * The whole site: header, the Simulator or Report page, and footer.
+ *
+ * The live simulation and the works planner are started here, above both
+ * pages, so switching page never stops either of them.
  */
 
 import { useEffect, useState } from "react";
 import Hero from "../components/layout/Hero";
 import SiteFooter from "../components/layout/SiteFooter";
 import SiteHeader from "../components/layout/SiteHeader";
-import ComparePanel from "../features/baseline/ComparePanel";
 import { differences } from "../features/baseline/differences";
-import Figures from "../features/figures/Figures";
 import QuickGuide from "../features/guide/QuickGuide";
-import SimulationLog from "../features/log/SimulationLog";
-import MapPanel from "../features/map/MapPanel";
-import Results from "../features/results/Results";
-import SettingsPanel from "../features/settings/SettingsPanel";
+import type { Plan, WorksRequest } from "../features/planner/types";
+import { usePlanner } from "../features/planner/usePlanner";
+import { closedWindow, whenText } from "../features/planner/wording";
 import type { ResultsSnapshot, Selection } from "../features/simulation/types";
 import { useTrafficSim } from "../features/simulation/useTrafficSim";
-import StatusLine from "./StatusLine";
+import ReportPage from "./ReportPage";
+import SimulatorPage from "./SimulatorPage";
+import { useView } from "./useView";
 
 /** Save text as a file on the user's computer. */
 function downloadFile(text: string, fileName: string): void {
@@ -32,7 +33,9 @@ function downloadFile(text: string, fileName: string): void {
 }
 
 export default function App() {
+  const view = useView();
   const sim = useTrafficSim();
+  const planner = usePlanner(sim.settings);
   const metrics = sim.metrics;
   const [guideOpen, setGuideOpen] = useState(false);
   const [clickMode, setClickMode] = useState(false);
@@ -106,53 +109,76 @@ export default function App() {
     sim.setStatus("Downloaded the road numbers as combined-link-results.csv.");
   }
 
+  /**
+   * Set the simulator up to show a planned closure: the same street and kind
+   * of closure, traffic following that time of day, and the works in place
+   * from the start. Then switch to the Simulator page.
+   */
+  function tryInSimulator(plan: Plan, request: WorksRequest): void {
+    sim.pause();
+    let profile: "SCATS weekday" | "SCATS weekend" = "SCATS weekday";
+    if (plan.dayType === "weekend") {
+      profile = "SCATS weekend";
+    }
+    sim.set("demand-profile", profile);
+    sim.set("profile-start-hour", plan.start);
+    sim.set("closure-type", request.closureType);
+    sim.set("scheduled-closure?", true);
+    sim.set("closure-start-min", 0);
+    choose(request.street, request.section);
+    sim.restart(
+      "Set up the recommended plan: " +
+        whenText(plan) +
+        ", " +
+        closedWindow(plan) +
+        ", with traffic for that time of day and the works in place from the start. Press Start to watch.",
+    );
+    window.location.hash = "#workbench";
+  }
+
   function openGuide(): void {
     setGuideOpen(true);
   }
 
+  let skipTarget = "#workbench";
+  let skipText = "Skip to the simulator";
+  if (view === "report") {
+    skipTarget = "#report";
+    skipText = "Skip to the report";
+  }
+
   return (
     <>
-      <a className="skip-link" href="#workbench">
-        Skip to the simulator
+      <a className="skip-link" href={skipTarget}>
+        {skipText}
       </a>
-      <SiteHeader onOpenGuide={openGuide} />
-      <Hero onOpenGuide={openGuide} />
+      <SiteHeader view={view} onOpenGuide={openGuide} planning={planner.state.phase === "running"} />
 
-      <main id="workbench" className="container">
-        <div className="workbench">
-          <SettingsPanel
+      {view === "simulator" && (
+        <>
+          <Hero onOpenGuide={openGuide} />
+          <SimulatorPage
             sim={sim}
             selection={selection}
             onChoose={choose}
             clickMode={clickMode}
-            onToggleClickMode={function () {
-              setClickMode(!clickMode);
-            }}
+            onSetClickMode={setClickMode}
+            differences={settingDifferences}
+            snapshot={snapshot}
+            onDownload={downloadCsv}
           />
-
-          <section className="results" aria-label="Simulator">
-            <MapPanel
-              sim={sim}
-              selection={selection}
-              onChoose={choose}
-              clickMode={clickMode}
-              onStopClickMode={function () {
-                setClickMode(false);
-              }}
-            />
-            <Figures metrics={metrics} />
-            <ComparePanel sim={sim} differences={settingDifferences} onDownload={downloadCsv} />
-            <SimulationLog lines={sim.log} />
-            <StatusLine sim={sim} />
-            <Results
-              snapshot={snapshot}
-              baseline={sim.baseline}
-              running={sim.running}
-              differences={settingDifferences}
-            />
-          </section>
-        </div>
-      </main>
+        </>
+      )}
+      {view === "report" && (
+        <ReportPage
+          sim={sim}
+          planner={planner}
+          selection={selection}
+          snapshot={snapshot}
+          differences={settingDifferences}
+          onTryInSimulator={tryInSimulator}
+        />
+      )}
 
       <SiteFooter onOpenGuide={openGuide} />
       <QuickGuide

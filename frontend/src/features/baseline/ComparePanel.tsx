@@ -96,7 +96,7 @@ export default function ComparePanel({ sim, differences, onDownload }: ComparePa
       )}
       {hasBaseline && (
         <p className="help results-link">
-          <a href="#results">See the full comparison under Run results.</a>
+          <a href="#report-results">See the full comparison on the Report page.</a>
         </p>
       )}
     </div>

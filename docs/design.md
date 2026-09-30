@@ -25,7 +25,9 @@ Open Sans (bundled with the page, 600 to 800 weight) for headings, navigation, t
 
 ## Layout
 
-From top to bottom: a thin black bar, the yellow header with a black pentagon name plate, a grey introduction band, then the simulator. Settings sit on the left; the map sits on the right with a black toolbar above it and a black run bar below it (Restart, Start / Pause, Step 1 second, speed, Keep running, clock). Under the map come the yellow figure tiles, "Compare with normal traffic", the simulation log, the status line and the run results. A black footer ends the page.
+From top to bottom: a thin black bar, the yellow header with a black pentagon name plate, a grey introduction band, then the simulator. Settings sit on the left; the map sits on the right with a black toolbar above it and a black run bar below it (Restart, Start / Pause, Step 1 second, speed, Keep running, clock). Under the map come the yellow figure tiles, "Compare with normal traffic", the simulation log, the status line and a link to the Report page. A black footer ends the page.
+
+The header links switch between two pages: **Simulator** and **Report**. The Report page has the works planner (the form on the left; progress and then the answer on the right, as numbered steps 1 to 3) and, below it, the full results of the latest simulator run. Switching page never stops the simulation or a planner search; a pulsing dot on the Report link shows a search is running. Below 560 px the header shows only the page links; the Quick guide opens from the introduction and the footer.
 
 Below 900 px wide, the map comes first and the settings follow. Below 430 px, the run buttons share one row and figures use two columns. The page never scrolls sideways.
 
@@ -44,6 +46,7 @@ Below 900 px wide, the map comes first and the settings follow. Below 430 px, th
 - The map only shows real model seconds. Cars slide between the last two seconds so movement looks smooth; with reduced motion turned on, they jump instead. Looking at the model never changes its results.
 - Closures take effect at once through the model's own procedures. Clicking a road chooses its street; with "Close roads by clicking" on, a click closes or reopens the road under the pointer. The Street and Which part lists do the same by keyboard. Closed streets are listed in words with a Reopen button.
 - **Save baseline** uses the model's own checks: every road open, and at least one minute counted. The baseline is saved once, kept in the browser, and reused for every later run, across restarts, setting changes and reloads, until it is replaced or cleared. Every setting that differs from the baseline is listed next to the comparison.
+- The works planner shows ranges, not single numbers, because every test is repeated with different random traffic. Its impact badge always pairs a colour with an icon and a word. When a search starts or ends, focus and scrolling move to the progress or the answer. The 24-hour chart has a table of the same numbers, and the report prints cleanly.
 - **Run results** use a still copy taken when the traffic pauses or stops. The baseline and the current run are compared at the same moment: the end of the shorter run. Averages only count trips that finish while counting. The page always shows finished, waiting, stranded and driving counts together.
 - **Download CSV** uses the desktop export's columns and numbers.
 - Every error explains what to do next. If the simulator fails to load, a Try again button appears. Status messages never move the keyboard focus.

@@ -34,7 +34,8 @@ export default function Results({ snapshot, baseline, running, differences }: Re
     [snapshot],
   );
 
-  let intro = "Results appear here when you pause or the run ends, once the warm-up time has passed.";
+  let intro =
+    "Results from the Simulator page appear here when you pause or the run ends, once the warm-up time has passed.";
   if (snapshot) {
     const m = snapshot.metrics;
     intro =
@@ -51,7 +52,7 @@ export default function Results({ snapshot, baseline, running, differences }: Re
   }
 
   return (
-    <section className="results-panel panel" id="results" aria-labelledby="results-title">
+    <section className="results-panel panel" id="report-results" aria-labelledby="results-title">
       <div className="results-head">
         <span className="comparison-icon">
           <BarChart3 size={21} />

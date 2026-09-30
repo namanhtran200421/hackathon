@@ -52,9 +52,6 @@
   .map-stage {
     height: 470px;
   }
-  .site-header nav a {
-    display: none;
-  }
   .site-footer .container {
     grid-template-columns: 1fr;
     gap: 24px;
@@ -113,9 +110,25 @@
     min-width: 0;
   }
 }
+@media (max-width: 560px) {
+  .site-header nav a,
+  .site-header nav button {
+    padding: 8px;
+    font-size: 12px;
+  }
+  .site-header nav button {
+    display: none;
+  }
+}
 @media (max-width: 430px) {
   .container {
     padding: 0 14px;
+  }
+  .site-header .container {
+    gap: 8px;
+  }
+  .brand-plate {
+    width: 150px;
   }
   .map-stage {
     height: 440px;

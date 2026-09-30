@@ -76,6 +76,9 @@ interface BaselineRequest {
 
 export type TrafficSimulation = ReturnType<typeof useTrafficSim>;
 
+/** The status once the road map is built. */
+const READY = "Ready. Press Start to begin.";
+
 export function useTrafficSim() {
   const [phase, setPhase] = useState<SimulatorPhase>("loading");
   const [status, setStatus] = useState("Loading the simulator…");
@@ -98,6 +101,7 @@ export function useTrafficSim() {
   const keepRunningRef = useRef(false);
   const speedRef = useRef(DEFAULT_SPEED);
   const settingsAtRestart = useRef<Settings>(DEFAULT_SETTINGS);
+  const readyMessage = useRef(READY);
   const latestMetrics = useRef<Metrics | null>(null);
   const samples = useRef<Sample[]>([]);
   const sampleStep = useRef(1);
@@ -173,7 +177,8 @@ export function useTrafficSim() {
         setWorld(newWorld);
         setAppliedSettings(settingsAtRestart.current);
         setPhase("ready");
-        setStatus("Ready. Press Start to begin.");
+        setStatus(readyMessage.current);
+        readyMessage.current = READY;
       }
 
       function rememberSample(current: Metrics): void {
@@ -437,9 +442,15 @@ export function useTrafficSim() {
     [send],
   );
 
-  /** The Restart button (NetLogo's Setup). */
+  /**
+   * The Restart button (NetLogo's Setup). `message` replaces the usual
+   * "Ready" message once the road map is rebuilt.
+   */
   const restart = useCallback(
-    function () {
+    function (message?: string) {
+      if (message) {
+        readyMessage.current = message;
+      }
       settingsAtRestart.current = settingsRef.current;
       setPhase("building");
       setStatus("Building the road map…");

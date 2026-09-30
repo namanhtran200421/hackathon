@@ -17,7 +17,7 @@ npm run dev
 
 Then open http://localhost:3000.
 
-The road map is ready when the page loads. Press **Start** to set the traffic moving. The **Quick guide** button at the top of the page explains everything else in six short steps.
+The road map is ready when the page loads. Press **Start** to set the traffic moving. The **Quick guide** button at the top of the page explains everything else in seven short steps. The **Report** page, linked at the top, holds the full results and the works planner.
 
 ## What you can do
 
@@ -25,7 +25,8 @@ The road map is ready when the page loads. Press **Start** to set the traffic mo
 - **Close streets.** Pick a street and close it in both directions, in one direction, or by one lane. You can also click roads on the map to close and reopen them. Closures work while the traffic is moving.
 - **Watch it live.** The map shows every car. Colour the roads by traffic jams, by traffic volume, or by the change from normal traffic. Zoom in with the + button, or hold Ctrl and scroll.
 - **Run as long as you like.** The simulation normally stops after its counting time. Turn on **Keep running** to let it go until you press Pause.
-- **Compare with normal traffic.** Record a baseline once, with every road open. Every later run is compared with it: a summary table, charts over time, and the streets that changed most. The baseline is kept in your browser, so it survives a reload.
+- **Compare with normal traffic.** Record a baseline once, with every road open. Every later run is compared with it on the Report page: a summary table, charts over time, and the streets that changed most. The baseline is kept in your browser, so it survives a reload.
+- **Plan road works.** On the Report page, describe the works and your limits, and the planner recommends when to close the road and over how many shifts. See [Planning road works](#planning-road-works) below.
 - **Download the numbers.** Download CSV saves the traffic on every road in the same format as the desktop model.
 
 Every button, slider and switch from the desktop NetLogo model has a matching control on the page.
@@ -38,6 +39,22 @@ The project has two parts, both written in TypeScript:
 
 1. **The simulation** (`simulation/`). The NetLogo model, the map data and the tools that build it, plus the code that runs the model in the browser. The page runs the same model as desktop NetLogo, using NetLogo Web (the engine behind netlogoweb.org).
 2. **The front end** (`frontend/`). A React page built with Vite. The model runs in a background worker inside the browser, so the page stays smooth. The map is drawn on a canvas that refreshes 60 times a second and slides each car between its positions.
+
+## Planning road works
+
+The Report page answers the question councils and contractors start with: when should we close this road so that traffic suffers least?
+
+You describe the works: the street and which part, how it is closed, how many hours of work are needed, the longest shift the crew can work, and how long setting up and packing away takes. You can limit the works to nights or daytime, and to weekdays or weekends, and say what matters most: least disruption, a balance, or the fewest shifts.
+
+The planner then works in three stages, all in background workers in your browser:
+
+1. **Test the works at four traffic levels**, from quiet (15% of the busiest time) to the busiest time. Each test runs the city twice with exactly the same cars, once with the works and once with every road open, so the difference is caused by the works alone. Every test is repeated with different random traffic (3 times for a quick check, 8 for a thorough one). This repetition is a Monte Carlo simulation, and it is where the ranges in the report come from.
+2. **Rank every plan the limits allow.** How busy each quarter hour of the day is comes from the public traffic signal counts (see [Observed traffic data](#observed-traffic-data)), separately for weekdays and weekends, so each quarter hour's extra delay can be read off the tested levels. Every start hour, kind of day and number of shifts is added up and ranked. Setting-up time counts as closed time, so many tiny shifts are not free.
+3. **Double-check the best plans** by re-testing their busiest hour directly, with that hour's real traffic pattern.
+
+The report gives the recommended plan in one sentence, the likely extra time in traffic (in car-hours, with the range across repeats), what it saves compared with a daytime closure, a 24-hour chart of the best and worst times, other good options, what could go wrong (running late, queues at the edge of the city, trips that cannot get through, close calls) and how the numbers were worked out. **Watch it in the simulator** sets the plan up on the map, and the report prints or saves as a PDF.
+
+Test results are remembered in your browser, so repeating a search or changing only the limits or priority is instant. A quick check takes about a minute on a typical laptop.
 
 ## Project layout
 
@@ -53,6 +70,7 @@ frontend/                   The web page (React + Vite)
     figures/                    the yellow number tiles
     baseline/                   saving and comparing with normal traffic
     results/                    results tables and charts
+    planner/                    the works planner on the Report page
     log/                        the simulation log
     guide/                      the quick guide
   src/lib/                    Number and time formatting
@@ -61,7 +79,8 @@ frontend/                   The web page (React + Vite)
   test/                       Front-end tests
 simulation/                 Everything about the traffic model
   src/                        Settings, data types, messages, and the code
-                              that controls the model in the browser and Node
+                              that controls the model in the browser and Node,
+                              including the planner's background test runs
   runtime/                    Files the browser loads from /sim
   build/                      Turns the NetLogo model into JavaScript
   netlogo/                    The desktop NetLogo model, its code, map data,

@@ -1,7 +1,9 @@
 /**
- * The messages the web page and the background worker send each other.
+ * The messages the web page and the background workers send each other: the
+ * live simulator's worker, and the planner's batch workers.
  */
 
+import type { Scenario, ScenarioResult } from "./scenario";
 import type { SettingName, Settings, ViewMode } from "./settings";
 import type { Metrics, ModelBaseline, World } from "./types";
 
@@ -49,3 +51,14 @@ export type WorkerMessage =
   | { type: "baseline"; saved: ModelBaseline | null }
   | { type: "csv"; text: string; ticks: number }
   | { type: "error"; message: string; fatal: boolean };
+
+/** Messages from the page to a planner batch worker. */
+export type BatchRequest = { type: "run"; id: number; scenario: Scenario };
+
+/** Messages from a planner batch worker to the page. */
+export type BatchReply =
+  | { type: "ready" }
+  | { type: "progress"; id: number; done: number; total: number }
+  | { type: "result"; id: number; result: ScenarioResult; seconds: number }
+  /** id is null when the engine itself failed to load. */
+  | { type: "error"; id: number | null; message: string };
