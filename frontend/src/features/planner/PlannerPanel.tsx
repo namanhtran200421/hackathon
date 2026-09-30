@@ -34,7 +34,7 @@ interface PlannerPanelProps {
 function EmptyState() {
   return (
     <section className="panel planner-step planner-empty" aria-label="How the planner works">
-      <h2>Find the least disruptive time for road works</h2>
+      <h3>How it works</h3>
       <ol className="how-steps">
         <li>
           <CalendarClock size={22} aria-hidden="true" />
@@ -48,8 +48,8 @@ function EmptyState() {
           <div>
             <strong>We test them many times</strong>
             <p>
-              The works are simulated at quiet and busy times, each repeated with different random traffic, in
-              the background on your computer.
+              We try the closure in quiet and busy traffic, many times over with different random traffic. It
+              all runs on your computer, in the background.
             </p>
           </div>
         </li>
@@ -57,7 +57,10 @@ function EmptyState() {
           <FlaskConical size={22} aria-hidden="true" />
           <div>
             <strong>Get a recommendation</strong>
-            <p>The best time and number of shifts, the likely range of delay, and what could go wrong.</p>
+            <p>
+              When to close the road, over how many shifts, how much delay to expect, where the traffic goes,
+              and what could go wrong.
+            </p>
           </div>
         </li>
       </ol>

@@ -242,7 +242,7 @@ export default function DayChart({ series, plan, times }: DayChartProps) {
             );
           })}
           <text x={0} y={12} className="chart-axis-label">
-            extra car-hours per hour
+            hours of delay for each hour closed
           </text>
           <text
             x={MARGIN.left + plotWidth / 2}
@@ -327,8 +327,8 @@ export default function DayChart({ series, plan, times }: DayChartProps) {
         )}
       </div>
       <p className="help chart-note">
-        The line is the average of the repeats; the band runs from the lowest to the highest. Higher means
-        more extra time stuck in traffic for every hour the road is closed.
+        The line is the average of the rounds of testing, and the shaded band runs from the lowest to the
+        highest. Higher means more delay for every hour the road is closed.
       </p>
       <DayTable series={series} />
     </figure>
@@ -361,7 +361,7 @@ function DayTable({ series }: { series: DaySeries[] }) {
               {series.map(function (line) {
                 return (
                   <th key={line.dayType} scope="col">
-                    {seriesName(line.dayType)}: extra car-hours per hour (range)
+                    {seriesName(line.dayType)}: hours of delay for each hour closed (lowest to highest)
                   </th>
                 );
               })}

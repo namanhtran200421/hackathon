@@ -1,5 +1,5 @@
 /**
- * "How sure are we?": how the numbers were worked out, the direct checks, and
+ * "How sure are we?": how the numbers were worked out, the double-checks, and
  * what the model leaves out. Closed until opened.
  */
 
@@ -16,9 +16,9 @@ interface HowSureProps {
 }
 
 const VERDICT_TEXT = {
-  close: "Close to the estimate",
-  higher: "Higher than estimated",
-  lower: "Lower than estimated",
+  close: "Close to our estimate",
+  higher: "More than we estimated",
+  lower: "Less than we estimated",
 };
 
 export default function HowSure({ repeats, checks }: HowSureProps) {
@@ -29,43 +29,43 @@ export default function HowSure({ repeats, checks }: HowSureProps) {
   return (
     <details className="panel planner-step how-sure">
       <summary>
-        <h2>How sure are we?</h2>
+        <h3>How sure are we?</h3>
       </summary>
 
-      <h3>How the numbers were worked out</h3>
+      <h4>How we worked it out</h4>
       <ul>
         <li>
-          The works were tested at {TRAFFIC_LEVELS.length} traffic levels ({levels} of the busiest time of
-          day), each repeated {repeats} times with different random traffic. Repeating like this is called a
-          Monte Carlo simulation; the ranges show how much the answer changes from one day to another.
+          We tested the closure in {TRAFFIC_LEVELS.length} amounts of traffic ({levels} of the busiest time of
+          day). We did this {repeats} times, each time with different random traffic. Testing many times like
+          this is called a Monte Carlo simulation. The ranges show how much the answer changes from day to
+          day.
         </li>
         <li>
           Each test runs the city twice with exactly the same cars: once with the works and once with every
-          road open. The difference is the extra time in traffic caused by the works. Each run warms up for{" "}
-          {WARM_UP_SECONDS / 60} minutes and then counts for {COUNT_SECONDS / 60} minutes.
+          road open. The difference is the delay caused by the works. Each run warms up for{" "}
+          {WARM_UP_SECONDS / 60} minutes, then counts for {COUNT_SECONDS / 60} minutes.
         </li>
         <li>
-          How busy each quarter hour of the day is comes from public traffic signal counts (Department of
-          Transport and Planning, August 2026), separately for weekdays and weekends. Each quarter
-          hour&rsquo;s delay is read off the tested levels.
+          How busy the city is at each time of day comes from real traffic light counts (Department of
+          Transport and Planning, August 2026), for weekdays and weekends.
         </li>
         <li>
-          Every plan your limits allow (each start hour, kind of day and number of shifts) was then added up
-          and ranked. The best plans&rsquo; busiest hours were double-checked directly with that hour&rsquo;s
-          real traffic pattern.
+          We then added up every plan your limits allow (each start time, kind of day and number of shifts)
+          and ranked them. Finally, we re-tested the busiest hour of the best plans with real traffic for that
+          time of day.
         </li>
       </ul>
 
       {checks.length > 0 && (
         <>
-          <h3>Direct checks</h3>
+          <h4>Double-checks</h4>
           <div className="table-wrap">
             <table className="compare-table">
               <thead>
                 <tr>
                   <th scope="col">Road closed at</th>
-                  <th scope="col">Estimate (car-hours per hour)</th>
-                  <th scope="col">Measured directly</th>
+                  <th scope="col">Our estimate (hours of delay)</th>
+                  <th scope="col">Separate test</th>
                   <th scope="col">Result</th>
                 </tr>
               </thead>
@@ -91,12 +91,12 @@ export default function HowSure({ repeats, checks }: HowSureProps) {
         </>
       )}
 
-      <h3>What the model leaves out</h3>
+      <h4>What the model leaves out</h4>
       <ul>
-        <li>Only cars are simulated. Trams, buses, bikes and people walking are not.</li>
+        <li>It only has cars. Trams, buses, bikes and people walking are not in it.</li>
         <li>
-          The number of cars at the busiest time is your simulator setting; the detector data only gives the
-          shape of the day.
+          The number of cars at the busiest time is your setting in the simulator. The real counts only give
+          the shape of the day.
         </li>
         <li>
           Queues left over from one hour are not carried into the next, so long closures near busy times may
@@ -105,7 +105,7 @@ export default function HowSure({ repeats, checks }: HowSureProps) {
         <li>
           A shift uses one kind of day throughout: a weekday night shift uses weekday traffic after midnight.
         </li>
-        <li>Small savings from a closure are treated as noise and counted as no change.</li>
+        <li>If a closure seems to make traffic slightly better, we count it as no change.</li>
       </ul>
     </details>
   );

@@ -19,17 +19,17 @@ export default function SearchProgress({ progress, repeats, repeatsDone, onStop 
   const percent = Math.round(progress.share * 100);
 
   let title =
-    "Testing the works at " + TRAFFIC_LEVELS.length + " traffic levels, from quiet to the busiest time";
+    "Testing the closure in " + TRAFFIC_LEVELS.length + " amounts of traffic, from quiet to the busiest";
   let detail =
     "Each test runs the city twice with the same cars: once with the works and once without. " +
     repeatsDone +
     " of " +
     repeats +
-    " repeats done.";
+    " rounds of testing done.";
   if (progress.stage === "checks") {
     title = "Double-checking the best plans at their real time of day";
     detail =
-      "The busiest hour of each top plan is re-tested with that hour's real traffic pattern, to check the estimate.";
+      "We re-test the busiest hour of the best plans with real traffic for that time of day, to check our numbers.";
   }
 
   let timeLeft = "Working out the time left…";
@@ -48,9 +48,9 @@ export default function SearchProgress({ progress, repeats, repeatsDone, onStop 
   return (
     <section className="panel planner-step search-progress" aria-labelledby="progress-title">
       <div className="step-head">
-        <h2 id="progress-title" tabIndex={-1}>
+        <h3 id="progress-title" tabIndex={-1}>
           <span className="step-number">2</span> Finding the best plan
-        </h2>
+        </h3>
         <button className="button secondary" onClick={onStop}>
           <Square size={14} /> {stopLabel}
         </button>

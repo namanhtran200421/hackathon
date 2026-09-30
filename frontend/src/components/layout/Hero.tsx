@@ -8,7 +8,7 @@ export default function Hero({ onOpenGuide }: { onOpenGuide: () => void }) {
   return (
     <section className="hero" aria-labelledby="page-title">
       <div className="container">
-        <h1 id="page-title" data-page-heading tabIndex={-1}>
+        <h1 id="page-title">
           Close a street in Melbourne&rsquo;s CBD and watch the traffic find another way.
         </h1>
         <p>

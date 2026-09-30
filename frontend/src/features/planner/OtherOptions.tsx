@@ -28,7 +28,7 @@ export default function OtherOptions({ outcome, priority }: OtherOptionsProps) {
   outcome.others.forEach(function (plan, index) {
     rows.push({ key: "other" + index, name: "Option " + (index + 2), plan: plan });
   });
-  rows.push({ key: "daytime", name: "For comparison", plan: outcome.daytime });
+  rows.push({ key: "daytime", name: "Daytime, for comparison", plan: outcome.daytime });
 
   // With a priority on fewer shifts, an option with more shifts can have less
   // delay and still rank lower. Say why.
@@ -38,18 +38,20 @@ export default function OtherOptions({ outcome, priority }: OtherOptionsProps) {
   let shiftNote = "";
   if (lessDelayMoreShifts && priority === "balanced") {
     shiftNote =
-      " Options with less delay but more shifts rank lower because, with the Balanced priority, each extra shift counts as " +
+      " Some options have less delay but need more shifts. With Balanced, each extra shift counts as " +
       carHours(outcome.shiftCost) +
-      " car-hours.";
+      " hours of delay, so they rank lower.";
   } else if (lessDelayMoreShifts && priority === "fewest-shifts") {
-    shiftNote = " Options with less delay but more shifts rank lower because you chose the fewest shifts.";
+    shiftNote =
+      " Some options have less delay but need more shifts, so they rank lower: you chose the fewest shifts.";
   }
 
   return (
     <section className="panel planner-step" aria-labelledby="options-title">
-      <h2 id="options-title">Other good options</h2>
+      <h3 id="options-title">Other good options</h3>
       <p className="help">
-        Each is clearly different from the ones above it. Extra car-hours are the total over all shifts.
+        Each one is clearly different from those above it. Hours of delay are for all shifts, with all drivers
+        added together.
         {shiftNote}
       </p>
       <div className="table-wrap">
@@ -59,9 +61,9 @@ export default function OtherOptions({ outcome, priority }: OtherOptionsProps) {
               <th scope="col">Option</th>
               <th scope="col">When the road is closed</th>
               <th scope="col">Shifts</th>
-              <th scope="col">Extra car-hours</th>
-              <th scope="col">Range over repeats</th>
-              <th scope="col">Compared with recommended</th>
+              <th scope="col">Hours of delay</th>
+              <th scope="col">Lowest to highest</th>
+              <th scope="col">Compared with our pick</th>
             </tr>
           </thead>
           <tbody>

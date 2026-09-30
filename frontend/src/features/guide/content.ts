@@ -2,8 +2,10 @@
  * The words in the Quick guide.
  */
 
-/** The seven steps: [title, explanation]. */
-export const STEPS: [string, string][] = [
+import { FEATURES } from "../../app/features";
+
+/** The steps: [title, explanation]. */
+const ALL_STEPS: [string, string][] = [
   [
     "Start the traffic",
     "The road map is ready when the page opens. Press Start to set the traffic moving and Pause to stop it. Step 1 second moves time forward by one second.",
@@ -18,7 +20,7 @@ export const STEPS: [string, string][] = [
   ],
   [
     "Compare with normal traffic",
-    "First run with every road open until the warm-up is over plus at least one minute, then press Save baseline. You only need to do this once: the baseline is kept in this browser and used for every later run. To test a closure, press Restart (this reopens every road), close your street and press Start. The Report page compares the two runs.",
+    "First run with every road open until the warm-up is over plus at least one minute, then press Save baseline. You only need to do this once: the baseline is kept in this browser and used for every later run. To test a closure, press Restart (this reopens every road), close your street and press Start. Results, below the map, compare the two runs.",
   ],
   [
     "Read the map",
@@ -26,13 +28,18 @@ export const STEPS: [string, string][] = [
   ],
   [
     "Plan road works",
-    "Close a street and press Find the best time for this closure. The Report page opens with what your run showed and the planner filled in with that closure. Add how many hours of work are needed and when the crew can work, then press Find the best plan. It tests the works at quiet and busy times, each repeated with different random traffic, and recommends when to close the road, over how many shifts, and which streets take the detour traffic. Watch it in the simulator sets the plan up on the map.",
+    "Close a street and press Find the best time for this closure. The planner in Results fills in that closure. Add how many hours of work are needed and when the crew can work, then press Find the best plan. It tests the closure in quiet and busy traffic, many times over, and tells you when to close the road, over how many shifts, and which streets get the detour traffic. Show it on the map sets the plan up in the simulator.",
   ],
   [
     "Download the numbers",
     "Download CSV saves the traffic on every road as a spreadsheet file, in the same format as the desktop model.",
   ],
 ];
+
+/** The steps shown: the planner's step only while the works planner is switched on. */
+export const STEPS = ALL_STEPS.filter(function (step) {
+  return FEATURES.worksPlanner || step[0] !== "Plan road works";
+});
 
 /** Where each desktop NetLogo control is on this page: [NetLogo, this page]. */
 export const WHERE_TO_FIND: [string, string][] = [

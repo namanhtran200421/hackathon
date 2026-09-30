@@ -34,7 +34,7 @@ export default function Risks({ request, outcome, facts, checks, curves, profile
         timeOfDay(best.start + best.closedPerShift) +
         "), that would add about " +
         carHours(lateTypical) +
-        " car-hours, and up to " +
+        " hours of delay, and up to " +
         carHours(Math.max(...late)) +
         ".",
     );
@@ -77,17 +77,17 @@ export default function Risks({ request, outcome, facts, checks, curves, profile
   const check = checkFor(best, checks, curves, profiles);
   if (check && verdict(check) === "higher") {
     risks.push(
-      "The direct check at " +
+      "The double-check at " +
         timeOfDay(check.hour) +
-        " found more delay than estimated. Treat the totals as a lower guide.",
+        " found more delay than we estimated. Treat the totals as a minimum.",
     );
   }
 
   if (outcome.repeats < 5) {
     risks.push(
-      "These numbers come from " +
+      "These numbers come from only " +
         outcome.repeats +
-        " repeats. Choose Thorough for firmer numbers before committing.",
+        " rounds of testing. Choose Careful check for firmer numbers before you commit.",
     );
   }
 
@@ -99,7 +99,7 @@ export default function Risks({ request, outcome, facts, checks, curves, profile
 
   return (
     <section className="panel planner-step" aria-labelledby="risks-title">
-      <h2 id="risks-title">What could go wrong</h2>
+      <h3 id="risks-title">What could go wrong</h3>
       {risks.length === 0 && <p className="help">No particular risks showed up in the tests.</p>}
       <ul className="risk-list">
         {risks.map(function (risk) {

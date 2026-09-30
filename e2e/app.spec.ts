@@ -7,6 +7,7 @@
 import fs from "node:fs";
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { FEATURES } from "../frontend/src/app/features";
 
 function statusLine(page: Page) {
   return page.locator(".feedback [role=status]");
@@ -39,9 +40,9 @@ async function runUntil(page: Page, seconds: number): Promise<void> {
   await expect(page.getByRole("button", { name: "Start", exact: true })).toBeVisible();
 }
 
-/** Switch page with the links in the header. */
-async function openPage(page: Page, name: "Simulator" | "Report"): Promise<void> {
-  await page.getByRole("navigation", { name: "Pages" }).getByRole("link", { name: name }).click();
+/** Jump to a part of the page with the links in the header. */
+async function goTo(page: Page, name: "Simulator" | "Results"): Promise<void> {
+  await page.getByRole("navigation", { name: "Page sections" }).getByRole("link", { name: name }).click();
 }
 
 async function useMaxSpeed(page: Page): Promise<void> {
@@ -131,13 +132,12 @@ test("baseline, change view, results and CSV download", async function ({ page }
   await openReady(page);
   await useMaxSpeed(page);
   await runUntil(page, 125);
-  await expect(page.locator(".results-teaser")).toContainText("ready on the Report page");
+  const results = page.locator("#run-results");
+  await expect(results).toContainText("Every road was open.");
 
   await page.getByRole("button", { name: "Save baseline" }).click();
   await expect(page.locator(".results-link")).toBeVisible();
-  await openPage(page, "Report");
-  await expect(page.locator("#report-results")).toContainText("Baseline compared with this run");
-  await openPage(page, "Simulator");
+  await expect(results).toContainText("Same as normal traffic");
   await page.getByRole("button", { name: "Restart" }).click();
   await expect(statusLine(page)).toContainText("Ready", { timeout: 60000 });
 
@@ -146,22 +146,22 @@ test("baseline, change view, results and CSV download", async function ({ page }
   await page.getByRole("combobox", { name: "View" }).selectOption("change vs baseline");
   await expect(page.locator(".map-legend")).toContainText("More traffic");
 
-  // The full comparison link goes straight to the results on the Report page.
-  await page.getByRole("link", { name: "See the full comparison on the Report page." }).click();
-  const results = page.locator("#report-results");
-  await expect(results).toContainText("Baseline compared with this run");
+  // The link in "Compare with normal traffic" goes to the results below.
+  await page.getByRole("link", { name: "See the comparison under Results, below." }).click();
+  await expect(results).toContainText("Closed: Collins St");
+  await expect(results).toContainText("compared with normal traffic");
+  await expect(results.locator(".chart-grid svg")).toHaveCount(2);
+
+  // Every number is one click away.
+  await results.getByText("See all the numbers").click();
+  await expect(results).toContainText("Normal traffic (baseline) compared with your run");
   await expect(results.locator("tbody").first()).toContainText("Trips finished");
   await expect(results).toContainText("Both runs are compared at");
   await expect(results.locator(".chart svg")).toHaveCount(3);
   await expect(results.locator(".streets-table")).toContainText("Collins St");
   await expect(results.locator(".streets-table")).toContainText("closed");
-  await checkAccessibility(page, "#report-results");
-  await expect(page.locator(".run-summary")).toContainText("Closed: Collins St");
-  await expect(page.locator(".run-summary")).toContainText("compared with the baseline");
+  await checkAccessibility(page, "#results");
 
-  // The simulation kept its state while the Report page was open.
-  await openPage(page, "Simulator");
-  expect(await secondsShown(page)).toBeGreaterThanOrEqual(125);
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download CSV" }).click();
   const file = await download;
@@ -192,9 +192,7 @@ test("a baseline is saved once and reused across settings and reloads", async fu
   await expect(page.locator(".baseline-meta")).toContainText("Baseline:");
   await expect(page.getByRole("button", { name: "Replace baseline" })).toBeVisible();
   await runUntil(page, 90);
-  await openPage(page, "Report");
-  await expect(page.locator("#report-results")).toContainText("Baseline compared with this run");
-  await openPage(page, "Simulator");
+  await expect(page.locator("#run-results")).toContainText("compared with normal traffic");
 
   await page.getByRole("button", { name: "Clear baseline" }).click();
   await expect(page.getByRole("button", { name: "Save baseline" })).toBeVisible();
@@ -251,37 +249,39 @@ test("quick guide, phone layout, keyboard and accessibility", async function ({ 
 test("the simulator hands its closure to the works planner, which finds a time and where traffic goes", async function ({
   page,
 }) {
+  test.skip(!FEATURES.worksPlanner, "The works planner is switched off in frontend/src/app/features.ts.");
   test.setTimeout(300000);
   await openReady(page);
   await page.getByRole("button", { name: "Close this street" }).click();
   await expect(page.locator(".closure-list")).toContainText("Collins St");
+  await expect(page.locator("#run-results")).toContainText("Nothing yet");
 
   // The simulator's button fills in the planner with the closure on the map.
   await page.getByRole("button", { name: "Find the best time for this closure" }).click();
   await expect(page.locator(".from-map")).toContainText("Filled in from the closure on the simulator");
-  await expect(page.getByRole("combobox", { name: "Street", exact: true })).toHaveValue("Collins St");
-  await expect(page.locator(".run-summary")).toContainText("Nothing yet");
+  await expect(page.getByRole("combobox", { name: "Street for the works" })).toHaveValue("Collins St");
+  await expect(page.getByRole("combobox", { name: "Street for the works" })).toBeFocused();
 
   await page.getByRole("combobox", { name: "When can the works happen?" }).selectOption("night");
   await page.getByRole("button", { name: "Find the best plan" }).click();
   await expect(page.getByRole("progressbar", { name: "Search progress" })).toBeVisible();
 
-  // Switching page does not stop the search.
-  await openPage(page, "Simulator");
-  await expect(page.locator(".nav-busy")).toBeVisible();
-  await openPage(page, "Report");
+  // The simulator still works while the planner searches in the background.
+  await goTo(page, "Simulator");
+  await page.getByRole("button", { name: "Step 1 second" }).click();
+  await goTo(page, "Results");
 
   const answer = page.locator(".recommendation");
   await expect(answer).toBeVisible({ timeout: 240000 });
   await expect(answer).toContainText("Close Collins St (whole street) on");
-  await expect(answer).toContainText("car-hours in total");
+  await expect(answer).toContainText("hours in total");
   await expect(answer.locator(".impact-badge")).toBeVisible();
   await expect(page.locator(".settings-used")).toContainText("Uses the simulator");
   await expect(page.locator(".day-chart svg")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Where the traffic goes" })).toBeVisible();
   await expect(page.locator(".options-table tbody tr")).not.toHaveCount(0);
   await expect(page.locator(".chart-ruled-out")).toHaveCount(1);
-  await checkAccessibility(page, "#report");
+  await checkAccessibility(page, "#results");
 
   // Searching again with the same works is instant: every test is remembered.
   await page.getByRole("radio", { name: /Least traffic disruption/ }).check();
@@ -289,20 +289,25 @@ test("the simulator hands its closure to the works planner, which finds a time a
   await page.getByRole("button", { name: "Find the best plan" }).click();
   await expect(answer).toBeVisible({ timeout: 20000 });
 
-  // Changing the simulator's city makes the plan out of date, and the report says so.
-  await openPage(page, "Simulator");
+  // Changing the simulator's city makes the plan out of date, and the results say so.
   await page.getByRole("slider", { name: "Cars arriving per hour" }).fill("4000");
-  await openPage(page, "Report");
   await expect(page.locator(".settings-used")).toContainText("have changed since this search");
-  await openPage(page, "Simulator");
   await page.getByRole("slider", { name: "Cars arriving per hour" }).fill("2500");
-  await openPage(page, "Report");
   await expect(page.locator(".settings-used")).not.toContainText("have changed");
 
-  await page.getByRole("button", { name: "Watch it in the simulator" }).click();
+  await page.getByRole("button", { name: "Show it on the map" }).click();
   await expect(statusLine(page)).toContainText("Set up the recommended plan", { timeout: 60000 });
   await expect(page.getByLabel("Traffic demand profile")).toHaveValue(/SCATS/);
   await expect(page.locator(".closure-list")).toContainText("Collins St");
+});
+
+test("the works planner stays hidden while it is switched off", async function ({ page }) {
+  test.skip(FEATURES.worksPlanner, "The works planner is switched on.");
+  await openReady(page);
+  await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Best time to do the works" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Find the best time/ })).toHaveCount(0);
+  await expect(page.locator(".works-form")).toHaveCount(0);
 });
 
 test("a simulator that fails to load offers Try again", async function ({ page }) {

@@ -1,8 +1,9 @@
 /**
- * The whole site: header, the Simulator or Report page, and footer.
+ * The whole page: header, introduction, the simulator, Results (what the run
+ * showed and the works planner), and footer.
  *
- * The live simulation and the works planner are started here, above both
- * pages, so switching page never stops either of them.
+ * The live simulation and the works planner are started here, so a planner
+ * search keeps running in the background while you use the simulator.
  */
 
 import { useEffect, useState } from "react";
@@ -17,9 +18,9 @@ import { usePlanner } from "../features/planner/usePlanner";
 import { closedWindow, whenText } from "../features/planner/wording";
 import type { ResultsSnapshot, Selection } from "../features/simulation/types";
 import { useTrafficSim } from "../features/simulation/useTrafficSim";
-import ReportPage from "./ReportPage";
-import SimulatorPage from "./SimulatorPage";
-import { useView } from "./useView";
+import { FEATURES } from "./features";
+import ResultsSection from "./ResultsSection";
+import Workbench from "./Workbench";
 
 /** Save text as a file on the user's computer. */
 function downloadFile(text: string, fileName: string): void {
@@ -33,8 +34,15 @@ function downloadFile(text: string, fileName: string): void {
   }, 1000);
 }
 
+/** Scroll a part of the page into view, at its top. */
+function scrollToId(id: string): void {
+  const element = document.getElementById(id);
+  if (element) {
+    element.scrollIntoView({ block: "start" });
+  }
+}
+
 export default function App() {
-  const view = useView();
   const sim = useTrafficSim();
   const planner = usePlanner(sim.settings);
   const metrics = sim.metrics;
@@ -42,6 +50,15 @@ export default function App() {
   const [clickMode, setClickMode] = useState(false);
   const [pendingChoice, setPendingChoice] = useState<Selection | null>(null);
   const [snapshot, setSnapshot] = useState<ResultsSnapshot | null>(null);
+
+  // Opening the page at an address such as "#results": the browser tries to
+  // scroll before the page is drawn, so scroll once it is.
+  useEffect(function () {
+    const id = window.location.hash.slice(1);
+    if (id) {
+      scrollToId(id);
+    }
+  }, []);
 
   // The chosen street comes from the model. Right after the user picks one,
   // show their choice until the model confirms it.
@@ -113,7 +130,7 @@ export default function App() {
   /**
    * Set the simulator up to show a planned closure: the same street and kind
    * of closure, traffic following that time of day, and the works in place
-   * from the start. Then switch to the Simulator page.
+   * from the start. Then scroll up to the map.
    */
   function tryInSimulator(plan: Plan, request: WorksRequest): void {
     sim.pause();
@@ -134,23 +151,16 @@ export default function App() {
         closedWindow(plan) +
         ", with traffic for that time of day and the works in place from the start. Press Start to watch.",
     );
-    window.location.hash = "#workbench";
+    scrollToId("workbench");
   }
 
   /**
-   * Hand a closure to the works planner: fill in its form and show it on the
-   * Report page, with the keyboard focus on the form.
+   * Hand a closure to the works planner: fill in its form, scroll to it and
+   * put the keyboard focus on it.
    */
   function planClosure(closure: WorksClosure): void {
     planner.planClosure(closure);
-    if (view === "report") {
-      const form = document.getElementById("report-plan");
-      if (form) {
-        form.scrollIntoView({ block: "start" });
-      }
-    } else {
-      window.location.hash = "#report-plan";
-    }
+    scrollToId("plan");
     setTimeout(function () {
       const street = document.getElementById("works-street");
       if (street) {
@@ -172,52 +182,42 @@ export default function App() {
     );
   }
 
+  // The planner buttons only show while the works planner is switched on.
+  let mapPlanButton: (() => void) | null = null;
+  if (FEATURES.worksPlanner) {
+    mapPlanButton = planMapClosure;
+  }
+
   function openGuide(): void {
     setGuideOpen(true);
   }
 
-  let skipTarget = "#workbench";
-  let skipText = "Skip to the simulator";
-  if (view === "report") {
-    skipTarget = "#report";
-    skipText = "Skip to the report";
-  }
-
   return (
     <>
-      <a className="skip-link" href={skipTarget}>
-        {skipText}
+      <a className="skip-link" href="#workbench">
+        Skip to the simulator
       </a>
-      <SiteHeader view={view} onOpenGuide={openGuide} planning={planner.state.phase === "running"} />
-
-      {view === "simulator" && (
-        <>
-          <Hero onOpenGuide={openGuide} />
-          <SimulatorPage
-            sim={sim}
-            selection={selection}
-            onChoose={choose}
-            clickMode={clickMode}
-            onSetClickMode={setClickMode}
-            differences={settingDifferences}
-            snapshot={snapshot}
-            onDownload={downloadCsv}
-            onPlanClosure={planMapClosure}
-          />
-        </>
-      )}
-      {view === "report" && (
-        <ReportPage
-          sim={sim}
-          planner={planner}
-          selection={selection}
-          snapshot={snapshot}
-          differences={settingDifferences}
-          onTryInSimulator={tryInSimulator}
-          onPlanClosure={planClosure}
-          onDownload={downloadCsv}
-        />
-      )}
+      <SiteHeader onOpenGuide={openGuide} />
+      <Hero onOpenGuide={openGuide} />
+      <Workbench
+        sim={sim}
+        selection={selection}
+        onChoose={choose}
+        clickMode={clickMode}
+        onSetClickMode={setClickMode}
+        differences={settingDifferences}
+        onPlanClosure={mapPlanButton}
+      />
+      <ResultsSection
+        sim={sim}
+        planner={planner}
+        selection={selection}
+        snapshot={snapshot}
+        differences={settingDifferences}
+        onTryInSimulator={tryInSimulator}
+        onPlanClosure={planClosure}
+        onDownload={downloadCsv}
+      />
 
       <SiteFooter onOpenGuide={openGuide} />
       <QuickGuide

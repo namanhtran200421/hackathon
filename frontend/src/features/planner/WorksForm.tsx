@@ -78,13 +78,13 @@ export default function WorksForm(props: WorksFormProps) {
       map +
       ", with " +
       whole(props.settings["demand-veh-per-hour"]) +
-      " cars an hour arriving at the busiest time of day. Change these on the Simulator page.";
+      " cars an hour arriving at the busiest time of day. Change these in the simulator's settings above.";
   }
 
   function thoroughLabel(level: Thoroughness): string {
     let name = "Quick check";
     if (level === "thorough") {
-      name = "Thorough";
+      name = "Careful check";
     }
     const seconds = props.estimateSeconds(Object.assign({}, request, { thoroughness: level }));
     if (seconds === null) {
@@ -100,7 +100,7 @@ export default function WorksForm(props: WorksFormProps) {
 
   return (
     <form
-      id="report-plan"
+      id="works-form"
       className="panel controls works-form"
       aria-labelledby="works-title"
       onSubmit={function (event) {
@@ -111,16 +111,16 @@ export default function WorksForm(props: WorksFormProps) {
       }}
     >
       <div className="panel-heading">
-        <h2 id="works-title">
+        <h3 id="works-title">
           <span className="step-number">1</span> What works do you need to do?
-        </h2>
+        </h3>
       </div>
 
       <fieldset className="group" disabled={props.running}>
         <legend className="group-title">Where</legend>
         {fromMap && <p className="from-map">Filled in from the closure on the simulator&rsquo;s map.</p>}
         <div className="field">
-          <label htmlFor="works-street">Street</label>
+          <label htmlFor="works-street">Street for the works</label>
           <select
             id="works-street"
             value={streetValue}
@@ -140,7 +140,7 @@ export default function WorksForm(props: WorksFormProps) {
           </select>
         </div>
         <div className="field">
-          <label htmlFor="works-section">Which part</label>
+          <label htmlFor="works-section">Part of the street</label>
           <select
             id="works-section"
             value={String(request.section)}
@@ -160,7 +160,7 @@ export default function WorksForm(props: WorksFormProps) {
         </div>
         <Choice<ClosureType>
           id="works-closure"
-          label="How it is closed"
+          label="How the works close it"
           value={request.closureType}
           options={choiceOptions("closure-type") as [ClosureType, string][]}
           onChange={function (value) {
@@ -259,7 +259,7 @@ export default function WorksForm(props: WorksFormProps) {
       </fieldset>
 
       <fieldset className="group" disabled={props.running}>
-        <legend className="group-title">How thorough?</legend>
+        <legend className="group-title">How careful?</legend>
         <div className="option-list">
           <label className="option">
             <input
@@ -273,7 +273,7 @@ export default function WorksForm(props: WorksFormProps) {
             />
             <span>
               <strong>{thoroughLabel("quick")}</strong>
-              <small>Each test repeated 3 times with different traffic.</small>
+              <small>3 rounds of testing with different random traffic.</small>
             </span>
           </label>
           <label className="option">
@@ -288,7 +288,7 @@ export default function WorksForm(props: WorksFormProps) {
             />
             <span>
               <strong>{thoroughLabel("thorough")}</strong>
-              <small>Repeated 8 times, and the top 3 plans double-checked.</small>
+              <small>8 rounds, and the best 3 plans double-checked.</small>
             </span>
           </label>
         </div>

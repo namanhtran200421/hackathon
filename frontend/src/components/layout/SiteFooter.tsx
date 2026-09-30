@@ -26,7 +26,7 @@ export default function SiteFooter({ onOpenGuide }: { onOpenGuide: () => void })
               <a href="#compare">Compare with normal traffic</a>
             </li>
             <li>
-              <a href="#report">Report and works planner</a>
+              <a href="#results">Results</a>
             </li>
           </ul>
         </div>

@@ -1,19 +1,19 @@
 /**
- * "Compare with normal traffic": save, replace or clear the baseline, list any
- * settings that changed since it was saved, and download the road numbers.
+ * "Compare with normal traffic": save, replace or clear the baseline, and list
+ * any settings that changed since it was saved. The comparison itself is in
+ * Results, below the simulator.
  */
 
-import { ArrowDownToLine, Route } from "lucide-react";
+import { Route } from "lucide-react";
 import type { TrafficSimulation } from "../simulation/useTrafficSim";
 import { describeBaseline, type Difference } from "./differences";
 
 interface ComparePanelProps {
   sim: TrafficSimulation;
   differences: Difference[];
-  onDownload: () => void;
 }
 
-export default function ComparePanel({ sim, differences, onDownload }: ComparePanelProps) {
+export default function ComparePanel({ sim, differences }: ComparePanelProps) {
   const ready = sim.phase === "ready";
   let hasBaseline = false;
   if (sim.metrics) {
@@ -71,9 +71,6 @@ export default function ComparePanel({ sim, differences, onDownload }: ComparePa
               Clear baseline
             </button>
           )}
-          <button className="button secondary" disabled={!ready} onClick={onDownload}>
-            <ArrowDownToLine size={16} /> Download CSV
-          </button>
         </div>
       </div>
 
@@ -96,7 +93,7 @@ export default function ComparePanel({ sim, differences, onDownload }: ComparePa
       )}
       {hasBaseline && (
         <p className="help results-link">
-          <a href="#report-results">See the full comparison on the Report page.</a>
+          <a href="#run-results">See the comparison under Results, below.</a>
         </p>
       )}
     </div>

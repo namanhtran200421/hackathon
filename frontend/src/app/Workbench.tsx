@@ -1,6 +1,6 @@
 /**
- * The Simulator page: settings, the live map, the figures, the baseline
- * controls, the model's log and a pointer to the full results.
+ * The simulator: settings on the left; the live map, the figures, the
+ * baseline controls, the model's log and the status line on the right.
  */
 
 import ComparePanel from "../features/baseline/ComparePanel";
@@ -9,25 +9,22 @@ import Figures from "../features/figures/Figures";
 import SimulationLog from "../features/log/SimulationLog";
 import MapPanel from "../features/map/MapPanel";
 import SettingsPanel from "../features/settings/SettingsPanel";
-import type { ResultsSnapshot, Selection } from "../features/simulation/types";
+import type { Selection } from "../features/simulation/types";
 import type { TrafficSimulation } from "../features/simulation/useTrafficSim";
-import ResultsLink from "./ResultsLink";
 import StatusLine from "./StatusLine";
 
-interface SimulatorPageProps {
+interface WorkbenchProps {
   sim: TrafficSimulation;
   selection: Selection;
   onChoose: (street: string, section: number) => void;
   clickMode: boolean;
   onSetClickMode: (on: boolean) => void;
   differences: Difference[];
-  snapshot: ResultsSnapshot | null;
-  onDownload: () => void;
-  /** Open the works planner with the closure on the map. */
-  onPlanClosure: () => void;
+  /** Hand the closure on the map to the works planner in Results. */
+  onPlanClosure: (() => void) | null;
 }
 
-export default function SimulatorPage(props: SimulatorPageProps) {
+export default function Workbench(props: WorkbenchProps) {
   const sim = props.sim;
   return (
     <main id="workbench" className="container">
@@ -54,10 +51,9 @@ export default function SimulatorPage(props: SimulatorPageProps) {
             }}
           />
           <Figures metrics={sim.metrics} />
-          <ComparePanel sim={sim} differences={props.differences} onDownload={props.onDownload} />
+          <ComparePanel sim={sim} differences={props.differences} />
           <SimulationLog lines={sim.log} />
           <StatusLine sim={sim} />
-          <ResultsLink snapshot={props.snapshot} running={sim.running} onPlanClosure={props.onPlanClosure} />
         </section>
       </div>
     </main>

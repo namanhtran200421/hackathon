@@ -23,8 +23,8 @@ interface ClosureControlsProps {
   onChoose: (street: string, section: number) => void;
   clickMode: boolean;
   onToggleClickMode: () => void;
-  /** Open the works planner on the Report page with this closure. */
-  onPlanClosure: () => void;
+  /** Open the works planner in Results with this closure. */
+  onPlanClosure: (() => void) | null;
 }
 
 export default function ClosureControls({
@@ -153,9 +153,11 @@ export default function ClosureControls({
           Reopen all streets
         </button>
       </div>
-      <button className="button secondary full plan-closure" disabled={!ready} onClick={onPlanClosure}>
-        <CalendarClock size={16} /> Find the best time for this closure
-      </button>
+      {onPlanClosure && (
+        <button className="button secondary full plan-closure" disabled={!ready} onClick={onPlanClosure}>
+          <CalendarClock size={16} /> Find the best time for this closure
+        </button>
+      )}
 
       <button
         className={clickModeClass}

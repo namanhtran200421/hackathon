@@ -76,7 +76,7 @@ function savingText(best: Plan, other: Plan, otherName: string): string | null {
   if (other.typical > 0) {
     share = " (" + Math.round((saved / other.typical) * 100) + "% less)";
   }
-  return "Saves about " + carHours(saved) + " car-hours" + share + " compared with " + otherName + ".";
+  return "About " + carHours(saved) + " fewer hours of delay" + share + " than " + otherName + ".";
 }
 
 export default function Recommendation(props: RecommendationProps) {
@@ -103,22 +103,22 @@ export default function Recommendation(props: RecommendationProps) {
   if (check) {
     const measured = average(check.measured);
     const judged = verdict(check);
-    let agreement = "close to the estimate";
+    let agreement = "close to our estimate";
     if (judged === "higher") {
-      agreement = "higher than the estimate, so allow for more delay";
+      agreement = "more than our estimate, so allow for extra delay";
     } else if (judged === "lower") {
-      agreement = "lower than the estimate";
+      agreement = "less than our estimate";
     }
     checkText =
-      "Double-checked directly at " +
+      "We double-checked " +
       timeOfDay(check.hour) +
-      ", the busiest hour of this plan: " +
+      ", the busiest hour of this plan, with a separate test: " +
       carHours(measured) +
-      " extra car-hours per hour, " +
+      " hours of delay for that hour, " +
       agreement +
-      " (" +
+      " of " +
       carHours(check.estimate) +
-      ").";
+      ".";
   }
 
   let setupText = "";
@@ -129,9 +129,9 @@ export default function Recommendation(props: RecommendationProps) {
   return (
     <section className="panel planner-step recommendation" aria-labelledby="recommendation-title">
       <div className="step-head">
-        <h2 id="recommendation-title" tabIndex={-1}>
+        <h3 id="recommendation-title" tabIndex={-1}>
           <span className="step-number">3</span> Our recommendation
-        </h2>
+        </h3>
         <ImpactBadge impact={outcome.impact} />
       </div>
 
@@ -145,12 +145,13 @@ export default function Recommendation(props: RecommendationProps) {
 
       <dl className="recommendation-figures">
         <div>
-          <dt>Extra time in traffic</dt>
+          <dt>Extra time stuck in traffic</dt>
           <dd>
-            <strong>{carHours(best.typical)}</strong> car-hours in total
+            <strong>{carHours(best.typical)}</strong> hours in total
           </dd>
           <dd className="help">
-            {rangeText(best.low, best.high)} across {outcome.repeats} repeats with different traffic
+            Between {rangeText(best.low, best.high).replace(" to ", " and ")} hours over {outcome.repeats}{" "}
+            rounds of testing
           </dd>
         </div>
         <div>
@@ -168,7 +169,8 @@ export default function Recommendation(props: RecommendationProps) {
         </div>
       </dl>
       <p className="help car-hour-note">
-        A car-hour is one car held up for an hour, or 60 cars held up for a minute each.
+        Hours of delay are for all drivers added together: 60 drivers each held up for a minute adds up to 1
+        hour.
       </p>
 
       {outcome.nearTie && (
@@ -179,8 +181,8 @@ export default function Recommendation(props: RecommendationProps) {
       )}
       {props.stoppedEarly && (
         <p className="planner-note">
-          <strong>Stopped early:</strong> based on {outcome.repeats} of {props.repeatsWanted} repeats, so the
-          numbers are rougher.
+          <strong>Stopped early:</strong> based on {outcome.repeats} of {props.repeatsWanted} rounds of
+          testing, so the numbers are rougher.
         </p>
       )}
       {checkText && <p className="help check-note">{checkText}</p>}
@@ -192,7 +194,7 @@ export default function Recommendation(props: RecommendationProps) {
             props.onTryInSimulator(best);
           }}
         >
-          <Play size={15} /> Watch it in the simulator
+          <Play size={15} /> Show it on the map
         </button>
         <button
           className="button secondary"

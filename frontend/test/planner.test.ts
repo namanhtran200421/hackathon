@@ -8,7 +8,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { STYLE, type ScenarioResult, type World } from "@traffic-lab/simulation";
-import { viewFromHash } from "../src/app/useView";
 import { rateAt, TRAFFIC_LEVELS, type SeedCurve } from "../src/features/planner/delayCurve";
 import { levelJobs, plannerSettings, scenarioKey, seedsFor } from "../src/features/planner/jobs";
 import { fitsTimes, rankPlans, shiftDelay, shiftOptions, summarise } from "../src/features/planner/plans";
@@ -197,17 +196,13 @@ test("scenario keys ignore the order settings were given in", function () {
   assert.notEqual(scenarioKey(a), scenarioKey({ settings: { seed: 2, "measure-s": 600 }, closure: null }));
 });
 
-test("times of day and pages read naturally", function () {
+test("times of day read naturally", function () {
   assert.equal(timeOfDay(0), "midnight");
   assert.equal(timeOfDay(12), "noon");
   assert.equal(timeOfDay(21.5), "9:30 pm");
   assert.equal(timeOfDay(24 + 5), "5 am");
   const plan = rankPlans(REQUEST, [curve(1, 1)], profiles())[0];
   assert.match(closedWindow(plan), /^\d+(:\d\d)? (am|pm)|midnight to /);
-  assert.equal(viewFromHash("#report"), "report");
-  assert.equal(viewFromHash("#report-results"), "report");
-  assert.equal(viewFromHash("#workbench"), "simulator");
-  assert.equal(viewFromHash(""), "simulator");
 });
 
 test("the closure to plan comes from the simulator's map", function () {

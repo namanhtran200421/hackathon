@@ -17,7 +17,7 @@ npm run dev
 
 Then open http://localhost:3000.
 
-The road map is ready when the page loads. Press **Start** to set the traffic moving. The **Quick guide** button at the top of the page explains everything else in seven short steps. The **Report** page, linked at the top, holds the full results and the works planner.
+The road map is ready when the page loads. Press **Start** to set the traffic moving. The **Quick guide** button at the top of the page explains everything else in a few short steps. **Results**, below the simulator, shows what your run did and finds the best time to do the works.
 
 ## What you can do
 
@@ -25,8 +25,8 @@ The road map is ready when the page loads. Press **Start** to set the traffic mo
 - **Close streets.** Pick a street and close it in both directions, in one direction, or by one lane. You can also click roads on the map to close and reopen them. Closures work while the traffic is moving.
 - **Watch it live.** The map shows every car. Colour the roads by traffic jams, by traffic volume, or by the change from normal traffic. Zoom in with the + button, or hold Ctrl and scroll.
 - **Run as long as you like.** The simulation normally stops after its counting time. Turn on **Keep running** to let it go until you press Pause.
-- **Compare with normal traffic.** Record a baseline once, with every road open. Every later run is compared with it on the Report page: a summary table, charts over time, and the streets that changed most. The baseline is kept in your browser, so it survives a reload.
-- **Plan road works.** On the Report page, describe the works and your limits, and the planner recommends when to close the road and over how many shifts. See [Planning road works](#planning-road-works) below.
+- **Compare with normal traffic.** Record a baseline once, with every road open. Every later run is compared with it under Results: the key numbers, charts over time and the streets that got busier, with every number one click away. The baseline is kept in your browser, so it survives a reload.
+- **Plan road works.** Under Results, describe the works and your limits, and the planner recommends when to close the road and over how many shifts. See [Planning road works](#planning-road-works) below.
 - **Download the numbers.** Download CSV saves the traffic on every road in the same format as the desktop model.
 
 Every button, slider and switch from the desktop NetLogo model has a matching control on the page.
@@ -42,27 +42,29 @@ The project has two parts, both written in TypeScript:
 
 ## Planning road works
 
-The Report page answers the question councils and contractors start with: when should we close this road so that traffic suffers least, and where will the traffic go?
+> **Hidden for now.** The works planner is switched off, so the page shows only the simulator and the run results. To bring it back, set `worksPlanner` to `true` in `frontend/src/app/features.ts`. Everything below describes it when it is switched on.
+
+The works planner answers the question councils and contractors start with: when should we close this road so that traffic suffers least, and where will the traffic go?
 
 The simulator and the planner work as one flow:
 
 1. **Try a closure in the simulator.** Close a street, run it against your baseline and watch the detours happen.
-2. **Press "Find the best time for this closure".** The button sits under Road closures and under the map. It opens the Report page with the planner's form filled in: the street closed on the map, closed the same way, using the simulator's settings (road map, cars per hour, drivers, traffic lights).
-3. **Read what you saw.** The top of the Report page sums up your run: what was closed, how it compared with the baseline, and the streets that got busier. These are the same numbers as the CSV download. One run is one traffic level and one traffic pattern, so it shows _where_ the traffic goes but not _when_ to close the road.
+2. **Press "Find the best time for this closure".** The button sits under Road closures and under the map. It takes you to the planner under Results with its form filled in: the street closed on the map, closed the same way, using the simulator's settings (road map, cars per hour, drivers, traffic lights).
+3. **Read what happened.** "What happened in your run", at the top of Results, sums up your run: what was closed, how it compared with the baseline, and the streets that got busier. These are the same numbers as the CSV download. One run is one traffic level and one traffic pattern, so it shows _where_ the traffic goes but not _when_ to close the road.
 4. **Find the best plan.** The planner tests the same closure at every time of day (below), then says when to close the road, over how many shifts, and where the detour traffic goes at that time.
-5. **Watch it in the simulator.** This sets the recommended plan up on the map, so you can see it and show others.
+5. **Show it on the map.** This sets the recommended plan up on the map, so you can see it and show others.
 
-The report says which simulator settings it used. If you change them afterwards, it warns that the plan is out of date until you search again.
+The planner says which simulator settings it used. If you change them afterwards, it warns that the plan is out of date until you search again.
 
 You describe the works: the street and which part, how it is closed, how many hours of work are needed, the longest shift the crew can work, and how long setting up and packing away takes. You can limit the works to nights or daytime, and to weekdays or weekends, and say what matters most: least disruption, a balance, or the fewest shifts.
 
 The planner then works in three stages, all in background workers in your browser:
 
-1. **Test the works at four traffic levels**, from quiet (15% of the busiest time) to the busiest time. Each test runs the city twice with exactly the same cars, once with the works and once with every road open, so the difference is caused by the works alone. Every test is repeated with different random traffic (3 times for a quick check, 8 for a thorough one). This repetition is a Monte Carlo simulation, and it is where the ranges in the report come from.
+1. **Test the works at four traffic levels**, from quiet (15% of the busiest time) to the busiest time. Each test runs the city twice with exactly the same cars, once with the works and once with every road open, so the difference is caused by the works alone. Every test is repeated with different random traffic (3 rounds for a quick check, 8 for a careful one). This repetition is a Monte Carlo simulation, and it is where the ranges in the report come from.
 2. **Rank every plan the limits allow.** How busy each quarter hour of the day is comes from the public traffic signal counts (see [Observed traffic data](#observed-traffic-data)), separately for weekdays and weekends, so each quarter hour's extra delay can be read off the tested levels. Every start hour, kind of day and number of shifts is added up and ranked. Setting-up time counts as closed time, so many tiny shifts are not free.
 3. **Double-check the best plans** by re-testing their busiest hour directly, with that hour's real traffic pattern.
 
-The report gives the recommended plan in one sentence, the likely extra time in traffic (in car-hours, with the range across repeats), what it saves compared with a daytime closure, a 24-hour chart of the best and worst times, where the traffic goes (which streets take the detour traffic at the plan's busiest hour, from the double-check tests), other good options, what could go wrong (running late, queues at the edge of the city, trips that cannot get through, close calls) and how the numbers were worked out. **Watch it in the simulator** sets the plan up on the map, and the report prints or saves as a PDF.
+The report gives the recommended plan in one sentence, the likely extra time stuck in traffic (in hours, all drivers added together, with the lowest and highest over the rounds of testing), what it saves compared with a daytime closure, a 24-hour chart of the best and worst times, where the traffic goes (which streets take the detour traffic at the plan's busiest hour, from the double-check tests), other good options, what could go wrong (running late, queues at the edge of the city, trips that cannot get through, close calls) and how the numbers were worked out. **Show it on the map** sets the plan up in the simulator, and Results print or save as a PDF.
 
 Test results are remembered in your browser, so repeating a search or changing only the limits or priority is instant. A quick check takes about a minute on a typical laptop.
 
@@ -80,7 +82,7 @@ frontend/                   The web page (React + Vite)
     figures/                    the yellow number tiles
     baseline/                   saving and comparing with normal traffic
     results/                    results tables and charts
-    planner/                    the works planner on the Report page
+    planner/                    the works planner, under Results
     log/                        the simulation log
     guide/                      the quick guide
   src/lib/                    Number and time formatting

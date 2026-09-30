@@ -57,11 +57,11 @@ export default function Detours({ check, request }: { check: DirectCheck; reques
 
   return (
     <section className="panel planner-step" aria-labelledby="detours-title">
-      <h2 id="detours-title">Where the traffic goes</h2>
+      <h3 id="detours-title">Where the traffic goes</h3>
       <p className="help">
         At {timeOfDay(check.hour)} on {dayWord(check.dayType)}s, the busiest hour of the recommended closure,
-        compared with no works. Cars per hour through an average block of each street, both directions,
-        averaged over {check.measured.length} repeats.
+        compared with no works. Cars per hour on a typical block of each street, both directions, average of{" "}
+        {check.measured.length} rounds of testing.
       </p>
       <p className="detour-summary">{summary}</p>
       {rows.length > 0 && (

@@ -117,7 +117,7 @@ export const PRIORITY_TEXT: Record<Priority, { label: string; help: string }> = 
   },
   balanced: {
     label: "Balanced",
-    help: "Each extra shift counts as much as an hour of the works at average traffic.",
+    help: "Weighs up less delay against fewer shifts.",
   },
   "fewest-shifts": {
     label: "Finish in the fewest shifts",

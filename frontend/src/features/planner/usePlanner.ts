@@ -1,5 +1,5 @@
 /**
- * The works planner's search, for the Report page.
+ * The works planner's search, shown under Results.
  *
  * 1. Test the works at four traffic levels, repeated with different random
  *    seeds (the Monte Carlo part), in background workers.

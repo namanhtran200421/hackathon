@@ -17,7 +17,8 @@ interface SettingsPanelProps {
   onChoose: (street: string, section: number) => void;
   clickMode: boolean;
   onToggleClickMode: () => void;
-  onPlanClosure: () => void;
+  /** Null while the works planner is hidden. */
+  onPlanClosure: (() => void) | null;
 }
 
 export default function SettingsPanel(props: SettingsPanelProps) {

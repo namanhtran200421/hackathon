@@ -1,5 +1,5 @@
 /**
- * The Quick guide: a side panel that explains the simulator in seven steps,
+ * The Quick guide: a side panel that explains the simulator in a few short steps,
  * where each desktop NetLogo control is, and what the model can tell you.
  */
 
