@@ -431,3 +431,59 @@ main.report-page {
 .planner-step {
   scroll-margin-top: 20px;
 }
+
+/* Handing the simulator's closure to the planner. */
+.plan-closure {
+  margin-bottom: 10px;
+}
+.results-teaser-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.from-map {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  background: #fff8d6;
+  border-left: 4px solid var(--accent);
+  padding: 7px 10px;
+  margin: -4px 0 14px;
+}
+
+/* What you saw in the simulator. */
+.run-summary {
+  padding: 22px;
+  margin-bottom: 24px;
+}
+.run-summary h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.run-summary-closed {
+  font-weight: 700;
+  color: var(--ink);
+}
+.run-summary-figures dd small {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.run-summary-streets {
+  font-size: 13px;
+  margin: 10px 0 6px;
+}
+.run-summary-link {
+  margin-top: 14px;
+}
+.detour-summary {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 10px 0 4px;
+}
+.settings-used .planner-note {
+  margin-top: 6px;
+}

@@ -9,6 +9,7 @@
  */
 
 import type { TrafficSim } from "./createTrafficSim";
+import { isDrivable, STYLE } from "./packing";
 import { checkSetting, DEFAULT_SETTINGS, type ClosureType, type Settings } from "./settings";
 
 /** A street closure to apply straight after Setup. */
@@ -45,6 +46,40 @@ export interface ScenarioResult {
   /** Road directions closed and narrowed by the works. */
   closedDirections: number;
   narrowedDirections: number;
+  /**
+   * Cars per hour through an average block of each street, both directions
+   * together, while counting: the same measure as the results table and the
+   * CSV download. Rounded to whole cars.
+   */
+  streets: Record<string, number>;
+}
+
+/** Cars per hour through an average block of every drivable street. */
+function streetFlows(sim: TrafficSim, measured: number): Record<string, number> {
+  const world = sim.world();
+  const styles = sim.styles();
+  const flows: Record<string, number> = {};
+  if (!world || styles.length !== world.roads.length * STYLE.fields) {
+    return flows;
+  }
+  const hours = Math.max(1 / 3600, measured / 3600);
+  const totals = new Map<string, { counted: number; sections: Set<number> }>();
+  world.roads.forEach(function (road) {
+    if (!isDrivable(road)) {
+      return;
+    }
+    let street = totals.get(road.street);
+    if (!street) {
+      street = { counted: 0, sections: new Set() };
+      totals.set(road.street, street);
+    }
+    street.counted = street.counted + styles[road.index * STYLE.fields + STYLE.winCount];
+    street.sections.add(road.section);
+  });
+  totals.forEach(function (street, name) {
+    flows[name] = Math.round(street.counted / Math.max(1, street.sections.size) / hours);
+  });
+  return flows;
 }
 
 /** Settings a scenario may never change: they only affect how the map looks. */
@@ -116,5 +151,6 @@ export function runScenario(
     cars: metrics.cars,
     closedDirections: counts.closed,
     narrowedDirections: counts.narrowed,
+    streets: streetFlows(sim, metrics.measured),
   };
 }

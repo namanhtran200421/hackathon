@@ -18,7 +18,7 @@ export const WARM_UP_SECONDS = 300;
 export const COUNT_SECONDS = 600;
 
 /** Simulator settings the planner copies: the city, drivers and signals. */
-const COPIED_SETTINGS = [
+export const COPIED_SETTINGS = [
   "network-source",
   "demand-veh-per-hour",
   "through-traffic-%",

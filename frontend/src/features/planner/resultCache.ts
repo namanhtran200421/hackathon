@@ -13,8 +13,10 @@
 
 import type { ScenarioResult } from "@traffic-lab/simulation";
 
-const STORAGE_KEY = "melbourne-traffic-lab:planner-results:v1";
-const MOST_KEPT = 3000;
+const STORAGE_KEY = "melbourne-traffic-lab:planner-results:v2";
+// Each result lists every street's traffic (about 1.5 kB), so keep enough
+// for several searches without filling the browser's storage.
+const MOST_KEPT = 1200;
 
 let results: Map<string, ScenarioResult> | null = null;
 
@@ -26,7 +28,9 @@ function isResult(value: unknown): value is ScenarioResult {
     Number.isFinite(result.vehicleHours) &&
     Number.isFinite(result.measured) &&
     Number.isFinite(result.waiting) &&
-    Number.isFinite(result.stranded)
+    Number.isFinite(result.stranded) &&
+    typeof result.streets === "object" &&
+    result.streets !== null
   );
 }
 

@@ -1,9 +1,10 @@
 /**
  * Road closures: choose a street and how to close it, close or reopen it,
- * close roads by clicking the map, schedule a closure, and see what is closed.
+ * close roads by clicking the map, schedule a closure, see what is closed,
+ * and hand the closure to the works planner.
  */
 
-import { Check, MousePointerClick, X } from "lucide-react";
+import { CalendarClock, Check, MousePointerClick, X } from "lucide-react";
 import { Choice, Slider, Toggle } from "../../components/form";
 import type { Selection } from "../simulation/types";
 import type { TrafficSimulation } from "../simulation/useTrafficSim";
@@ -22,6 +23,8 @@ interface ClosureControlsProps {
   onChoose: (street: string, section: number) => void;
   clickMode: boolean;
   onToggleClickMode: () => void;
+  /** Open the works planner on the Report page with this closure. */
+  onPlanClosure: () => void;
 }
 
 export default function ClosureControls({
@@ -30,6 +33,7 @@ export default function ClosureControls({
   onChoose,
   clickMode,
   onToggleClickMode,
+  onPlanClosure,
 }: ClosureControlsProps) {
   const settings = sim.settings;
   const ready = sim.phase === "ready";
@@ -149,6 +153,9 @@ export default function ClosureControls({
           Reopen all streets
         </button>
       </div>
+      <button className="button secondary full plan-closure" disabled={!ready} onClick={onPlanClosure}>
+        <CalendarClock size={16} /> Find the best time for this closure
+      </button>
 
       <button
         className={clickModeClass}

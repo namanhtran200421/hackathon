@@ -6,7 +6,7 @@
 import { STYLE, isDrivable, type BaselineSummary, type Metrics, type World } from "@traffic-lab/simulation";
 import { clock, oneDp, twoDp, whole } from "../../lib/format";
 import { sampleFrom } from "../simulation/useTrafficSim";
-import type { Sample } from "../simulation/types";
+import type { BaselineRecording, ResultsSnapshot, Sample } from "../simulation/types";
 
 /**
  * A run's figures at simulated second `time`: its final figures if it ended
@@ -221,4 +221,53 @@ export function streetRows(world: World, styles: Float32Array, measuredSeconds: 
     });
   });
   return rows;
+}
+
+/** A run next to its baseline, both at the same moment. */
+export interface RunComparison {
+  runFigures: Sample;
+  /** Null without a full baseline recording. */
+  baseFigures: Sample | null;
+  rows: SummaryRow[];
+  hasBaseline: boolean;
+}
+
+/**
+ * Compare a run with the baseline at the same moment: the end of the shorter
+ * of the two, so the totals are fair.
+ */
+export function compareRun(snapshot: ResultsSnapshot, baseline: BaselineRecording | null): RunComparison {
+  const m = snapshot.metrics;
+  const hasBaseline = m.hasBaseline;
+  let baselineEnd = null;
+  if (hasBaseline && baseline) {
+    baselineEnd = baseline.metrics;
+  }
+  let compareAt = m.ticks;
+  if (baselineEnd) {
+    compareAt = Math.min(m.ticks, baselineEnd.ticks);
+  }
+  const runFigures = figuresAt(snapshot.history, m, compareAt);
+  let baseFigures: Sample | null = null;
+  if (baselineEnd && baseline) {
+    baseFigures = figuresAt(baseline.history, baselineEnd, compareAt);
+  }
+  let fallback = null;
+  if (hasBaseline && !baseFigures) {
+    fallback = m.baseline;
+  }
+  return {
+    runFigures: runFigures,
+    baseFigures: baseFigures,
+    rows: summaryRows(runFigures, baseFigures, fallback),
+    hasBaseline: hasBaseline,
+  };
+}
+
+/** Street comparisons only make sense when the baseline used the same road map. */
+export function sameMapAsBaseline(snapshot: ResultsSnapshot, baseline: BaselineRecording | null): boolean {
+  if (baseline && baseline.settings) {
+    return baseline.settings["network-source"] === snapshot.world.network;
+  }
+  return true;
 }

@@ -51,6 +51,10 @@ test("scenarios report the works and count the full measuring time", function ()
   assert.ok(works.closedDirections > 0);
   assert.equal(open.closedDirections, 0);
   assert.ok(works.vehicleHours > 0 && open.vehicleHours > 0);
+  // Street traffic: nothing gets through the closed street, but it does with every road open.
+  assert.equal(works.streets["Collins St"], 0);
+  assert.ok(open.streets["Collins St"] > 0);
+  assert.ok(Object.keys(works.streets).length > 10);
 });
 
 test("scenarios reject unknown settings and very long runs", function () {

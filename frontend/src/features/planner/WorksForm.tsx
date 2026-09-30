@@ -1,24 +1,25 @@
 /**
  * Step 1, "What works do you need to do?": the street, how it is closed, how
- * long the work takes, the limits, and what matters most.
+ * long the work takes, the limits, and what matters most. The simulator's
+ * "Find the best time for this closure" button fills in the street.
  */
 
-import { useState } from "react";
 import { Search } from "lucide-react";
 import type { ClosureType, Settings, World } from "@traffic-lab/simulation";
 import { Choice, RangeField } from "../../components/form";
 import { whole } from "../../lib/format";
 import { sectionsOf } from "../settings/closures";
 import { choiceOptions } from "../settings/labels";
-import type { Selection } from "../simulation/types";
-import type { AllowedDays, AllowedTimes, Priority, Thoroughness, WorksRequest } from "./types";
+import type { AllowedDays, AllowedTimes, Priority, Thoroughness, WorksClosure, WorksRequest } from "./types";
 import { durationText, hoursText, PRIORITY_TEXT } from "./wording";
 
 interface WorksFormProps {
   world: World | null;
   settings: Settings | null;
-  /** The street chosen in the simulator, used as the starting choice. */
-  selection: Selection;
+  request: WorksRequest;
+  onChange: (request: WorksRequest) => void;
+  /** The closure last filled in from the simulator's map, if any. */
+  fromSimulator: WorksClosure | null;
   ready: boolean;
   running: boolean;
   estimateSeconds: (request: WorksRequest) => number | null;
@@ -40,21 +41,20 @@ const DAYS: [AllowedDays, string][] = [
 const PRIORITIES: Priority[] = ["least-disruption", "balanced", "fewest-shifts"];
 
 export default function WorksForm(props: WorksFormProps) {
-  const [request, setRequest] = useState<WorksRequest>({
-    street: props.selection.street,
-    section: props.selection.section,
-    closureType: "Both directions",
-    workHours: 6,
-    longestShift: 8,
-    setupHours: 1,
-    days: "either",
-    times: "any",
-    priority: "balanced",
-    thoroughness: "quick",
-  });
+  const request = props.request;
 
   function change(changes: Partial<WorksRequest>): void {
-    setRequest(Object.assign({}, request, changes));
+    props.onChange(Object.assign({}, request, changes));
+  }
+
+  // Say so while the form still shows the closure sent from the simulator.
+  const filledIn = props.fromSimulator;
+  let fromMap = false;
+  if (filledIn) {
+    fromMap =
+      filledIn.street === request.street &&
+      filledIn.section === request.section &&
+      filledIn.closureType === request.closureType;
   }
 
   let streets: string[] = [];
@@ -100,6 +100,7 @@ export default function WorksForm(props: WorksFormProps) {
 
   return (
     <form
+      id="report-plan"
       className="panel controls works-form"
       aria-labelledby="works-title"
       onSubmit={function (event) {
@@ -117,6 +118,7 @@ export default function WorksForm(props: WorksFormProps) {
 
       <fieldset className="group" disabled={props.running}>
         <legend className="group-title">Where</legend>
+        {fromMap && <p className="from-map">Filled in from the closure on the simulator&rsquo;s map.</p>}
         <div className="field">
           <label htmlFor="works-street">Street</label>
           <select

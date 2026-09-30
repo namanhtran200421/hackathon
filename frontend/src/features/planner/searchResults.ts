@@ -7,7 +7,7 @@ import type { ScenarioResult } from "@traffic-lab/simulation";
 import { average, extraPerHour, rateAt, TRAFFIC_LEVELS, type SeedCurve } from "./delayCurve";
 import type { Job } from "./jobs";
 import { estimateAt } from "./plans";
-import type { DayProfiles, DayType, DirectCheck, Plan } from "./types";
+import type { DayProfiles, DayType, DirectCheck, Plan, StreetChange } from "./types";
 
 type Results = (ScenarioResult | null)[];
 
@@ -64,6 +64,33 @@ export function curvesFrom(jobs: Job[], results: Results): SeedCurve[] {
   return curves;
 }
 
+/** Average each street's traffic without and with the works, over the repeats. */
+export function streetChanges(pairs: { open: ScenarioResult; works: ScenarioResult }[]): StreetChange[] {
+  const totals = new Map<string, { before: number; after: number }>();
+  pairs.forEach(function (pair) {
+    const names = new Set(Object.keys(pair.open.streets || {}).concat(Object.keys(pair.works.streets || {})));
+    names.forEach(function (name) {
+      let street = totals.get(name);
+      if (!street) {
+        street = { before: 0, after: 0 };
+        totals.set(name, street);
+      }
+      street.before = street.before + ((pair.open.streets || {})[name] || 0);
+      street.after = street.after + ((pair.works.streets || {})[name] || 0);
+    });
+  });
+  const changes: StreetChange[] = [];
+  const count = Math.max(1, pairs.length);
+  totals.forEach(function (street, name) {
+    const before = street.before / count;
+    const after = street.after / count;
+    changes.push({ street: name, before: before, after: after, change: after - before });
+  });
+  return changes.sort(function (a, b) {
+    return b.change - a.change;
+  });
+}
+
 /** The direct checks whose tests have all finished. */
 export function checksFrom(
   jobs: Job[],
@@ -71,7 +98,16 @@ export function checksFrom(
   curves: SeedCurve[],
   profiles: DayProfiles,
 ): DirectCheck[] {
-  const groups = new Map<string, { dayType: DayType; hour: number; measured: number[]; complete: boolean }>();
+  const groups = new Map<
+    string,
+    {
+      dayType: DayType;
+      hour: number;
+      measured: number[];
+      pairs: { open: ScenarioResult; works: ScenarioResult }[];
+      complete: boolean;
+    }
+  >();
   const pairs = pairsBy(jobs, results, function (job) {
     return job.dayType + ":" + job.hour + ":" + job.seed;
   });
@@ -82,7 +118,7 @@ export function checksFrom(
     const key = job.dayType + ":" + job.hour;
     let group = groups.get(key);
     if (!group) {
-      group = { dayType: job.dayType, hour: job.hour, measured: [], complete: true };
+      group = { dayType: job.dayType, hour: job.hour, measured: [], pairs: [], complete: true };
       groups.set(key, group);
     }
     const pair = pairs.get(key + ":" + job.seed);
@@ -91,6 +127,7 @@ export function checksFrom(
       return;
     }
     group.measured.push(extraPerHour(pair.open, pair.works));
+    group.pairs.push({ open: pair.open, works: pair.works });
   });
   const checks: DirectCheck[] = [];
   groups.forEach(function (group) {
@@ -102,6 +139,7 @@ export function checksFrom(
       hour: group.hour,
       estimate: estimateAt(group.hour, group.dayType, curves, profiles),
       measured: group.measured,
+      streets: streetChanges(group.pairs),
     });
   });
   return checks;

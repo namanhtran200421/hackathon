@@ -28,6 +28,17 @@ const COMPARED: [SettingName, string][] = [
   ["warm-up-s", "Warm-up time"],
 ];
 
+/** The name people see for a setting, such as "Cars arriving per hour". */
+export function settingLabel(name: SettingName): string {
+  const found = COMPARED.find(function (entry) {
+    return entry[0] === name;
+  });
+  if (found) {
+    return found[1];
+  }
+  return name;
+}
+
 export interface Difference {
   label: string;
   from: string;

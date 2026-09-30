@@ -23,6 +23,8 @@ interface SimulatorPageProps {
   differences: Difference[];
   snapshot: ResultsSnapshot | null;
   onDownload: () => void;
+  /** Open the works planner with the closure on the map. */
+  onPlanClosure: () => void;
 }
 
 export default function SimulatorPage(props: SimulatorPageProps) {
@@ -38,6 +40,7 @@ export default function SimulatorPage(props: SimulatorPageProps) {
           onToggleClickMode={function () {
             props.onSetClickMode(!props.clickMode);
           }}
+          onPlanClosure={props.onPlanClosure}
         />
 
         <section className="results" aria-label="Simulator">
@@ -54,7 +57,7 @@ export default function SimulatorPage(props: SimulatorPageProps) {
           <ComparePanel sim={sim} differences={props.differences} onDownload={props.onDownload} />
           <SimulationLog lines={sim.log} />
           <StatusLine sim={sim} />
-          <ResultsLink snapshot={props.snapshot} running={sim.running} />
+          <ResultsLink snapshot={props.snapshot} running={sim.running} onPlanClosure={props.onPlanClosure} />
         </section>
       </div>
     </main>

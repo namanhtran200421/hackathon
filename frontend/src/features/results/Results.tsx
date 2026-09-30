@@ -12,7 +12,7 @@ import type { Difference } from "../baseline/differences";
 import type { BaselineRecording, ResultsSnapshot, Sample } from "../simulation/types";
 import Bars, { type BarRow } from "./charts/Bars";
 import LineChart, { type ChartLine } from "./charts/LineChart";
-import { figuresAt, streetRows, summaryRows, type StreetRow } from "./calculations";
+import { compareRun, sameMapAsBaseline, streetRows, type StreetRow } from "./calculations";
 import StreetTable from "./StreetTable";
 import SummaryTable from "./SummaryTable";
 
@@ -91,34 +91,12 @@ function chartPoints(history: Sample[], key: "cars" | "meanTrip") {
 
 function ResultsBody({ snapshot, baseline, running, differences, streets }: ResultsBodyProps) {
   const [showAllStreets, setShowAllStreets] = useState(false);
-  const m = snapshot.metrics;
-  const hasBaseline = m.hasBaseline;
-
-  // Compare both runs at the same moment: the end of the shorter one.
-  let baselineEnd = null;
-  if (hasBaseline && baseline) {
-    baselineEnd = baseline.metrics;
-  }
-  let compareAt = m.ticks;
-  if (baselineEnd) {
-    compareAt = Math.min(m.ticks, baselineEnd.ticks);
-  }
-  const runFigures = figuresAt(snapshot.history, m, compareAt);
-  let baseFigures: Sample | null = null;
-  if (baselineEnd && baseline) {
-    baseFigures = figuresAt(baseline.history, baselineEnd, compareAt);
-  }
-  let fallback = null;
-  if (hasBaseline && !baseFigures) {
-    fallback = m.baseline;
-  }
-  const rows = summaryRows(runFigures, baseFigures, fallback);
-
-  // Street comparisons only make sense on the same road map.
-  let sameMap = true;
-  if (baseline && baseline.settings) {
-    sameMap = baseline.settings["network-source"] === snapshot.world.network;
-  }
+  const comparison = compareRun(snapshot, baseline);
+  const hasBaseline = comparison.hasBaseline;
+  const runFigures = comparison.runFigures;
+  const baseFigures = comparison.baseFigures;
+  const rows = comparison.rows;
+  const sameMap = sameMapAsBaseline(snapshot, baseline);
   const compareStreets = hasBaseline && sameMap;
 
   const ranked = streets.slice().sort(function (a, b) {

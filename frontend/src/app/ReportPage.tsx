@@ -1,13 +1,15 @@
 /**
- * The Report page: the works planner, then the full results of the latest
- * simulator run.
+ * The Report page, in the order people use it: what the simulator run showed,
+ * the works planner for that closure, then the run's full results.
  */
 
 import type { Difference } from "../features/baseline/differences";
 import PlannerPanel from "../features/planner/PlannerPanel";
-import type { Plan, WorksRequest } from "../features/planner/types";
+import { closureToPlan } from "../features/planner/request";
+import type { Plan, WorksClosure, WorksRequest } from "../features/planner/types";
 import type { Planner } from "../features/planner/usePlanner";
 import Results from "../features/results/Results";
+import RunSummary from "../features/results/RunSummary";
 import type { ResultsSnapshot, Selection } from "../features/simulation/types";
 import type { TrafficSimulation } from "../features/simulation/useTrafficSim";
 
@@ -18,10 +20,19 @@ interface ReportPageProps {
   snapshot: ResultsSnapshot | null;
   differences: Difference[];
   onTryInSimulator: (plan: Plan, request: WorksRequest) => void;
+  onPlanClosure: (closure: WorksClosure) => void;
+  onDownload: () => void;
 }
 
 export default function ReportPage(props: ReportPageProps) {
   const sim = props.sim;
+  const startingClosure = closureToPlan(
+    sim.world,
+    sim.store.current.styles,
+    props.selection.street,
+    props.selection.section,
+    sim.settings["closure-type"],
+  );
   return (
     <main id="report" className="container report-page">
       <div className="page-intro">
@@ -29,16 +40,26 @@ export default function ReportPage(props: ReportPageProps) {
           Plan road works with the least disruption
         </h1>
         <p>
-          Tell us about the works and the planner tests them at every time of day, many times over, to find
-          when and how to close the road. Below that are the full results of your latest simulator run.
+          Start with what you saw in the simulator, then let the planner test the same closure at every time
+          of day, many times over, to find when to close the road and where the traffic will go. The full
+          results of your latest run are at the bottom.
         </p>
       </div>
+
+      <RunSummary
+        snapshot={props.snapshot}
+        baseline={sim.baseline}
+        running={sim.running}
+        closureType={sim.settings["closure-type"]}
+        onPlan={props.onPlanClosure}
+        onDownload={props.onDownload}
+      />
 
       <PlannerPanel
         planner={props.planner}
         world={sim.world}
         settings={sim.settings}
-        selection={props.selection}
+        startingClosure={startingClosure}
         onTryInSimulator={props.onTryInSimulator}
       />
 

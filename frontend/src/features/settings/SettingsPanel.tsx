@@ -17,6 +17,7 @@ interface SettingsPanelProps {
   onChoose: (street: string, section: number) => void;
   clickMode: boolean;
   onToggleClickMode: () => void;
+  onPlanClosure: () => void;
 }
 
 export default function SettingsPanel(props: SettingsPanelProps) {
@@ -156,6 +157,7 @@ export default function SettingsPanel(props: SettingsPanelProps) {
         onChoose={props.onChoose}
         clickMode={props.clickMode}
         onToggleClickMode={props.onToggleClickMode}
+        onPlanClosure={props.onPlanClosure}
       />
 
       <details className="group advanced">

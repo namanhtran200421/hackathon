@@ -11,7 +11,8 @@ import SiteFooter from "../components/layout/SiteFooter";
 import SiteHeader from "../components/layout/SiteHeader";
 import { differences } from "../features/baseline/differences";
 import QuickGuide from "../features/guide/QuickGuide";
-import type { Plan, WorksRequest } from "../features/planner/types";
+import { closureToPlan } from "../features/planner/request";
+import type { Plan, WorksClosure, WorksRequest } from "../features/planner/types";
 import { usePlanner } from "../features/planner/usePlanner";
 import { closedWindow, whenText } from "../features/planner/wording";
 import type { ResultsSnapshot, Selection } from "../features/simulation/types";
@@ -136,6 +137,41 @@ export default function App() {
     window.location.hash = "#workbench";
   }
 
+  /**
+   * Hand a closure to the works planner: fill in its form and show it on the
+   * Report page, with the keyboard focus on the form.
+   */
+  function planClosure(closure: WorksClosure): void {
+    planner.planClosure(closure);
+    if (view === "report") {
+      const form = document.getElementById("report-plan");
+      if (form) {
+        form.scrollIntoView({ block: "start" });
+      }
+    } else {
+      window.location.hash = "#report-plan";
+    }
+    setTimeout(function () {
+      const street = document.getElementById("works-street");
+      if (street) {
+        street.focus({ preventScroll: true });
+      }
+    }, 50);
+  }
+
+  /** The simulator's "Find the best time for this closure" button: whatever is closed on the map now. */
+  function planMapClosure(): void {
+    planClosure(
+      closureToPlan(
+        sim.world,
+        sim.store.current.styles,
+        selection.street,
+        selection.section,
+        sim.settings["closure-type"],
+      ),
+    );
+  }
+
   function openGuide(): void {
     setGuideOpen(true);
   }
@@ -166,6 +202,7 @@ export default function App() {
             differences={settingDifferences}
             snapshot={snapshot}
             onDownload={downloadCsv}
+            onPlanClosure={planMapClosure}
           />
         </>
       )}
@@ -177,6 +214,8 @@ export default function App() {
           snapshot={snapshot}
           differences={settingDifferences}
           onTryInSimulator={tryInSimulator}
+          onPlanClosure={planClosure}
+          onDownload={downloadCsv}
         />
       )}
 

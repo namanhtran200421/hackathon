@@ -3,16 +3,16 @@
  * planner on the Report page.
  */
 
-import { ArrowRight, BarChart3 } from "lucide-react";
+import { ArrowRight, BarChart3, CalendarClock } from "lucide-react";
 import type { ResultsSnapshot } from "../features/simulation/types";
 
-export default function ResultsLink({
-  snapshot,
-  running,
-}: {
+interface ResultsLinkProps {
   snapshot: ResultsSnapshot | null;
   running: boolean;
-}) {
+  onPlanClosure: () => void;
+}
+
+export default function ResultsLink({ snapshot, running, onPlanClosure }: ResultsLinkProps) {
   let text =
     "Tables and charts for this run appear on the Report page when you pause or the run ends, after the warm-up.";
   if (snapshot) {
@@ -28,11 +28,19 @@ export default function ResultsLink({
       </span>
       <div>
         <h2 id="results-teaser-title">Results and works planner</h2>
-        <p>{text} The Report page also finds the least disruptive time to close a street.</p>
+        <p>
+          {text} Plan this closure sends the street closed on the map to the works planner, which finds the
+          least disruptive time to close it.
+        </p>
       </div>
-      <a className="button dark" href="#report">
-        Open the report <ArrowRight size={16} />
-      </a>
+      <div className="results-teaser-actions">
+        <button className="button secondary" onClick={onPlanClosure}>
+          <CalendarClock size={16} /> Plan this closure
+        </button>
+        <a className="button dark" href="#report">
+          Open the report <ArrowRight size={16} />
+        </a>
+      </div>
     </section>
   );
 }

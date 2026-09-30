@@ -18,6 +18,14 @@ export type Priority = "least-disruption" | "balanced" | "fewest-shifts";
 /** Quick uses fewer repeats; thorough uses more and double-checks more plans. */
 export type Thoroughness = "quick" | "thorough";
 
+/** Which road the works close, and how. */
+export interface WorksClosure {
+  street: string;
+  /** 0 means the whole street. */
+  section: number;
+  closureType: ClosureType;
+}
+
 /** What the user needs to do, and the limits the plan must keep to. */
 export interface WorksRequest {
   street: string;
@@ -70,4 +78,14 @@ export interface DirectCheck {
   estimate: number;
   /** What the direct tests measured, one number per repeat. */
   measured: number[];
+  /** How traffic on each street changed with the works, averaged over the repeats; biggest increase first. */
+  streets: StreetChange[];
+}
+
+/** Cars per hour through an average block of a street, without and with the works. */
+export interface StreetChange {
+  street: string;
+  before: number;
+  after: number;
+  change: number;
 }

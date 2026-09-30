@@ -42,7 +42,17 @@ The project has two parts, both written in TypeScript:
 
 ## Planning road works
 
-The Report page answers the question councils and contractors start with: when should we close this road so that traffic suffers least?
+The Report page answers the question councils and contractors start with: when should we close this road so that traffic suffers least, and where will the traffic go?
+
+The simulator and the planner work as one flow:
+
+1. **Try a closure in the simulator.** Close a street, run it against your baseline and watch the detours happen.
+2. **Press "Find the best time for this closure".** The button sits under Road closures and under the map. It opens the Report page with the planner's form filled in: the street closed on the map, closed the same way, using the simulator's settings (road map, cars per hour, drivers, traffic lights).
+3. **Read what you saw.** The top of the Report page sums up your run: what was closed, how it compared with the baseline, and the streets that got busier. These are the same numbers as the CSV download. One run is one traffic level and one traffic pattern, so it shows _where_ the traffic goes but not _when_ to close the road.
+4. **Find the best plan.** The planner tests the same closure at every time of day (below), then says when to close the road, over how many shifts, and where the detour traffic goes at that time.
+5. **Watch it in the simulator.** This sets the recommended plan up on the map, so you can see it and show others.
+
+The report says which simulator settings it used. If you change them afterwards, it warns that the plan is out of date until you search again.
 
 You describe the works: the street and which part, how it is closed, how many hours of work are needed, the longest shift the crew can work, and how long setting up and packing away takes. You can limit the works to nights or daytime, and to weekdays or weekends, and say what matters most: least disruption, a balance, or the fewest shifts.
 
@@ -52,7 +62,7 @@ The planner then works in three stages, all in background workers in your browse
 2. **Rank every plan the limits allow.** How busy each quarter hour of the day is comes from the public traffic signal counts (see [Observed traffic data](#observed-traffic-data)), separately for weekdays and weekends, so each quarter hour's extra delay can be read off the tested levels. Every start hour, kind of day and number of shifts is added up and ranked. Setting-up time counts as closed time, so many tiny shifts are not free.
 3. **Double-check the best plans** by re-testing their busiest hour directly, with that hour's real traffic pattern.
 
-The report gives the recommended plan in one sentence, the likely extra time in traffic (in car-hours, with the range across repeats), what it saves compared with a daytime closure, a 24-hour chart of the best and worst times, other good options, what could go wrong (running late, queues at the edge of the city, trips that cannot get through, close calls) and how the numbers were worked out. **Watch it in the simulator** sets the plan up on the map, and the report prints or saves as a PDF.
+The report gives the recommended plan in one sentence, the likely extra time in traffic (in car-hours, with the range across repeats), what it saves compared with a daytime closure, a 24-hour chart of the best and worst times, where the traffic goes (which streets take the detour traffic at the plan's busiest hour, from the double-check tests), other good options, what could go wrong (running late, queues at the edge of the city, trips that cannot get through, close calls) and how the numbers were worked out. **Watch it in the simulator** sets the plan up on the map, and the report prints or saves as a PDF.
 
 Test results are remembered in your browser, so repeating a search or changing only the limits or priority is instant. A quick check takes about a minute on a typical laptop.
 

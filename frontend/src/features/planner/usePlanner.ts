@@ -32,7 +32,8 @@ import {
 import { busiestHour, summarise, type PlanOutcome } from "./plans";
 import { cachedResult, rememberResult, saveResults } from "./resultCache";
 import { checksFrom, curvesFrom, worksFacts, type WorksFacts } from "./searchResults";
-import type { DayProfiles, DirectCheck, WorksRequest } from "./types";
+import { defaultRequest } from "./request";
+import type { DayProfiles, DirectCheck, WorksClosure, WorksRequest } from "./types";
 
 export type PlannerPhase = "idle" | "running" | "done" | "stopped" | "failed";
 
@@ -59,6 +60,8 @@ export interface PlannerState {
   facts: WorksFacts | null;
   /** Repeats the search was asked for (the outcome may use fewer if stopped). */
   repeatsWanted: number;
+  /** The simulator settings the search used. */
+  settingsUsed: Partial<Settings> | null;
   error: string | null;
 }
 
@@ -71,6 +74,7 @@ const IDLE: PlannerState = {
   checks: [],
   facts: null,
   repeatsWanted: 0,
+  settingsUsed: null,
   error: null,
 };
 
@@ -95,6 +99,11 @@ export type Planner = ReturnType<typeof usePlanner>;
 
 export function usePlanner(simulatorSettings: Settings | null) {
   const [state, setState] = useState<PlannerState>(IDLE);
+  // The works form's values. Kept here, above the pages, so the simulator
+  // can fill it in and nothing is lost when switching page.
+  const [draft, setDraft] = useState<WorksRequest | null>(null);
+  // The closure last sent over from the simulator, to say so on the form.
+  const [fromSimulator, setFromSimulator] = useState<WorksClosure | null>(null);
   const [profiles, setProfiles] = useState<DayProfiles | null>(null);
   const [profilesError, setProfilesError] = useState<string | null>(null);
   const search = useRef<Search | null>(null);
@@ -330,7 +339,14 @@ export function usePlanner(simulatorSettings: Settings | null) {
       finished: false,
     };
     search.current = current;
-    setState(Object.assign({}, IDLE, { phase: "running", request: request, repeatsWanted: repeats.levels }));
+    setState(
+      Object.assign({}, IDLE, {
+        phase: "running",
+        request: request,
+        repeatsWanted: repeats.levels,
+        settingsUsed: base,
+      }),
+    );
     runStage(current, jobs, current.levelResults, function () {
       startChecks(current);
     });
@@ -385,8 +401,30 @@ export function usePlanner(simulatorSettings: Settings | null) {
     return Math.ceil(toRun / workers) * secondsPerTest.current;
   }
 
+  /** The form's values, starting from `fallback` until someone changes them. */
+  function formValues(fallback: WorksClosure): WorksRequest {
+    if (draft) {
+      return draft;
+    }
+    return defaultRequest(fallback);
+  }
+
+  /** Fill in the form with a closure from the simulator, keeping the other answers. */
+  function planClosure(closure: WorksClosure): void {
+    let values = defaultRequest(closure);
+    if (draft) {
+      values = Object.assign({}, draft, closure);
+    }
+    setDraft(values);
+    setFromSimulator(closure);
+  }
+
   return {
     state: state,
+    formValues: formValues,
+    setDraft: setDraft,
+    fromSimulator: fromSimulator,
+    planClosure: planClosure,
     profiles: profiles,
     profilesError: profilesError,
     ready: profiles !== null && simulatorSettings !== null,

@@ -26,7 +26,7 @@ export const STEPS: [string, string][] = [
   ],
   [
     "Plan road works",
-    "On the Report page, describe the works: the street, how it is closed, how many hours of work, and when the crew can work. Find the best plan tests the works at quiet and busy times, each repeated with different random traffic, and recommends when to close the road and over how many shifts, with a range of likely delay. Watch it in the simulator sets the plan up on the map.",
+    "Close a street and press Find the best time for this closure. The Report page opens with what your run showed and the planner filled in with that closure. Add how many hours of work are needed and when the crew can work, then press Find the best plan. It tests the works at quiet and busy times, each repeated with different random traffic, and recommends when to close the road, over how many shifts, and which streets take the detour traffic. Watch it in the simulator sets the plan up on the map.",
   ],
   [
     "Download the numbers",

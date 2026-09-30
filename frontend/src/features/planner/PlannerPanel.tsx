@@ -6,16 +6,18 @@
 import { useEffect } from "react";
 import { CalendarClock, Dices, FlaskConical } from "lucide-react";
 import type { Settings, World } from "@traffic-lab/simulation";
-import type { Selection } from "../simulation/types";
 import { ratesByDay, quarterBands } from "./delayCurve";
+import { checkFor } from "./checks";
 import DayChart, { type DaySeries } from "./DayChart";
+import Detours from "./Detours";
 import HowSure from "./HowSure";
 import OtherOptions from "./OtherOptions";
 import { allowedDayTypes } from "./plans";
 import Recommendation from "./Recommendation";
 import Risks from "./Risks";
 import SearchProgress from "./SearchProgress";
-import type { Plan, WorksRequest } from "./types";
+import SettingsUsed from "./SettingsUsed";
+import type { Plan, WorksClosure, WorksRequest } from "./types";
 import type { Planner } from "./usePlanner";
 import WorksForm from "./WorksForm";
 import { closedWindow, whenText } from "./wording";
@@ -23,8 +25,9 @@ import { closedWindow, whenText } from "./wording";
 interface PlannerPanelProps {
   planner: Planner;
   world: World | null;
-  settings: Settings | null;
-  selection: Selection;
+  settings: Settings;
+  /** What the form starts with: the closure on the simulator's map. */
+  startingClosure: WorksClosure;
   onTryInSimulator: (plan: Plan, request: WorksRequest) => void;
 }
 
@@ -66,7 +69,7 @@ export default function PlannerPanel({
   planner,
   world,
   settings,
-  selection,
+  startingClosure,
   onTryInSimulator,
 }: PlannerPanelProps) {
   const state = planner.state;
@@ -144,6 +147,12 @@ export default function PlannerPanel({
     statusText = "Search stopped. Showing the best plan so far.";
   }
 
+  // Where the traffic goes: from the direct check of the recommended plan.
+  let detourCheck = null;
+  if (state.outcome && profiles) {
+    detourCheck = checkFor(state.outcome.best, state.checks, state.curves, profiles);
+  }
+
   let chartPlan = null;
   if (state.outcome && !nothingClosed) {
     chartPlan = state.outcome.best;
@@ -154,7 +163,9 @@ export default function PlannerPanel({
       <WorksForm
         world={world}
         settings={settings}
-        selection={selection}
+        request={planner.formValues(startingClosure)}
+        onChange={planner.setDraft}
+        fromSimulator={planner.fromSimulator}
         ready={planner.ready}
         running={running}
         estimateSeconds={planner.estimateSeconds}
@@ -168,6 +179,9 @@ export default function PlannerPanel({
         {planner.profilesError && <p className="error">{planner.profilesError}</p>}
         {state.error && <p className="error">{state.error}</p>}
         {state.phase === "idle" && <EmptyState />}
+        {state.settingsUsed && state.phase !== "idle" && (
+          <SettingsUsed used={state.settingsUsed} current={settings} />
+        )}
         {state.phase === "failed" && (
           <button className="button secondary" onClick={planner.reset}>
             Start again
@@ -218,6 +232,8 @@ export default function PlannerPanel({
             <DayChart series={series} plan={chartPlan} times={request.times} />
           </section>
         )}
+
+        {showAnswer && detourCheck && request && <Detours check={detourCheck} request={request} />}
 
         {showAnswer && state.outcome && request && profiles && (
           <>

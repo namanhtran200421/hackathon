@@ -156,6 +156,8 @@ test("baseline, change view, results and CSV download", async function ({ page }
   await expect(results.locator(".streets-table")).toContainText("Collins St");
   await expect(results.locator(".streets-table")).toContainText("closed");
   await checkAccessibility(page, "#report-results");
+  await expect(page.locator(".run-summary")).toContainText("Closed: Collins St");
+  await expect(page.locator(".run-summary")).toContainText("compared with the baseline");
 
   // The simulation kept its state while the Report page was open.
   await openPage(page, "Simulator");
@@ -246,16 +248,20 @@ test("quick guide, phone layout, keyboard and accessibility", async function ({ 
   await checkAccessibility(page);
 });
 
-test("the works planner finds a time, keeps going between pages, and sets up the simulator", async function ({
+test("the simulator hands its closure to the works planner, which finds a time and where traffic goes", async function ({
   page,
 }) {
   test.setTimeout(300000);
   await openReady(page);
-  await openPage(page, "Report");
-  await expect(
-    page.getByRole("heading", { name: "Find the least disruptive time for road works" }),
-  ).toBeVisible();
-  await page.getByRole("combobox", { name: "Street", exact: true }).selectOption("Collins St");
+  await page.getByRole("button", { name: "Close this street" }).click();
+  await expect(page.locator(".closure-list")).toContainText("Collins St");
+
+  // The simulator's button fills in the planner with the closure on the map.
+  await page.getByRole("button", { name: "Find the best time for this closure" }).click();
+  await expect(page.locator(".from-map")).toContainText("Filled in from the closure on the simulator");
+  await expect(page.getByRole("combobox", { name: "Street", exact: true })).toHaveValue("Collins St");
+  await expect(page.locator(".run-summary")).toContainText("Nothing yet");
+
   await page.getByRole("combobox", { name: "When can the works happen?" }).selectOption("night");
   await page.getByRole("button", { name: "Find the best plan" }).click();
   await expect(page.getByRole("progressbar", { name: "Search progress" })).toBeVisible();
@@ -270,7 +276,9 @@ test("the works planner finds a time, keeps going between pages, and sets up the
   await expect(answer).toContainText("Close Collins St (whole street) on");
   await expect(answer).toContainText("car-hours in total");
   await expect(answer.locator(".impact-badge")).toBeVisible();
+  await expect(page.locator(".settings-used")).toContainText("Uses the simulator");
   await expect(page.locator(".day-chart svg")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Where the traffic goes" })).toBeVisible();
   await expect(page.locator(".options-table tbody tr")).not.toHaveCount(0);
   await expect(page.locator(".chart-ruled-out")).toHaveCount(1);
   await checkAccessibility(page, "#report");
@@ -280,6 +288,16 @@ test("the works planner finds a time, keeps going between pages, and sets up the
   await expect(page.getByText(/Quick check \(already tested\)/)).toBeVisible();
   await page.getByRole("button", { name: "Find the best plan" }).click();
   await expect(answer).toBeVisible({ timeout: 20000 });
+
+  // Changing the simulator's city makes the plan out of date, and the report says so.
+  await openPage(page, "Simulator");
+  await page.getByRole("slider", { name: "Cars arriving per hour" }).fill("4000");
+  await openPage(page, "Report");
+  await expect(page.locator(".settings-used")).toContainText("have changed since this search");
+  await openPage(page, "Simulator");
+  await page.getByRole("slider", { name: "Cars arriving per hour" }).fill("2500");
+  await openPage(page, "Report");
+  await expect(page.locator(".settings-used")).not.toContainText("have changed");
 
   await page.getByRole("button", { name: "Watch it in the simulator" }).click();
   await expect(statusLine(page)).toContainText("Set up the recommended plan", { timeout: 60000 });

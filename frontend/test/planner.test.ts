@@ -7,12 +7,13 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import type { ScenarioResult } from "@traffic-lab/simulation";
+import { STYLE, type ScenarioResult, type World } from "@traffic-lab/simulation";
 import { viewFromHash } from "../src/app/useView";
 import { rateAt, TRAFFIC_LEVELS, type SeedCurve } from "../src/features/planner/delayCurve";
 import { levelJobs, plannerSettings, scenarioKey, seedsFor } from "../src/features/planner/jobs";
 import { fitsTimes, rankPlans, shiftDelay, shiftOptions, summarise } from "../src/features/planner/plans";
-import { curvesFrom } from "../src/features/planner/searchResults";
+import { closureToPlan } from "../src/features/planner/request";
+import { curvesFrom, streetChanges } from "../src/features/planner/searchResults";
 import type { DayProfiles, WorksRequest } from "../src/features/planner/types";
 import { closedWindow, timeOfDay } from "../src/features/planner/wording";
 import { DEFAULT_SETTINGS } from "@traffic-lab/simulation";
@@ -67,6 +68,7 @@ function result(vehicleHours: number): ScenarioResult {
     cars: 100,
     closedDirections: 4,
     narrowedDirections: 0,
+    streets: {},
   };
 }
 
@@ -206,4 +208,54 @@ test("times of day and pages read naturally", function () {
   assert.equal(viewFromHash("#report-results"), "report");
   assert.equal(viewFromHash("#workbench"), "simulator");
   assert.equal(viewFromHash(""), "simulator");
+});
+
+test("the closure to plan comes from the simulator's map", function () {
+  const world = {
+    network: "Real OSM map",
+    roads: [
+      { index: 0, street: "Collins St", section: 2, lanes: 2, kind: "main", carsAllowed: true },
+      { index: 1, street: "Bourke St", section: 1, lanes: 2, kind: "main", carsAllowed: true },
+    ],
+    nodes: [],
+    labels: [],
+    streets: ["Bourke St", "Collins St"],
+    bounds: { minX: 0, maxX: 1, minY: 0, maxY: 1 },
+  } as unknown as World;
+  const styles = new Float32Array(2 * STYLE.fields);
+  styles[0 * STYLE.fields + STYLE.lanesOpen] = 2;
+  styles[1 * STYLE.fields + STYLE.lanesOpen] = 2;
+  // Nothing closed: the street chosen in the simulator, closed its way.
+  assert.deepEqual(closureToPlan(world, styles, "Bourke St", 1, "Both directions"), {
+    street: "Bourke St",
+    section: 1,
+    closureType: "Both directions",
+  });
+  // Collins St has a lane closed: plan that, as a lane closure, whole street.
+  styles[0 * STYLE.fields + STYLE.lanesOpen] = 1;
+  assert.deepEqual(closureToPlan(world, styles, "Bourke St", 1, "Both directions"), {
+    street: "Collins St",
+    section: 0,
+    closureType: "One lane each direction",
+  });
+  // Fully closed and chosen: keep the chosen section and a full closure.
+  styles[0 * STYLE.fields + STYLE.closed] = 1;
+  assert.deepEqual(closureToPlan(world, styles, "Collins St", 2, "One lane each direction"), {
+    street: "Collins St",
+    section: 2,
+    closureType: "Both directions",
+  });
+});
+
+test("street changes average the repeats, biggest increase first", function () {
+  const open1 = Object.assign(result(10), { streets: { "Collins St": 100, "Flinders Ln": 20 } });
+  const works1 = Object.assign(result(11), { streets: { "Collins St": 0, "Flinders Ln": 80 } });
+  const open2 = Object.assign(result(10), { streets: { "Collins St": 120, "Flinders Ln": 30 } });
+  const works2 = Object.assign(result(11), { streets: { "Collins St": 0, "Flinders Ln": 100 } });
+  const changes = streetChanges([
+    { open: open1, works: works1 },
+    { open: open2, works: works2 },
+  ]);
+  assert.deepEqual(changes[0], { street: "Flinders Ln", before: 25, after: 90, change: 65 });
+  assert.deepEqual(changes[1], { street: "Collins St", before: 110, after: 0, change: -110 });
 });
