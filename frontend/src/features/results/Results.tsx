@@ -2,7 +2,8 @@
  * "Run results": appears when the traffic is paused or has finished.
  *
  * Shows a summary table (compared with the baseline when there is one), two
- * charts over time, the streets that changed most, and a table of every street.
+ * charts over time, the streets that changed most, a table of every street,
+ * and how the traffic compares with the SCATS counts.
  */
 
 import { useMemo, useState } from "react";
@@ -13,6 +14,7 @@ import type { BaselineRecording, ResultsSnapshot, Sample } from "../simulation/t
 import Bars, { type BarRow } from "./charts/Bars";
 import LineChart, { type ChartLine } from "./charts/LineChart";
 import { figuresAt, streetRows, summaryRows, type StreetRow } from "./calculations";
+import CountsTable, { countRows } from "./CountsTable";
 import StreetTable from "./StreetTable";
 import SummaryTable from "./SummaryTable";
 
@@ -113,12 +115,7 @@ function ResultsBody({ snapshot, baseline, running, differences, streets }: Resu
   }
   const rows = summaryRows(runFigures, baseFigures, fallback);
 
-  // Street comparisons only make sense on the same road map.
-  let sameMap = true;
-  if (baseline && baseline.settings) {
-    sameMap = baseline.settings["network-source"] === snapshot.world.network;
-  }
-  const compareStreets = hasBaseline && sameMap;
+  const compareStreets = hasBaseline;
 
   const ranked = streets.slice().sort(function (a, b) {
     if (compareStreets) {
@@ -202,11 +199,6 @@ function ResultsBody({ snapshot, baseline, running, differences, streets }: Resu
           results as well as any closures.
         </p>
       )}
-      {hasBaseline && !sameMap && (
-        <p className="help results-note">
-          The baseline was recorded on a different road map, so streets are shown without a comparison.
-        </p>
-      )}
       {baseFigures && (
         <p className="help results-note">
           Both runs are compared at {clock(Math.min(runFigures.t, baseFigures.t))} of traffic, the end of the
@@ -222,6 +214,8 @@ function ResultsBody({ snapshot, baseline, running, differences, streets }: Resu
       <h3 className="results-subhead">{streetsTitle}</h3>
       <p className="help">
         Average number of cars per hour through one block of the street, both directions together.
+        {compareStreets &&
+          " Some change comes from chance: once anything changes, drivers make slightly different random choices. A longer counting time makes this smaller."}
       </p>
       {barRows.length > 0 && (
         <Bars title={barsTitle} rows={barRows} diverging={compareStreets} unit="cars/hour" />
@@ -236,6 +230,16 @@ function ResultsBody({ snapshot, baseline, running, differences, streets }: Resu
         >
           {moreStreetsLabel}
         </button>
+      )}
+
+      {snapshot.sites && snapshot.sites.length === snapshot.world.sites.length && (
+        <>
+          <h3 className="results-subhead">Compared with the SCATS counts</h3>
+          <CountsTable
+            rows={countRows(snapshot.world.sites, snapshot.sites)}
+            closures={m.closureDesc !== "none" && !m.closureDesc.startsWith("0 closed directions; 0 reduced")}
+          />
+        </>
       )}
     </div>
   );

@@ -1,7 +1,10 @@
 {
   "source": "OpenStreetMap contributors; ODbL",
   "downloaded": "2026-09-29",
-  "nodes": 706,
-  "directed_links": 1256,
-  "preserved_geometry_points": 6031
+  "nodes": 942,
+  "directed_links": 1599,
+  "preserved_geometry_points": 7817,
+  "edge_entry_points": 96,
+  "car_park_groups": 110,
+  "car_parks_and_entrances": 163
 }

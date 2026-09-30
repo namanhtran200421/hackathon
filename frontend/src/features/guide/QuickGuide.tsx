@@ -1,5 +1,5 @@
 /**
- * The Quick guide: a side panel that explains the simulator in six steps,
+ * The Quick guide: a side panel that explains the simulator in seven steps,
  * where each desktop NetLogo control is, and what the model can tell you.
  */
 
@@ -101,10 +101,13 @@ export default function QuickGuide({ open, onClose }: QuickGuideProps) {
           About the model
         </h3>
         <p className="guide-text">
-          The streets, one-way rules, lanes and speed limits come from OpenStreetMap. The number of cars,
-          where they go and the traffic light timings are made up for the model. Use it to explore what might
-          happen when a street closes. It is not a forecast or a safety assessment, and it has no trams,
-          buses, bikes or people walking.
+          The streets, one-way rules, lanes, speed limits and car parks come from OpenStreetMap, and the
+          traffic lights stand where the Department of Transport and Planning lists them. How many cars enter,
+          and where they go, is worked out from Victoria&rsquo;s SCATS traffic light counts for an average
+          August 2026 weekday or weekend, so the model reproduces the counts as closely as it can. The counts
+          do not say which way each car travels, and traffic light timings are not published, so those parts
+          are still estimates. Use it to explore what might happen when a street closes. It is not a forecast
+          or a safety assessment, and it has no trams, buses, bikes or people walking.
         </p>
         <p className="guide-text">
           The same traffic pattern number and settings give the same cars arriving at the same times, so a

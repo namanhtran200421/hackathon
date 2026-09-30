@@ -73,7 +73,7 @@ export default function MapLegend({ view, hasBaseline }: MapLegendProps) {
         <b className="lg-stopped" /> Stopped
       </span>
       <span>
-        <b className="lg-dest" /> Destination
+        <b className="lg-dest" /> Car park
       </span>
     </div>
   );

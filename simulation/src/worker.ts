@@ -117,6 +117,7 @@ function sendFrame(): void {
     const styles = sim.styles();
     message.styles = styles;
     message.stylesView = sim.settings()["view-mode"];
+    message.sites = sim.siteVolumes();
     transfer.push(styles.buffer);
     roadsChanged = false;
     lastColourUpdate = colourUpdate;

@@ -2,8 +2,6 @@
  * The shapes of the data the model hands to the web page.
  */
 
-import type { NetworkName } from "./settings";
-
 /** The five numbers the model keeps about a saved baseline. */
 export interface BaselineSummary {
   completed: number;
@@ -13,12 +11,29 @@ export interface BaselineSummary {
   measured: number;
 }
 
+/** How the simulated traffic compares with the SCATS counts so far. */
+export interface ScatsComparison {
+  /** Intersections compared: those whose detectors cover every approach lane. */
+  sites: number;
+  /** How many of them are within GEH 5 of the counts. */
+  withinGeh5: number;
+  /** Vehicles per hour entering them in the model, added up. */
+  modelled: number;
+  /** Vehicles per hour entering them in the SCATS counts, added up. */
+  counted: number;
+}
+
 /** The latest numbers from the model. */
 export interface Metrics {
-  demandFactor: number;
-  effectiveArrivalsPerHour: number;
-  observedSignalCount: number;
-  observedDataVersion: string;
+  /** The model's time of day, in seconds after midnight. */
+  clock: number;
+  /** Trips per hour starting now, from the SCATS-shaped data. */
+  tripsPerHour: number;
+  scats: ScatsComparison;
+  /** Which version of the traffic data the model uses. */
+  dataVersion: string;
+  /** The day type the current run uses. */
+  dayType: string;
   /** Seconds of traffic so far. */
   ticks: number;
   /** Cars driving in the city now. */
@@ -76,12 +91,28 @@ export interface RoadInfo {
   carsAllowed: boolean;
 }
 
-/** An entry gate or a destination. */
+/** A road into the map ("gate") or a car park ("carpark"). */
 export interface MapNode {
   x: number;
   y: number;
   kind: string;
   label: string;
+}
+
+/** A signalised intersection compared with its SCATS counts. */
+export interface CountSite {
+  /** The DTP site number. */
+  id: number;
+  /** The DTP site name, such as "SWANSTON/LONSDALE". */
+  name: string;
+  x: number;
+  y: number;
+}
+
+/** Vehicles per hour entering one counted intersection. */
+export interface SiteVolume {
+  modelled: number;
+  counted: number;
 }
 
 export interface MapLabel {
@@ -93,10 +124,10 @@ export interface MapLabel {
 
 /** The road layout. It only changes when the model runs Setup. */
 export interface World {
-  network: NetworkName;
   roads: RoadInfo[];
   nodes: MapNode[];
   labels: MapLabel[];
+  sites: CountSite[];
   /** Streets that can be closed, in alphabetical order. */
   streets: string[];
   bounds: { minX: number; maxX: number; minY: number; maxY: number };

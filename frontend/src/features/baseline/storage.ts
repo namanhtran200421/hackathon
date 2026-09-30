@@ -4,7 +4,9 @@
 
 import type { BaselineRecording } from "../simulation/types";
 
-const STORAGE_KEY = "melbourne-traffic-lab:baseline:v1";
+// Version 2 uses the real traffic data and a new road map; baselines saved
+// by version 1 cannot be compared with it, so they are left behind.
+const STORAGE_KEY = "melbourne-traffic-lab:baseline:v2";
 
 /** Read the saved baseline, or null if there is none. */
 export function loadBaseline(): BaselineRecording | null {

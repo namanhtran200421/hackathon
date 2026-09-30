@@ -7,11 +7,13 @@
 import {
   CHOICE_OPTIONS,
   NUMBER_RULES,
+  START_TIMES,
   type ChoiceSettingName,
   type NumberRule,
   type NumberSettingName,
   type Settings,
 } from "@traffic-lab/simulation";
+import { startSeconds, timeOfDay } from "../../lib/format";
 
 export interface SliderText {
   label: string;
@@ -20,17 +22,6 @@ export interface SliderText {
 }
 
 export const SLIDER_TEXT: Record<NumberSettingName, SliderText> = {
-  "profile-start-hour": {
-    label: "Start hour in Melbourne",
-    unit: ":00",
-    help: "Local clock time at setup, including warm-up. Observed demand updates every 15 minutes.",
-  },
-  "demand-veh-per-hour": { label: "Cars arriving per hour", unit: "cars/hour" },
-  "through-traffic-%": {
-    label: "Cars just passing through",
-    unit: "%",
-    help: "Trips that cross the city from one edge to another without stopping.",
-  },
   "informed-drivers-%": {
     label: "Drivers using live traffic info",
     unit: "%",
@@ -42,11 +33,15 @@ export const SLIDER_TEXT: Record<NumberSettingName, SliderText> = {
     unit: "seconds",
     help: "How long each traffic light takes to go through all its colours.",
   },
-  "ew-green-share": { label: "Green time for east–west streets", unit: "%" },
+  "ew-green-share": {
+    label: "Green time for east–west streets",
+    unit: "%",
+    help: "Used when traffic lights do not share green time by demand.",
+  },
   "warm-up-s": {
     label: "Warm-up time",
     unit: "seconds",
-    help: "Time for the streets to fill up before we start counting.",
+    help: "Time for the streets to fill up. It runs before the start time, so counting starts at the start time.",
   },
   "measure-s": { label: "Counting time", unit: "seconds" },
   seed: { label: "Traffic pattern number", unit: "" },
@@ -59,17 +54,22 @@ export const SLIDER_TEXT: Record<NumberSettingName, SliderText> = {
   "closure-start-min": { label: "Close it after", unit: "minutes" },
 };
 
+/** Every start time as people read it: "08:15" → "8:15 am". */
+function startTimeText(): Record<string, string> {
+  const text: Record<string, string> = {};
+  START_TIMES.forEach(function (time) {
+    text[time] = timeOfDay(startSeconds(time));
+  });
+  return text;
+}
+
 /** The text shown for each option of each drop-down list. */
 export const CHOICE_TEXT: { [Name in ChoiceSettingName]: Record<Settings[Name], string> } = {
-  "demand-profile": {
-    "Flat (synthetic)": "Flat (synthetic)",
-    "SCATS weekday": "SCATS weekday",
-    "SCATS weekend": "SCATS weekend",
+  "day-type": {
+    Weekday: "Weekday (Monday to Friday)",
+    Weekend: "Weekend (Saturday and Sunday)",
   },
-  "network-source": {
-    "Real OSM map": "Real Melbourne streets",
-    "Schematic Hoddle grid": "Simple grid",
-  },
+  "start-time": startTimeText(),
   "signal-coordination": {
     "random offsets": "Not coordinated",
     "green wave (east-west)": "Green wave (east–west)",

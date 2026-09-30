@@ -9,18 +9,14 @@ import type { BaselineRecording } from "../simulation/types";
 
 /** Settings that shape a run, with the names people see. */
 const COMPARED: [SettingName, string][] = [
-  ["demand-profile", "Traffic demand profile"],
-  ["profile-start-hour", "Start hour in Melbourne"],
-  ["use-observed-signals?", "Matched DTP signal locations"],
-  ["network-source", "Road map"],
-  ["demand-veh-per-hour", "Cars arriving per hour"],
-  ["through-traffic-%", "Cars just passing through"],
+  ["day-type", "Day"],
+  ["start-time", "Start time"],
   ["informed-drivers-%", "Drivers using live traffic info"],
   ["speed-limit-kmh", "Speed limit"],
   ["cycle-length", "Traffic light cycle"],
+  ["adaptive-signals?", "Share green time by demand"],
   ["ew-green-share", "Green time for east–west streets"],
   ["signal-coordination", "Traffic light timing"],
-  ["hook-turns?", "Hook turns"],
   ["fixed-seed?", "Repeat the same traffic pattern"],
   ["seed", "Traffic pattern number"],
   ["route-noise", "Route randomness"],
@@ -101,7 +97,7 @@ export function describeBaseline(baseline: BaselineRecording): string {
     hour: "numeric",
     minute: "2-digit",
   });
-  const map = describeSetting("network-source", baseline.settings["network-source"]);
-  const demand = describeSetting("demand-veh-per-hour", baseline.settings["demand-veh-per-hour"]);
-  return when + " · " + map + " · " + demand;
+  const day = describeSetting("day-type", baseline.settings["day-type"]);
+  const start = describeSetting("start-time", baseline.settings["start-time"]);
+  return when + " · " + day + " from " + start;
 }

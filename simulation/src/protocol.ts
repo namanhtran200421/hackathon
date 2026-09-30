@@ -3,7 +3,7 @@
  */
 
 import type { SettingName, Settings, ViewMode } from "./settings";
-import type { Metrics, ModelBaseline, World } from "./types";
+import type { Metrics, ModelBaseline, SiteVolume, World } from "./types";
 
 /** Desktop buttons the page may press. Setup and Go have their own messages. */
 export type ButtonName =
@@ -41,6 +41,8 @@ export type WorkerMessage =
       /** Every road's look, sent when it changes. */
       styles?: Float32Array;
       stylesView?: ViewMode;
+      /** Traffic entering each counted intersection, sent with the road looks. */
+      sites?: SiteVolume[];
     }
   | { type: "running"; running: boolean; reason: RunReason | null }
   | { type: "output"; lines: string[] }

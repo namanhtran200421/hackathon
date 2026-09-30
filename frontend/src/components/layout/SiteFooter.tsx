@@ -9,8 +9,8 @@ export default function SiteFooter({ onOpenGuide }: { onOpenGuide: () => void })
         <div>
           <h2>Melbourne Traffic Lab</h2>
           <p>
-            Real streets, made-up traffic and traffic lights. Use it to explore what might happen when a
-            street closes. It is not a traffic forecast or a safety assessment.
+            Real streets and traffic lights, with traffic from real SCATS counts. Use it to explore what might
+            happen when a street closes. It is not a traffic forecast or a safety assessment.
           </p>
         </div>
         <div>
@@ -41,6 +41,17 @@ export default function SiteFooter({ onOpenGuide }: { onOpenGuide: () => void })
               <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">
                 © OpenStreetMap contributors
               </a>
+            </li>
+            <li>
+              Traffic data{" "}
+              <a
+                href="https://opendata.transport.vic.gov.au/dataset/traffic-signal-volume-data"
+                target="_blank"
+                rel="noreferrer"
+              >
+                © Department of Transport and Planning, Victoria
+              </a>{" "}
+              (CC BY 4.0)
             </li>
             <li>Traffic Grid model after Wilensky (2003)</li>
           </ul>

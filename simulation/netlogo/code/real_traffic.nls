@@ -1,38 +1,154 @@
-; Public DTP data supplies relative demand timing and conservative signal matches.
-; Absolute CBD entry demand, routes and signal phases remain assumptions.
-to load-observed-data
-  file-open "data/observed/profiles.txt"
-  set observed-weekday file-read
-  set observed-weekend file-read
-  set observed-signal-points file-read
-  set observed-data-version file-read
+; Real traffic from Victoria's public SCATS counts, prepared by
+; simulation/build/prepare-observed.py. Traffic lights stand at the DTP signal
+; sites. Trips start and end where real roads cross the map's edge and at
+; public car parks, as many as the counts show for the chosen day and time.
+; Traffic light timings are not in the data and remain assumed.
+
+to load-real-traffic
+  file-open "data/observed/demand.txt"
+  set data-version file-read
+  set signal-sites file-read
+  set count-sites file-read
+  set weekday-counts file-read
+  set weekend-counts file-read
+  set zone-groups file-read
+  set weekday-trips file-read
+  set weekend-trips file-read
+  set weekday-scales file-read
+  set weekend-scales file-read
   file-close
-  set active-demand-profile demand-profile
-  set active-profile-start-hour profile-start-hour
-  set observed-signal-count 0
+  set active-day-type day-type
+  ; The clock starts one warm-up before the chosen time, so counting starts at it.
+  set run-start-s (start-seconds - warm-up-s) mod 86400
+  set trips-hour -1
 end
 
-to apply-observed-signals
-  if use-observed-signals? [
-    foreach observed-signal-points [point ->
-      let target min-one-of nodes [distancexy item 0 point item 1 point]
-      if target != nobody [
-        if [distancexy item 0 point item 1 point] of target < 0.01 [
-          ask target [set signalised? true]
-          set observed-signal-count observed-signal-count + 1
-        ]
-      ]
-    ]
+; The chosen start time, such as "08:15", in seconds after midnight.
+to-report start-seconds
+  report 3600 * digits-at 0 + 60 * digits-at 3
+end
+
+; The two-digit number at position AT of start-time, such as 8 for "08".
+; (read-from-string needs the NetLogo compiler, which the web page does not load.)
+to-report digits-at [at]
+  report 10 * position (item at start-time) "0123456789" + position (item (at + 1) start-time) "0123456789"
+end
+
+; The model's time of day, in seconds after midnight.
+to-report clock-seconds
+  report (run-start-s + ticks) mod 86400
+end
+
+to-report clock-label
+  let minutes floor (clock-seconds / 60)
+  report (word two-digits floor (minutes / 60) ":" two-digits (minutes mod 60))
+end
+
+to-report two-digits [n]
+  report ifelse-value n < 10 [word "0" n] [word "" n]
+end
+
+; When the hour changes, look up that hour's trips: for each place trips can
+; start, a list of [group trips-per-hour].
+to refresh-trips
+  let hour floor (clock-seconds / 3600)
+  if hour != trips-hour [
+    set trips-hour hour
+    set hour-trips item hour (ifelse-value active-day-type = "Weekday" [weekday-trips] [weekend-trips])
+    set hour-totals map [trips -> sum map [pair -> item 1 pair] trips] hour-trips
   ]
 end
 
-to-report observed-demand-factor
-  if active-demand-profile = "Flat (synthetic)" [report 1]
-  let index floor (((active-profile-start-hour * 3600 + ticks) mod 86400) / 900)
-  if active-demand-profile = "SCATS weekday" [report item index observed-weekday]
-  report item index observed-weekend
+; Within the hour, trips rise and fall with the 15-minute counts.
+to-report slot-scale
+  report item floor (clock-seconds / 900) (ifelse-value active-day-type = "Weekday" [weekday-scales] [weekend-scales])
 end
 
-to-report effective-arrivals-per-hour
-  report demand-veh-per-hour * observed-demand-factor
+; Trips per hour starting right now, across the whole map. Only reads data,
+; so watching it never changes the model.
+to-report trips-per-hour-now
+  let rows item floor (clock-seconds / 3600) (ifelse-value active-day-type = "Weekday" [weekday-trips] [weekend-trips])
+  report sum map [trips -> sum map [pair -> item 1 pair] trips] rows * slot-scale
+end
+
+; A destination group for one trip, chosen in proportion to the trips per hour.
+to-report pick-group [trips total]
+  let r random-float total
+  foreach trips [pair ->
+    set r r - item 1 pair
+    if r < 0 [report item 0 pair]
+  ]
+  report item 0 last trips
+end
+
+; The roads entering each counted site, from junctions outside the site.
+to setup-count-sites
+  set site-roads map [site -> roads-into item 2 site] count-sites
+end
+
+to-report roads-into [junctions]
+  let members turtle-set map [i -> node i] junctions
+  report (link-set [my-in-roads] of members) with [not member? end1 members]
+end
+
+; Vehicles per hour entering each counted site while counting.
+to-report site-volumes
+  let hrs measured-seconds / 3600
+  if hrs <= 0 [report map [rs -> 0] site-roads]
+  report map [rs -> sum [win-count] of rs / hrs] site-roads
+end
+
+; The SCATS counts for the same stretch of the day as the counting, in
+; vehicles per hour: each 15 minutes weighted by how much of it was counted.
+to-report counted-volumes
+  let table ifelse-value active-day-type = "Weekday" [weekday-counts] [weekend-counts]
+  let start run-start-s + warm-up-s
+  let finish start + measured-seconds
+  if finish <= start [report item (floor (start / 900) mod 96) table]
+  let totals map [v -> 0] item 0 table
+  let t start
+  while [t < finish] [
+    let part (min list ((floor (t / 900) + 1) * 900) finish) - t
+    let slot-counts item (floor (t / 900) mod 96) table
+    set totals (map [[a b] -> a + b * part] totals slot-counts)
+    set t t + part
+  ]
+  report map [a -> a / (finish - start)] totals
+end
+
+; The GEH statistic traffic engineers use to compare hourly flows: under 5 is
+; a good match.
+to-report geh [modelled counted]
+  if modelled + counted = 0 [report 0]
+  report sqrt (2 * (modelled - counted) ^ 2 / (modelled + counted))
+end
+
+; How the model compares with SCATS so far: sites compared, sites within
+; GEH 5, and total vehicles per hour entering them in the model and counted.
+to-report scats-comparison
+  let modelled site-volumes
+  let counted counted-volumes
+  let within length filter [g -> g < 5] (map [[m c] -> geh m c] modelled counted)
+  report (list length modelled within sum modelled sum counted)
+end
+
+; The same comparison as a percentage, for the desktop monitor.
+to-report scats-match
+  if measured-seconds < 60 [report "counting…"]
+  let result scats-comparison
+  report (word round (100 * item 1 result / max list 1 item 0 result) "% of " item 0 result " sites")
+end
+
+; Traffic lights. SCATS gives each approach green time by demand; with
+; adaptive-signals? on, each intersection shares its green time between
+; east-west and north-south by the cars on its approaches at the start of
+; each cycle, never giving either less than a fifth.
+to-report approaches-to [members]
+  report (link-set [my-in-roads] of members) with [not within-site? and axis != "access"]
+end
+
+to-report demand-share [approaches]
+  let ew sum [sum map length lane-cars] of approaches with [axis = "EW"]
+  let ns sum [sum map length lane-cars] of approaches with [axis = "NS"]
+  report max list 0.2 (min list 0.8 ((ew + 1) / (ew + ns + 2)))
 end

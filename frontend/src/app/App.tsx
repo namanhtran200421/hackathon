@@ -81,6 +81,7 @@ export default function App() {
   // Results use a copy taken whenever the traffic pauses or stops, so the
   // tables and charts stay still while the traffic moves.
   const styles = sim.store.current.styles;
+  const sites = sim.store.current.sites;
   useEffect(
     function () {
       if (sim.running || !metrics || !sim.world || !styles) {
@@ -90,9 +91,19 @@ export default function App() {
         setSnapshot(null);
         return;
       }
-      setSnapshot({ metrics: metrics, history: sim.history, styles: styles.slice(), world: sim.world });
+      let siteCopy = null;
+      if (sites) {
+        siteCopy = sites.slice();
+      }
+      setSnapshot({
+        metrics: metrics,
+        history: sim.history,
+        styles: styles.slice(),
+        world: sim.world,
+        sites: siteCopy,
+      });
     },
-    [sim.running, metrics, sim.world, styles, sim.history],
+    [sim.running, metrics, sim.world, styles, sites, sim.history],
   );
 
   let settingDifferences: ReturnType<typeof differences> = [];

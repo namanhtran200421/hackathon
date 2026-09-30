@@ -1,6 +1,8 @@
 /**
- * The settings panel: the scenario, road closures, and the less common
- * settings (traffic lights, route choice and counting) in fold-out groups.
+ * The settings panel: the day and time of the real traffic, the scenario,
+ * road closures, what the traffic data is and how well the model matches it,
+ * and the less common settings (traffic lights, route choice and counting) in
+ * fold-out groups.
  */
 
 import { SlidersHorizontal } from "lucide-react";
@@ -10,6 +12,7 @@ import type { Selection } from "../simulation/types";
 import type { TrafficSimulation } from "../simulation/useTrafficSim";
 import ClosureControls from "./ClosureControls";
 import { choiceOptions } from "./labels";
+import TrafficData from "./TrafficData";
 
 interface SettingsPanelProps {
   sim: TrafficSimulation;
@@ -43,16 +46,16 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     };
   }
 
-  let networkHelp: string | undefined;
-  if (sim.world && settings["network-source"] !== sim.world.network) {
-    networkHelp = "Press Restart to load this map.";
-  }
-
   let countingDisplay: string | undefined;
   let countingHelp: string | undefined;
   if (sim.keepRunning) {
     countingDisplay = "No time limit";
     countingHelp = "Keep running is on, so counting carries on until you pause.";
+  }
+
+  let greenShareHelp: string | undefined;
+  if (settings["adaptive-signals?"]) {
+    greenShareHelp = "Not used while traffic lights share green time by demand.";
   }
 
   return (
@@ -62,23 +65,37 @@ export default function SettingsPanel(props: SettingsPanelProps) {
         <SlidersHorizontal size={19} />
       </div>
 
+      <section className="group" aria-labelledby="group-when">
+        <h3 id="group-when" className="group-title">
+          Day and time
+        </h3>
+        <Choice
+          id="day-type"
+          label="Day"
+          value={settings["day-type"]}
+          options={choiceOptions("day-type")}
+          onChange={function (value) {
+            sim.set("day-type", value);
+          }}
+          needsRestart
+        />
+        <Choice
+          id="start-time"
+          label="Start time"
+          value={settings["start-time"]}
+          options={choiceOptions("start-time")}
+          onChange={function (value) {
+            sim.set("start-time", value);
+          }}
+          needsRestart
+          help="Counting starts at this time. The traffic follows the real counts as the clock moves on."
+        />
+      </section>
+
       <section className="group" aria-labelledby="group-scenario">
         <h3 id="group-scenario" className="group-title">
           Scenario
         </h3>
-        <Choice
-          id="network"
-          label="Road map"
-          value={settings["network-source"]}
-          options={choiceOptions("network-source")}
-          onChange={function (value) {
-            sim.set("network-source", value);
-          }}
-          needsRestart
-          help={networkHelp}
-        />
-        {slider("demand-veh-per-hour")}
-        {slider("through-traffic-%")}
         {slider("informed-drivers-%")}
         <Slider
           name="seed"
@@ -99,57 +116,6 @@ export default function SettingsPanel(props: SettingsPanelProps) {
         />
       </section>
 
-      <section className="group" aria-label="Public traffic data">
-        <h3 className="group-title">Public traffic data</h3>
-        <Choice
-          id="demand-profile"
-          label="Traffic demand profile"
-          value={settings["demand-profile"]}
-          options={choiceOptions("demand-profile")}
-          onChange={function (value) {
-            sim.set("demand-profile", value);
-          }}
-          needsRestart
-        />
-        {slider("profile-start-hour", true)}
-        <Toggle
-          id="observed-signals"
-          label="Use matched DTP signal locations"
-          checked={settings["use-observed-signals?"]}
-          onChange={setSwitch("use-observed-signals?")}
-          needsRestart
-        />
-        {sim.metrics && (
-          <p className="help" aria-label="Active demand rate">
-            Active arrival rate: {Math.round(sim.metrics.effectiveArrivalsPerHour).toLocaleString("en-AU")}{" "}
-            cars/hour · {sim.metrics.observedSignalCount} matched signals applied.
-          </p>
-        )}
-        <p className="help">
-          SCATS profiles use August 2026 detector observations. In observed mode, Cars arriving per hour is
-          the assumed peak arrival rate, scaled by the selected time of day. It is not a measured CBD entry
-          count.
-        </p>
-        <p className="help">
-          1,293 detectors at 138 sites inform the profiles. Up to 80 matched signal locations supplement
-          inferred signals on the real map. Signal timings, trip destinations and route choices remain
-          synthetic.
-        </p>
-        <p className="help">
-          <a
-            href="https://opendata.transport.vic.gov.au/dataset/traffic-signal-volume-data"
-            target="_blank"
-            rel="noreferrer"
-          >
-            DTP traffic volumes
-          </a>{" "}
-          ·{" "}
-          <a href="/sim/observed-data.json" target="_blank" rel="noreferrer">
-            Data provenance and profiles
-          </a>
-        </p>
-      </section>
-
       <ClosureControls
         sim={sim}
         selection={props.selection}
@@ -158,11 +124,29 @@ export default function SettingsPanel(props: SettingsPanelProps) {
         onToggleClickMode={props.onToggleClickMode}
       />
 
+      <TrafficData metrics={sim.metrics} />
+
       <details className="group advanced">
         <summary>Traffic lights &amp; speed</summary>
         {slider("speed-limit-kmh", true)}
         {slider("cycle-length", true)}
-        {slider("ew-green-share", true)}
+        <Toggle
+          id="adaptive-signals"
+          label="Share green time by demand"
+          checked={settings["adaptive-signals?"]}
+          onChange={setSwitch("adaptive-signals?")}
+          help="Like SCATS, each intersection gives more green time to the direction with more cars waiting."
+        />
+        <Slider
+          name="ew-green-share"
+          value={settings["ew-green-share"]}
+          onChange={function (value) {
+            sim.set("ew-green-share", value);
+          }}
+          needsRestart
+          disabled={settings["adaptive-signals?"]}
+          help={greenShareHelp}
+        />
         <Choice
           id="signal-coordination"
           label="Traffic light timing"
@@ -174,13 +158,6 @@ export default function SettingsPanel(props: SettingsPanelProps) {
           needsRestart
           help="A green wave times the lights so east–west traffic keeps getting greens."
         />
-        <Toggle
-          id="hook-turns"
-          label="Hook turns"
-          checked={settings["hook-turns?"]}
-          onChange={setSwitch("hook-turns?")}
-          help="Melbourne-style right turns from the left lane. Only on the simple grid, and only an approximation."
-        />
       </details>
 
       <details className="group advanced">
@@ -191,7 +168,7 @@ export default function SettingsPanel(props: SettingsPanelProps) {
 
       <details className="group advanced">
         <summary>Counting</summary>
-        {slider("warm-up-s")}
+        {slider("warm-up-s", true)}
         <Slider
           name="measure-s"
           value={settings["measure-s"]}

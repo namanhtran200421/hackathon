@@ -2,7 +2,7 @@
  * Types the web page uses on top of the simulation package's.
  */
 
-import type { Metrics, ModelBaseline, Settings, World } from "@traffic-lab/simulation";
+import type { Metrics, ModelBaseline, Settings, SiteVolume, World } from "@traffic-lab/simulation";
 
 /** One point for the results charts. */
 export interface Sample {
@@ -42,6 +42,8 @@ export interface ResultsSnapshot {
   history: Sample[];
   styles: Float32Array;
   world: World;
+  /** Traffic entering each counted intersection, in the order of world.sites. */
+  sites: SiteVolume[] | null;
 }
 
 /** Where the page is in loading the simulator. */

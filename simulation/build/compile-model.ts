@@ -4,7 +4,7 @@
  * Input:  build/model.nlogox (made by prepare-model.py)
  * Output: runtime/model.js          the compiled model
  *         runtime/reporters.js      read-only questions the page asks the model
- *         runtime/network-*.json    road maps the page shows while the model loads
+ *         runtime/network-osm.json  the road map the page shows while the model loads
  *
  * Uses the NetLogo Web compiler saved in build/vendor, so no internet
  * connection is needed. Run it with:  npm run model:web
@@ -15,7 +15,6 @@ import path from "node:path";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
 import { loadTrafficSim, RUNTIME_FOLDER } from "../src/loadInNode";
-import type { NetworkName } from "../src/settings";
 
 interface CompileResult {
   success: boolean;
@@ -46,9 +45,10 @@ const hours = "(max list (1 / 3600) (measured-seconds / 3600))";
 
 /** Everything the page reads from the model, written in NetLogo. */
 const questions: Record<string, string> = {
-  // The numbers shown under the map, plus the selection and baseline state.
+  // The numbers shown under the map, plus the selection and baseline state
+  // and how the traffic compares with the SCATS counts so far.
   metrics:
-    "(list ticks count cars generated-total completed-total stranded-count queued-at-gates mean-trip-time-min mean-delay-min measured-seconds trips-done vehicle-hours run-finished? closure-desc selection-label measuring? (is-list? baseline-signature) (baseline-signature = scenario-signature) baseline-summary selected-street selected-block warm-up-s measure-s observed-demand-factor effective-arrivals-per-hour observed-signal-count observed-data-version)",
+    "(list ticks count cars generated-total completed-total stranded-count queued-at-gates mean-trip-time-min mean-delay-min measured-seconds trips-done vehicle-hours run-finished? closure-desc selection-label measuring? (is-list? baseline-signature) (baseline-signature = scenario-signature) baseline-summary selected-street selected-block warm-up-s measure-s clock-seconds trips-per-hour-now scats-comparison data-version active-day-type)",
   // Position, direction and colour of every car.
   cars: "[ (list who xcor ycor heading color) ] of cars",
   // The road layout. It only changes when Setup runs.
@@ -69,6 +69,11 @@ const questions: Record<string, string> = {
     "(list (ifelse-value is-list? baseline-signature [table:to-list baseline] [[]]) baseline-summary baseline-signature)",
   // Every car is accounted for: finished, stranded, driving or waiting.
   conservation: "generated-total = completed-total + stranded-count + count cars + queued-at-gates",
+  // The intersections compared with SCATS: site number, name and position.
+  sites:
+    "map [site -> (list item 0 site item 1 site mean map [i -> [xcor] of node i] item 2 site mean map [i -> [ycor] of node i] item 2 site)] count-sites",
+  // Vehicles per hour entering each of those intersections, simulated and counted.
+  siteVolumes: "(list site-volumes counted-volumes)",
 };
 
 const compiled: string[] = [];
@@ -89,15 +94,7 @@ fs.writeFileSync(
 );
 console.log("Compiled the model and the web reporters.");
 
-// Save both road maps so the page can draw streets while the model starts.
-const maps: [string, NetworkName][] = [
-  ["osm", "Real OSM map"],
-  ["schematic", "Schematic Hoddle grid"],
-];
-maps.forEach(function (entry) {
-  const simulation = loadTrafficSim();
-  simulation.set("network-source", entry[1]);
-  const world = simulation.setup();
-  fs.writeFileSync(path.join(RUNTIME_FOLDER, "network-" + entry[0] + ".json"), JSON.stringify(world));
-});
-console.log("Saved both road maps.");
+// Save the road map so the page can draw streets while the model starts.
+const world = loadTrafficSim().setup();
+fs.writeFileSync(path.join(RUNTIME_FOLDER, "network-osm.json"), JSON.stringify(world));
+console.log("Saved the road map.");

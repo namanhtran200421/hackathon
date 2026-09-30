@@ -2,7 +2,7 @@
 
 Close a street in Melbourne's CBD and watch the traffic find another way.
 
-Melbourne Traffic Lab is a traffic simulation of Melbourne's city centre. It runs in your web browser: the streets come from OpenStreetMap, cars arrive at the edges of the city, drive to their destinations, wait at traffic lights and look for detours when a road is closed. You can close any street, watch what happens, and compare the result with normal traffic.
+Melbourne Traffic Lab is a traffic simulation of Melbourne's city centre. It runs in your web browser on real data: the streets and car parks come from OpenStreetMap, the traffic lights stand where Victoria's Department of Transport and Planning (DTP) lists them, and the traffic itself comes from the SCATS counts at the city's traffic lights. Choose a weekday or weekend and a time of day, and cars enter where real roads cross into the city, drive to where they are going, wait at traffic lights and look for detours when a road is closed. You can close any street, watch what happens, and compare the result with normal traffic at that time.
 
 The simulation is a NetLogo model that our team built. The same model runs on the desktop in NetLogo and on the web page.
 
@@ -17,11 +17,13 @@ npm run dev
 
 Then open http://localhost:3000.
 
-The road map is ready when the page loads. Press **Start** to set the traffic moving. The **Quick guide** button at the top of the page explains everything else in six short steps.
+The road map is ready when the page loads, set to a weekday from 8 am. Press **Start** to set the traffic moving. The **Quick guide** button at the top of the page explains everything else in seven short steps.
 
 ## What you can do
 
-- **Change the traffic.** Set how many cars arrive each hour, how many are just passing through, and how many drivers use live traffic information to avoid jams.
+- **Choose the day and time.** Pick a weekday or a weekend day and any quarter-hour to start counting. The number of trips, and where they start and end, follow the real SCATS counts for that time, and change as the clock moves on.
+- **See how real it is.** The page shows how closely the simulated traffic matches the SCATS counts at the counted intersections, and the results list every one of them.
+- **Change how drivers behave.** Set how many drivers use live traffic information to avoid jams, and how the traffic lights are timed.
 - **Close streets.** Pick a street and close it in both directions, in one direction, or by one lane. You can also click roads on the map to close and reopen them. Closures work while the traffic is moving.
 - **Watch it live.** The map shows every car. Colour the roads by traffic jams, by traffic volume, or by the change from normal traffic. Zoom in with the + button, or hold Ctrl and scroll.
 - **Run as long as you like.** The simulation normally stops after its counting time. Turn on **Keep running** to let it go until you press Pause.
@@ -91,6 +93,7 @@ Run these from the project folder.
 | `npm run model:web`     | Rebuild the browser model after changing the NetLogo model     |
 | `npm run model:desktop` | Rebuild the desktop model file from its code                   |
 | `npm run model:map`     | Rebuild the road map from the OpenStreetMap data               |
+| `npm run model:data`    | Rebuild the real traffic from the SCATS counts and the map     |
 
 The first time you run the browser tests, install a test browser with `npx playwright install chromium`. The model commands need Python 3; they do not need an internet connection.
 
@@ -114,12 +117,14 @@ The code is TypeScript, written to be easy to read:
 
 ## Limits
 
-This is a model for exploring ideas, not a traffic forecast or a safety assessment. The streets are real. Optional SCATS profiles provide observed time-of-day patterns, while absolute arrival rates, destinations and traffic light timings remain assumed. There are no trams, buses, bikes or pedestrians. Results from the web page and from desktop NetLogo may differ slightly because the two use different random number generators; compare runs within the same one.
+This is a model for exploring ideas, not a traffic forecast or a safety assessment. The streets, car parks, traffic light locations and traffic counts are real. The SCATS counts do not say which way each car travels, so where trips go is the pattern that best reproduces the counts, not a survey of real journeys. Traffic light timings are not published, so each light shares its green time by demand, as SCATS does, on an assumed cycle. The simulated traffic matches the counts closely in total but not at every intersection; the page shows how closely. There are no trams, buses, bikes or pedestrians. Results from the web page and from desktop NetLogo may differ slightly because the two use different random number generators; compare runs within the same one.
 
 ## Credits
 
-The traffic model builds on our groupmate's Hoddle Grid prototype, which credits Wilensky's NetLogo Traffic Grid (2003). The web page runs it with NetLogo Web (Tortoise) by Uri Wilensky and contributors, under the GPL (see `simulation/runtime/LICENSE.md` and https://github.com/NetLogo/Tortoise). Map data © OpenStreetMap contributors, available under the Open Database Licence: https://www.openstreetmap.org/copyright.
+The traffic model builds on our groupmate's Hoddle Grid prototype, which credits Wilensky's NetLogo Traffic Grid (2003). The web page runs it with NetLogo Web (Tortoise) by Uri Wilensky and contributors, under the GPL (see `simulation/runtime/LICENSE.md` and https://github.com/NetLogo/Tortoise). Map data © OpenStreetMap contributors, available under the Open Database Licence: https://www.openstreetmap.org/copyright. Traffic signal locations and SCATS traffic volumes © Department of Transport and Planning, Victoria, under CC BY 4.0: https://opendata.transport.vic.gov.au/dataset/traffic-signal-volume-data.
 
-## Observed traffic data
+## Real traffic data
 
-Select **SCATS weekday** or **SCATS weekend** and restart to use August 2026 Melbourne CBD detector patterns. The arrival slider sets an assumed peak, not a measured boundary flow. Matched DTP signal locations are optional; timings remain synthetic. See [data requirements, provenance and model limitations](docs/data-and-limitations.md). Rebuild retained data with `npm run model:data`, then `npm run model:desktop` and `npm run model:web`.
+The traffic comes from the SCATS counts for August 2026: every 15 minutes of an average weekday and an average weekend day, at the signalised intersections on the map. `npm run model:data` turns them into the model's traffic: it matches the DTP signal sites to the map, adds up each intersection's detectors, and then works out how many trips an hour go from each real entry point and car park to each part of the city, so that the model's own route choice reproduces the counts. See [how the data is used, and its limits](docs/data-and-limitations.md).
+
+To rebuild everything after changing the map or the data, run `npm run model:map`, `npm run model:data`, `npm run model:desktop` and `npm run model:web`, in that order.

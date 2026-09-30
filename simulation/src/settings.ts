@@ -10,19 +10,16 @@
 /** The counting time used by "Keep running": counting never stops. */
 export const FOREVER = 1e9;
 
-export type NetworkName = "Real OSM map" | "Schematic Hoddle grid";
+export type DayType = "Weekday" | "Weekend";
 export type SignalCoordination = "random offsets" | "green wave (east-west)";
 export type ViewMode = "congestion" | "volume" | "change vs baseline";
 export type ClosureType = "Both directions" | "East / north direction" | "One lane each direction";
 
 /** The value of every setting, keyed by its NetLogo name. */
 export interface Settings {
-  "demand-profile": "Flat (synthetic)" | "SCATS weekday" | "SCATS weekend";
-  "profile-start-hour": number;
-  "use-observed-signals?": boolean;
-  "network-source": NetworkName;
-  "demand-veh-per-hour": number;
-  "through-traffic-%": number;
+  "day-type": DayType;
+  /** When counting starts, such as "08:00"; see START_TIMES. */
+  "start-time": string;
   "informed-drivers-%": number;
   "speed-limit-kmh": number;
   "cycle-length": number;
@@ -33,7 +30,7 @@ export interface Settings {
   "reroute-interval": number;
   "route-noise": number;
   "fixed-seed?": boolean;
-  "hook-turns?": boolean;
+  "adaptive-signals?": boolean;
   "close-whole-street?": boolean;
   "signal-coordination": SignalCoordination;
   "view-mode": ViewMode;
@@ -57,25 +54,37 @@ export type SwitchSettingName = {
 /** Names of the settings chosen from a list (choosers). */
 export type ChoiceSettingName = Exclude<SettingName, NumberSettingName | SwitchSettingName>;
 
+function twoDigits(value: number): string {
+  if (value < 10) {
+    return "0" + value;
+  }
+  return String(value);
+}
+
+/** Every quarter-hour of the day, "00:00" to "23:45": the SCATS counts come in 15 minutes. */
+export const START_TIMES: readonly string[] = (function () {
+  const times: string[] = [];
+  for (let minutes = 0; minutes < 24 * 60; minutes += 15) {
+    times.push(twoDigits(Math.floor(minutes / 60)) + ":" + twoDigits(minutes % 60));
+  }
+  return times;
+})();
+
 /** The starting value of every setting, as in the desktop model. */
 export const DEFAULT_SETTINGS: Settings = {
-  "demand-profile": "Flat (synthetic)",
-  "profile-start-hour": 8,
-  "use-observed-signals?": false,
-  "network-source": "Real OSM map",
-  "demand-veh-per-hour": 2500,
-  "through-traffic-%": 50,
+  "day-type": "Weekday",
+  "start-time": "08:00",
   "informed-drivers-%": 50,
   "speed-limit-kmh": 40,
   "cycle-length": 80,
   "ew-green-share": 50,
-  "warm-up-s": 60,
+  "warm-up-s": 600,
   "measure-s": 600,
   seed: 42,
   "reroute-interval": 60,
   "route-noise": 0.1,
   "fixed-seed?": true,
-  "hook-turns?": false,
+  "adaptive-signals?": true,
   "close-whole-street?": true,
   "signal-coordination": "random offsets",
   "view-mode": "congestion",
@@ -97,9 +106,6 @@ export interface NumberRule {
 
 /** The range of every slider. */
 export const NUMBER_RULES: Record<NumberSettingName, NumberRule> = {
-  "profile-start-hour": { min: 0, max: 23, step: 1, whole: true },
-  "demand-veh-per-hour": { min: 0, max: 12000, step: 250, whole: true },
-  "through-traffic-%": { min: 0, max: 100, step: 5, whole: true },
   "informed-drivers-%": { min: 0, max: 100, step: 5, whole: true },
   "speed-limit-kmh": { min: 20, max: 60, step: 5, whole: true },
   "cycle-length": { min: 40, max: 150, step: 5, whole: true },
@@ -115,8 +121,8 @@ export const NUMBER_RULES: Record<NumberSettingName, NumberRule> = {
 
 /** The options of every chooser. */
 export const CHOICE_OPTIONS: { [Name in ChoiceSettingName]: readonly Settings[Name][] } = {
-  "demand-profile": ["Flat (synthetic)", "SCATS weekday", "SCATS weekend"],
-  "network-source": ["Real OSM map", "Schematic Hoddle grid"],
+  "day-type": ["Weekday", "Weekend"],
+  "start-time": START_TIMES,
   "signal-coordination": ["random offsets", "green wave (east-west)"],
   "view-mode": ["congestion", "volume", "change vs baseline"],
   "closure-type": ["Both directions", "East / north direction", "One lane each direction"],
@@ -124,22 +130,21 @@ export const CHOICE_OPTIONS: { [Name in ChoiceSettingName]: readonly Settings[Na
 
 /** The on/off switches. */
 export const SWITCHES: readonly SwitchSettingName[] = [
-  "use-observed-signals?",
   "fixed-seed?",
-  "hook-turns?",
+  "adaptive-signals?",
   "close-whole-street?",
   "scheduled-closure?",
 ];
 
 /**
- * Settings the model only reads when it builds the road map (Setup). Changing
- * one of these only takes effect after a restart.
+ * Settings the model only reads when it starts a run (Setup). Changing one of
+ * these only takes effect after a restart. The warm-up is one of them because
+ * the clock starts one warm-up before the start time.
  */
 export const SETUP_ONLY: readonly SettingName[] = [
-  "demand-profile",
-  "profile-start-hour",
-  "use-observed-signals?",
-  "network-source",
+  "day-type",
+  "start-time",
+  "warm-up-s",
   "seed",
   "fixed-seed?",
   "speed-limit-kmh",

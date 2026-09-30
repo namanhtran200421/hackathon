@@ -43,6 +43,31 @@ async function useMaxSpeed(page: Page): Promise<void> {
   await page.getByRole("slider", { name: "Simulation speed" }).fill("7");
 }
 
+async function restart(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Restart" }).click();
+  await expect(statusLine(page)).toContainText("Ready", { timeout: 60000 });
+}
+
+/** Start at a time of day with a one-minute warm-up, so counting starts quickly. */
+async function useShortWarmUp(page: Page, startTime: string): Promise<void> {
+  await page.locator("#start-time").selectOption(startTime);
+  const counting = page.locator("details", { hasText: "Counting" });
+  if (
+    !(await counting.evaluate(function (element) {
+      return (element as HTMLDetailsElement).open;
+    }))
+  ) {
+    await page.locator("summary", { hasText: "Counting" }).click();
+  }
+  await page.getByRole("slider", { name: "Warm-up time" }).fill("60");
+  await restart(page);
+}
+
+/** Light 3 am traffic, for tests where the time of day does not matter. */
+async function useQuietNight(page: Page): Promise<void> {
+  await useShortWarmUp(page, "03:00");
+}
+
 async function checkAccessibility(page: Page, area?: string): Promise<void> {
   let scan = new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]);
   if (area) {
@@ -124,14 +149,16 @@ test("start, pause, step, closures and closing roads by clicking", async functio
 
 test("baseline, change view, results and CSV download", async function ({ page }) {
   await openReady(page);
+  await useShortWarmUp(page, "08:00");
   await useMaxSpeed(page);
   await runUntil(page, 125);
   await expect(page.locator("#results")).toContainText("Summary");
+  await expect(page.locator("#results")).toContainText("Compared with the SCATS counts");
+  await expect(page.locator(".counts-table")).toContainText("GEH");
 
   await page.getByRole("button", { name: "Save baseline" }).click();
   await expect(page.locator("#results")).toContainText("Baseline compared with this run");
-  await page.getByRole("button", { name: "Restart" }).click();
-  await expect(statusLine(page)).toContainText("Ready", { timeout: 60000 });
+  await restart(page);
   await expect(page.locator(".results-link")).toBeVisible();
 
   await page.getByRole("button", { name: "Close this street" }).click();
@@ -144,8 +171,9 @@ test("baseline, change view, results and CSV download", async function ({ page }
   await expect(results.locator("tbody").first()).toContainText("Trips finished");
   await expect(results).toContainText("Both runs are compared at");
   await expect(results.locator(".chart svg")).toHaveCount(3);
-  await expect(results.locator(".streets-table")).toContainText("Collins St");
-  await expect(results.locator(".streets-table")).toContainText("closed");
+  await results.getByRole("button", { name: /Show all \d+ streets/ }).click();
+  const collins = results.locator(".streets-table tbody tr", { hasText: /^Collins St/ });
+  await expect(collins).toContainText("closed");
   await checkAccessibility(page, "#results");
 
   const download = page.waitForEvent("download");
@@ -161,22 +189,24 @@ test("baseline, change view, results and CSV download", async function ({ page }
 
 test("a baseline is saved once and reused across settings and reloads", async function ({ page }) {
   await openReady(page);
+  await useQuietNight(page);
   await useMaxSpeed(page);
   await runUntil(page, 125);
   await page.getByRole("button", { name: "Save baseline" }).click();
-  await expect(page.locator(".baseline-meta")).toContainText("Baseline:");
+  await expect(page.locator(".baseline-meta")).toContainText("Weekday (Monday to Friday) from 3:00 am");
 
-  await page.getByRole("slider", { name: "Cars arriving per hour" }).fill("4000");
-  await page.getByRole("button", { name: "Restart" }).click();
-  await expect(statusLine(page)).toContainText("Ready", { timeout: 60000 });
+  await page.locator("#day-type").selectOption("Weekend");
+  await restart(page);
   await expect(page.locator(".baseline-diff")).toContainText(
-    "Cars arriving per hour: 2,500 cars/hour → 4,000 cars/hour",
+    "Day: Weekday (Monday to Friday) → Weekend (Saturday and Sunday)",
   );
 
   await page.reload();
   await expect(statusLine(page)).toContainText("Ready", { timeout: 60000 });
   await expect(page.locator(".baseline-meta")).toContainText("Baseline:");
   await expect(page.getByRole("button", { name: "Replace baseline" })).toBeVisible();
+  await useQuietNight(page);
+  await useMaxSpeed(page);
   await runUntil(page, 90);
   await expect(page.locator("#results")).toContainText("Baseline compared with this run");
 
@@ -192,6 +222,7 @@ test("the run stops at the end of the counting time unless it keeps running", as
   await page.locator("summary", { hasText: "Counting" }).click();
   await page.getByRole("slider", { name: "Warm-up time" }).fill("0");
   await page.getByRole("slider", { name: "Counting time" }).fill("60");
+  await restart(page);
   await useMaxSpeed(page);
   await page.getByRole("button", { name: "Start", exact: true }).click();
   await expect(statusLine(page)).toContainText("The counting time is over", { timeout: 60000 });
@@ -218,11 +249,10 @@ test("quick guide, phone layout, keyboard and accessibility", async function ({ 
 
   await page.getByRole("combobox", { name: "Street", exact: true }).selectOption("Bourke St");
   await expect(page.locator(".monitors-inline")).toContainText("Bourke St");
-  await page.getByLabel(/Road map/).selectOption("Schematic Hoddle grid");
+  await page.locator("#day-type").selectOption("Weekend");
   await expect(page.locator(".setup-button.needed")).toBeVisible();
-  await page.getByRole("button", { name: "Restart" }).click();
-  await expect(statusLine(page)).toContainText("Ready", { timeout: 60000 });
-  await expect(page.locator(".map-subtitle")).toHaveText("Simple street grid");
+  await restart(page);
+  await expect(page.locator(".map-subtitle")).toHaveText("Weekend · 7:50 am");
 
   const fitsScreen = await page.evaluate(function () {
     return document.documentElement.scrollWidth <= window.innerWidth;
@@ -243,17 +273,18 @@ test("a simulator that fails to load offers Try again", async function ({ page }
   await expect(statusLine(page)).toContainText("Ready", { timeout: 60000 });
 });
 
-test("observed public data controls apply on restart", async function ({ page, request }) {
+test("the real traffic follows the chosen day and time", async function ({ page, request }) {
   await openReady(page);
   const response = await request.get("/sim/observed-data.json");
   expect(response.ok()).toBe(true);
   const data = await response.json();
-  await page.getByLabel("Traffic demand profile").selectOption("SCATS weekday");
-  await page.locator('label[for="observed-signals"]').click();
-  await expect(page.getByLabel("Use matched DTP signal locations")).toBeChecked();
-  await page.getByRole("button", { name: "Restart" }).click();
-  await expect(page.getByLabel("Active demand rate")).toContainText(
-    String(Math.round(2500 * data.factors.weekday[32])).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " cars/hour",
-  );
-  await expect(page.getByLabel("Active demand rate")).toContainText("80 matched signals applied");
+  expect(data.countedSites).toBeGreaterThan(0);
+
+  await expect(page.getByLabel("Time in the model")).toHaveText("7:50 am");
+  await page.locator("#day-type").selectOption("Weekend");
+  await page.locator("#start-time").selectOption("13:00");
+  await restart(page);
+  await expect(page.getByLabel("Time in the model")).toHaveText("12:50 pm");
+  await expect(page.getByLabel("Trips starting now")).toContainText("trips an hour");
+  await expect(page.getByLabel("Match with the SCATS counts")).toContainText("after the warm-up");
 });

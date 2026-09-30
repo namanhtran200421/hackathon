@@ -169,6 +169,7 @@ export function useTrafficSim() {
         drawing.from = new Float32Array(0);
         drawing.fromIndex = new Map();
         drawing.cars = new Float32Array(0);
+        drawing.sites = null;
         drawing.ticks = -1;
         setWorld(newWorld);
         setAppliedSettings(settingsAtRestart.current);
@@ -264,6 +265,9 @@ export function useTrafficSim() {
           drawing.stylesView = message.stylesView;
           drawing.stylesVersion = drawing.stylesVersion + 1;
         }
+        if (message.sites) {
+          drawing.sites = message.sites;
+        }
 
         latestMetrics.current = current;
         rememberSample(current);
@@ -355,11 +359,7 @@ export function useTrafficSim() {
 
       // Draw the streets straight away while the simulator loads.
       let cancelled = false;
-      let mapName = "osm";
-      if (settingsRef.current["network-source"] === "Schematic Hoddle grid") {
-        mapName = "schematic";
-      }
-      fetch("/sim/network-" + mapName + ".json")
+      fetch("/sim/network-osm.json")
         .then(function (response) {
           if (response.ok) {
             return response.json() as Promise<World>;
