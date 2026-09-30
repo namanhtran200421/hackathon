@@ -101,5 +101,5 @@ to-report seg-distance [px py]
 end
 
 to-report scenario-signature
-  report (list observed-data-version demand-profile profile-start-hour use-observed-signals? active-network demand-veh-per-hour through-traffic-% informed-drivers-% speed-limit-kmh cycle-length ew-green-share signal-coordination hook-turns? fixed-seed? seed route-noise reroute-interval warm-up-s measure-s)
+  report (list data-version day-type start-time informed-drivers-% speed-limit-kmh cycle-length ew-green-share adaptive-signals? signal-coordination fixed-seed? seed route-noise reroute-interval warm-up-s measure-s)
 end

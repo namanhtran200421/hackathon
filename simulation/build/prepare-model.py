@@ -3,8 +3,9 @@
 The browser runs the same NetLogo code as the desktop model. Only the parts that
 need a desktop computer are changed:
 
-  * The road map is written straight into the code, because a browser cannot
-    open data/map.txt from disk.
+  * The road map and the real traffic data are written straight into the
+    code, because a browser cannot open data/map.txt or
+    data/observed/demand.txt from disk.
   * The desktop pop-up dialogs (Choose street, Choose section) and the CSV file
     export do nothing here. The web page has its own lists and download button.
   * The desktop drawing procedures do nothing. The web page draws the map itself.
@@ -28,9 +29,27 @@ import xml.etree.ElementTree as ElementTree
 NETLOGO_FOLDER = Path(__file__).resolve().parent.parent / "netlogo"
 DESKTOP_MODEL = NETLOGO_FOLDER / "Melbourne Traffic Combined.nlogox"
 MAP_FILE = NETLOGO_FOLDER / "data" / "map.txt"
+TRAFFIC_FILE = NETLOGO_FOLDER / "data" / "observed" / "demand.txt"
 OUTPUT = Path(__file__).resolve().parent / "model.nlogox"
 
-LOAD_MAP_FROM_DISK = 'file-open "data/map.txt"\n  let node-data file-read\n  let edge-data file-read\n  file-close'
+LOAD_MAP_FROM_DISK = (
+    'file-open "data/map.txt"\n  let node-data file-read\n  let edge-data file-read\n'
+    "  let entry-data file-read\n  let car-park-data file-read\n  file-close"
+)
+
+# The real traffic data, in the order demand.txt holds it.
+TRAFFIC_NAMES = [
+    "data-version",
+    "signal-sites",
+    "count-sites",
+    "weekday-counts",
+    "weekend-counts",
+    "zone-groups",
+    "weekday-trips",
+    "weekend-trips",
+    "weekday-scales",
+    "weekend-scales",
+]
 
 FORGET_BASELINE_ON_SETUP = """  if baseline-signature != scenario-signature [
     set baseline table:make
@@ -76,23 +95,23 @@ def main():
 
     if LOAD_MAP_FROM_DISK not in code:
         raise ValueError("The desktop map-loading code changed. Please review this script.")
-    nodes, edges = MAP_FILE.read_text().splitlines()
-    code = code.replace(LOAD_MAP_FROM_DISK, "let node-data " + nodes + "\n  let edge-data " + edges)
+    nodes, edges, entries, car_parks = MAP_FILE.read_text().splitlines()
+    code = code.replace(
+        LOAD_MAP_FROM_DISK,
+        "let node-data " + nodes + "\n  let edge-data " + edges
+        + "\n  let entry-data " + entries + "\n  let car-park-data " + car_parks,
+    )
 
-    profiles = (NETLOGO_FOLDER / "data/observed/profiles.txt").read_text().splitlines()
-    loader = '''  file-open "data/observed/profiles.txt"
-  set observed-weekday file-read
-  set observed-weekend file-read
-  set observed-signal-points file-read
-  set observed-data-version file-read
-  file-close'''
-    embedded = "\n".join("  set " + name + " " + value for name, value in zip(
-        ["observed-weekday", "observed-weekend", "observed-signal-points", "observed-data-version"], profiles))
-    if loader not in code:
-        raise ValueError("Observed-data loader changed; review embedding")
+    traffic = TRAFFIC_FILE.read_text().splitlines()
+    loader = '  file-open "data/observed/demand.txt"\n'
+    loader += "".join("  set " + name + " file-read\n" for name in TRAFFIC_NAMES)
+    loader += "  file-close"
+    if loader not in code or len(traffic) != len(TRAFFIC_NAMES):
+        raise ValueError("The real-traffic loader changed. Please review this script.")
+    embedded = "\n".join("  set " + name + " " + value for name, value in zip(TRAFFIC_NAMES, traffic))
     code = code.replace(loader, embedded)
 
-    for name in ["choose-street", "choose-section", "export-link-results", "draw-background", "draw-osm-roads"]:
+    for name in ["choose-street", "choose-section", "export-link-results", "draw-osm-roads"]:
         code = empty_procedure(code, name)
 
     if FORGET_BASELINE_ON_SETUP not in code:

@@ -44,6 +44,28 @@ export function clock(seconds: number): string {
   return minutesAndSeconds;
 }
 
+/** Seconds after midnight as a time of day: 29100 → "8:05 am", 45000 → "12:30 pm". */
+export function timeOfDay(seconds: number): string {
+  const minutesToday = Math.floor(Math.max(0, seconds) / 60) % (24 * 60);
+  const hours = Math.floor(minutesToday / 60);
+  const minutes = String(minutesToday % 60).padStart(2, "0");
+  let shownHour = hours % 12;
+  if (shownHour === 0) {
+    shownHour = 12;
+  }
+  let half = "am";
+  if (hours >= 12) {
+    half = "pm";
+  }
+  return shownHour + ":" + minutes + " " + half;
+}
+
+/** A model start time such as "08:15" as seconds after midnight. */
+export function startSeconds(startTime: string): number {
+  const parts = startTime.split(":").map(Number);
+  return parts[0] * 3600 + parts[1] * 60;
+}
+
 /** A signed change, using a real minus sign: -3 → "−3". */
 export function signed(value: number, show: (value: number) => string): string {
   if (value > 0) {

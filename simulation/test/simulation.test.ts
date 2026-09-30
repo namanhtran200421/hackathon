@@ -3,6 +3,7 @@
  *
  * These run the same engine, compiled model and controls the browser runs
  * (see src/loadInNode.ts) and check they behave like the desktop NetLogo model.
+ * Most tests start at 3 am, when the real traffic is light, so they run quickly.
  *
  * Run with:  npm test
  */
@@ -11,12 +12,17 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { loadTrafficSim, type NodeTrafficSim } from "../src/loadInNode";
 import { DEFAULT_SETTINGS, FOREVER, type SettingName, type Settings } from "../src/settings";
+import type { RoadInfo } from "../src/types";
 
 interface RoadState {
   section: number;
+  lanes: number;
   closed: boolean;
   lanesOpen: number;
 }
+
+/** Light night-time traffic and a one-minute warm-up. */
+const QUIET: Partial<Settings> = { "start-time": "03:00", "warm-up-s": 60 };
 
 /** Copy a value out of the model's sandbox so it can be compared normally. */
 function plain(value: unknown): unknown {
@@ -26,7 +32,7 @@ function plain(value: unknown): unknown {
 /** A model with some settings changed, after pressing Setup. */
 function started(settings?: Partial<Settings>): NodeTrafficSim {
   const simulation = loadTrafficSim();
-  const changes = settings || {};
+  const changes = Object.assign({}, QUIET, settings || {});
   Object.entries(changes).forEach(function (entry) {
     simulation.set(entry[0] as SettingName, entry[1]);
   });
@@ -57,6 +63,7 @@ function roadsOf(simulation: NodeTrafficSim, street: string): RoadState[] {
     .map(function (road) {
       return {
         section: road.section,
+        lanes: road.lanes,
         closed: styles[road.index * size + 2] === 1,
         lanesOpen: styles[road.index * size + 3],
       };
@@ -71,13 +78,40 @@ function isOpen(road: RoadState): boolean {
   return !road.closed;
 }
 
+/** A road's length along its shape, in patches. */
+function lengthOf(road: RoadInfo): number {
+  let total = 0;
+  for (let index = 1; index < road.geometry.length; index++) {
+    const a = road.geometry[index - 1];
+    const b = road.geometry[index];
+    total = total + Math.hypot(b[0] - a[0], b[1] - a[1]);
+  }
+  return total;
+}
+
+/** The middle of a road's longest straight piece, well away from other streets. */
+function middleOf(road: RoadInfo): [number, number] {
+  let best: [number, number] = road.geometry[0];
+  let longest = -1;
+  for (let index = 1; index < road.geometry.length; index++) {
+    const a = road.geometry[index - 1];
+    const b = road.geometry[index];
+    const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    if (length > longest) {
+      longest = length;
+      best = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    }
+  }
+  return best;
+}
+
 test("web controls start from the desktop model's defaults", function () {
   const simulation = loadTrafficSim();
   assert.deepEqual(plain(simulation.settings()), DEFAULT_SETTINGS);
 });
 
 test("only known settings and buttons are accepted", function () {
-  const simulation = started({ "network-source": "Schematic Hoddle grid" });
+  const simulation = started();
   assert.throws(function () {
     simulation.set("clear-all", 1);
   });
@@ -85,7 +119,13 @@ test("only known settings and buttons are accepted", function () {
     simulation.set("view-mode", "heatmap");
   });
   assert.throws(function () {
-    simulation.set("hook-turns?", "yes");
+    simulation.set("day-type", "Holiday");
+  });
+  assert.throws(function () {
+    simulation.set("start-time", "08:10");
+  });
+  assert.throws(function () {
+    simulation.set("adaptive-signals?", "yes");
   });
   assert.throws(function () {
     simulation.command("ask cars [die]");
@@ -94,10 +134,12 @@ test("only known settings and buttons are accepted", function () {
     simulation.select("Not A Real St", 0);
   });
 
-  simulation.set("demand-veh-per-hour", 99999);
-  assert.equal(simulation.settings()["demand-veh-per-hour"], 12000);
+  simulation.set("warm-up-s", 99999);
+  assert.equal(simulation.settings()["warm-up-s"], 900);
   simulation.set("reroute-interval", 12.4);
   assert.equal(simulation.settings()["reroute-interval"], 12);
+  simulation.set("start-time", "17:45");
+  assert.equal(simulation.settings()["start-time"], "17:45");
 });
 
 test("watching the model at any frame rate never changes its results", function () {
@@ -108,6 +150,7 @@ test("watching the model at any frame rate never changes its results", function 
     watched.cars();
     if (second % 5 === 0) {
       watched.styles();
+      watched.siteVolumes();
     }
   }
   const quiet = started();
@@ -117,7 +160,7 @@ test("watching the model at any frame rate never changes its results", function 
   assert.deepEqual(Array.from(watched.cars()), Array.from(quiet.cars()));
 });
 
-test("real map runs reproducibly, conserves vehicles and closes streets", function () {
+test("the real map runs reproducibly, conserves vehicles and closes streets", function () {
   const simulation = started();
   const again = started();
   run(simulation, 200);
@@ -146,7 +189,7 @@ test("real map runs reproducibly, conserves vehicles and closes streets", functi
 });
 
 test("baseline uses the model's guards and is kept across Setup until cleared", function () {
-  const simulation = started({ "network-source": "Schematic Hoddle grid" });
+  const simulation = started();
 
   // Too early: the warm-up plus one counted minute has not passed yet.
   run(simulation, 90);
@@ -170,8 +213,8 @@ test("baseline uses the model's guards and is kept across Setup until cleared", 
   simulation.setup();
   assert.equal(simulation.metrics().hasBaseline, true);
 
-  // Saved once, then reused: new settings keep the baseline but are flagged.
-  simulation.set("demand-veh-per-hour", 3000);
+  // Saved once, then reused: a new time keeps the baseline but is flagged.
+  simulation.set("start-time", "03:15");
   simulation.setup();
   const reused = simulation.metrics();
   assert.equal(reused.hasBaseline, true);
@@ -185,7 +228,7 @@ test("baseline uses the model's guards and is kept across Setup until cleared", 
 });
 
 test("a stored baseline restores into a fresh model, as after a reload", function () {
-  const first = started({ "network-source": "Schematic Hoddle grid" });
+  const first = started();
   run(first, 150);
   first.command("save-baseline");
   const stored = first.exportBaseline();
@@ -201,7 +244,7 @@ test("a stored baseline restores into a fresh model, as after a reload", functio
     });
   }
 
-  const fresh = started({ "network-source": "Schematic Hoddle grid" });
+  const fresh = started();
   assert.equal(fresh.metrics().hasBaseline, false);
   fresh.restoreBaseline(stored);
   assert.equal(fresh.metrics().hasBaseline, true);
@@ -211,7 +254,7 @@ test("a stored baseline restores into a fresh model, as after a reload", functio
   assert.deepEqual(baselineFlows(fresh), baselineFlows(first));
 
   // Restoring must not change how the traffic itself runs.
-  const untouched = started({ "network-source": "Schematic Hoddle grid" });
+  const untouched = started();
   run(untouched, 60);
   run(fresh, 60);
   assert.equal(fresh.metrics().ticks, 60);
@@ -223,11 +266,7 @@ test("a stored baseline restores into a fresh model, as after a reload", functio
 });
 
 test("the run stops at the end of the counting time unless it keeps running", function () {
-  const simulation = started({
-    "network-source": "Schematic Hoddle grid",
-    "warm-up-s": 0,
-    "measure-s": 60,
-  });
+  const simulation = started({ "warm-up-s": 0, "measure-s": 60 });
   assert.equal(run(simulation, 61), false);
   assert.equal(simulation.metrics().ticks, 60);
   assert.equal(simulation.metrics().finished, true);
@@ -244,38 +283,41 @@ test("the run stops at the end of the counting time unless it keeps running", fu
 });
 
 test("clicking a road toggles it with the desktop click handler", function () {
-  const simulation = started({ "network-source": "Schematic Hoddle grid" });
+  const simulation = started();
   const world = simulation.world();
   assert.ok(world);
-  const road = world.roads.find(function (candidate) {
-    return candidate.street === "Bourke St" && candidate.section === 2;
+  // The longest piece of Bourke St, clicked in the middle, is far from any other street.
+  const bourke = world.roads.filter(function (road) {
+    return road.street === "Bourke St" && road.carsAllowed && road.kind === "main";
   });
-  assert.ok(road);
-  const start = road.geometry[0];
-  const end = road.geometry[1];
-  const x = (start[0] + end[0]) / 2;
-  const y = (start[1] + end[1]) / 2;
+  const road = bourke.reduce(function (longest, candidate) {
+    if (lengthOf(candidate) > lengthOf(longest)) {
+      return candidate;
+    }
+    return longest;
+  });
+  const point = middleOf(road);
 
   simulation.set("close-whole-street?", false);
-  simulation.click(x, y);
-  let bourke = roadsOf(simulation, "Bourke St");
-  const sectionTwo = bourke.filter(function (piece) {
-    return piece.section === 2;
+  simulation.click(point[0], point[1]);
+  let pieces = roadsOf(simulation, "Bourke St");
+  const chosen = pieces.filter(function (piece) {
+    return piece.section === road.section;
   });
-  const otherSections = bourke.filter(function (piece) {
-    return piece.section !== 2;
+  const others = pieces.filter(function (piece) {
+    return piece.section !== road.section;
   });
-  assert.ok(sectionTwo.every(isClosed));
-  assert.ok(otherSections.every(isOpen));
-  assert.equal(simulation.metrics().selectionLabel, "Bourke St / section 2");
+  assert.ok(chosen.every(isClosed));
+  assert.ok(others.every(isOpen));
+  assert.equal(simulation.metrics().selectionLabel, "Bourke St / section " + road.section);
 
-  simulation.click(x, y);
-  bourke = roadsOf(simulation, "Bourke St");
-  assert.ok(bourke.every(isOpen));
+  simulation.click(point[0], point[1]);
+  pieces = roadsOf(simulation, "Bourke St");
+  assert.ok(pieces.every(isOpen));
 });
 
-test("directional and lane closures, scheduled closures and empty demand", function () {
-  const simulation = started({ "network-source": "Schematic Hoddle grid" });
+test("directional and lane closures, and scheduled closures", function () {
+  const simulation = started();
   simulation.select("Collins St", 0);
   simulation.set("closure-type", "East / north direction");
   simulation.command("close-selection");
@@ -289,28 +331,19 @@ test("directional and lane closures, scheduled closures and empty demand", funct
   simulation.command("close-selection");
   assert.ok(
     roadsOf(simulation, "Lonsdale St").every(function (road) {
-      return !road.closed && road.lanesOpen === 1;
+      return road.lanesOpen === road.lanes - 1 && road.closed === (road.lanes === 1);
     }),
   );
 
-  const scheduled = started({
-    "network-source": "Schematic Hoddle grid",
-    "scheduled-closure?": true,
-    "closure-start-min": 1,
-  });
+  const scheduled = started({ "scheduled-closure?": true, "closure-start-min": 1 });
   run(scheduled, 59);
   assert.ok(roadsOf(scheduled, "Collins St").every(isOpen));
   run(scheduled, 2);
   assert.ok(roadsOf(scheduled, "Collins St").every(isClosed));
-
-  const empty = started({ "demand-veh-per-hour": 0 });
-  run(empty, 30);
-  assert.equal(empty.metrics().generated, 0);
-  assert.equal(empty.cars().length, 0);
 });
 
 test("CSV export has the desktop columns and one row per drivable road", function () {
-  const simulation = started({ "network-source": "Schematic Hoddle grid" });
+  const simulation = started();
   run(simulation, 120);
   const lines = simulation.csv().trim().split("\n");
   assert.equal(

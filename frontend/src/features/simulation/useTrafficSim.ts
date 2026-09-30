@@ -76,9 +76,6 @@ interface BaselineRequest {
 
 export type TrafficSimulation = ReturnType<typeof useTrafficSim>;
 
-/** The status once the road map is built. */
-const READY = "Ready. Press Start to begin.";
-
 export function useTrafficSim() {
   const [phase, setPhase] = useState<SimulatorPhase>("loading");
   const [status, setStatus] = useState("Loading the simulator…");
@@ -101,7 +98,6 @@ export function useTrafficSim() {
   const keepRunningRef = useRef(false);
   const speedRef = useRef(DEFAULT_SPEED);
   const settingsAtRestart = useRef<Settings>(DEFAULT_SETTINGS);
-  const readyMessage = useRef(READY);
   const latestMetrics = useRef<Metrics | null>(null);
   const samples = useRef<Sample[]>([]);
   const sampleStep = useRef(1);
@@ -173,12 +169,12 @@ export function useTrafficSim() {
         drawing.from = new Float32Array(0);
         drawing.fromIndex = new Map();
         drawing.cars = new Float32Array(0);
+        drawing.sites = null;
         drawing.ticks = -1;
         setWorld(newWorld);
         setAppliedSettings(settingsAtRestart.current);
         setPhase("ready");
-        setStatus(readyMessage.current);
-        readyMessage.current = READY;
+        setStatus("Ready. Press Start to begin.");
       }
 
       function rememberSample(current: Metrics): void {
@@ -268,6 +264,9 @@ export function useTrafficSim() {
           drawing.styles = message.styles;
           drawing.stylesView = message.stylesView;
           drawing.stylesVersion = drawing.stylesVersion + 1;
+        }
+        if (message.sites) {
+          drawing.sites = message.sites;
         }
 
         latestMetrics.current = current;
@@ -360,11 +359,7 @@ export function useTrafficSim() {
 
       // Draw the streets straight away while the simulator loads.
       let cancelled = false;
-      let mapName = "osm";
-      if (settingsRef.current["network-source"] === "Schematic Hoddle grid") {
-        mapName = "schematic";
-      }
-      fetch("/sim/network-" + mapName + ".json")
+      fetch("/sim/network-osm.json")
         .then(function (response) {
           if (response.ok) {
             return response.json() as Promise<World>;
@@ -442,15 +437,9 @@ export function useTrafficSim() {
     [send],
   );
 
-  /**
-   * The Restart button (NetLogo's Setup). `message` replaces the usual
-   * "Ready" message once the road map is rebuilt.
-   */
+  /** The Restart button (NetLogo's Setup). */
   const restart = useCallback(
-    function (message?: string) {
-      if (message) {
-        readyMessage.current = message;
-      }
+    function () {
       settingsAtRestart.current = settingsRef.current;
       setPhase("building");
       setStatus("Building the road map…");

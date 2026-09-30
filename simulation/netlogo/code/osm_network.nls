@@ -1,9 +1,12 @@
 ; Real road geometry, directed topology and available OSM lane/speed tags.
-; Signal locations, gate demand and destination sites remain illustrative.
+; Traffic enters and leaves where real roads cross the map's edge and parks in
+; real public car parks. Traffic lights stand at the DTP signal sites.
 to build-osm-network
   file-open "data/map.txt"
   let node-data file-read
   let edge-data file-read
+  let entry-data file-read
+  let car-park-data file-read
   file-close
   foreach node-data [row-data ->
     create-nodes 1 [
@@ -37,48 +40,77 @@ to build-osm-network
       ask L [set seg 1 + position pair keys]
     ]
   ]
-  ask nodes [
-    let names remove-duplicates [street] of my-links
-    set signalised? count link-neighbors >= 3 and length names >= 2 and any? my-links with [road-kind = "main"]
-  ]
-  apply-observed-signals
-  ; Twelve synthetic boundary entry/exit gates, attached to the nearest road node.
-  let chosen []
-  foreach [[-108 -65] [-108 0] [-108 65] [108 -65] [108 0] [108 65] [-70 -90] [0 -90] [70 -90] [-70 90] [0 90] [70 90]] [xy ->
-    let used chosen
-    let n min-one-of nodes with [node-kind = "grid" and not member? self used] [distancexy item 0 xy item 1 xy]
-    set chosen lput n chosen
-    let dx-g ifelse-value [xcor] of n > 0 [-2] [2]
-    let dy-g ifelse-value [ycor] of n > 0 [-2] [2]
-    make-gate n dx-g dy-g "Boundary access" "EW" false 1 1
-  ]
-  ; Six explicitly synthetic destination sites, not claims about real car parks.
-  foreach [[-65 -45] [-30 25] [15 -35] [35 45] [65 10] [-55 55]] [xy ->
-    let n min-one-of nodes with [node-kind = "grid"] [distancexy item 0 xy item 1 xy]
-    let p nobody
-    create-nodes 1 [
-      init-node "carpark"
-      setxy ([xcor] of n + 1.5) ([ycor] of n + 1.5)
-      set weight 1 set shape "square" set size 1.5 set color sky
-      set label "D" set label-color white set p self
-    ]
-    make-road p n "Destination access" "access" "access" false 1 true 0
-    make-road n p "Destination access" "access" "access" false 1 true 0
-  ]
+  ; Each DTP signal site controls one or more junctions.
+  (foreach signal-sites range length signal-sites [[junctions id] ->
+    foreach junctions [i -> ask node i [set signalised? true set site-id id]]
+  ])
+  ask roads [set within-site? [site-id] of end1 >= 0 and [site-id] of end1 = [site-id] of end2]
+  foreach entry-data [crossing -> make-entry crossing]
+  foreach car-park-data [car-park -> make-car-park car-park]
   set gates nodes with [node-kind = "gate"]
   set carparks nodes with [node-kind = "carpark"]
-  set gate-weight-sum sum [weight] of gates
-  set dests sort (turtle-set gates carparks)
-  foreach range length dests [k -> ask item k dests [set dest-id k]]
-  ask roads [set partner road [who] of end2 [who] of end1 hide-link]
-  foreach ["Flinders St" "Collins St" "Bourke St" "Lonsdale St" "La Trobe St" "Spencer St" "William St" "Queen St" "Elizabeth St" "Russell St" "Exhibition St" "Spring St"] [nm ->
+  ; Places where trips start, in the order the trip data lists them.
+  set zone-points sort (turtle-set gates carparks)
+  set zone-set turtle-set zone-points
+  (foreach zone-points zone-groups [[z g] ->
+    ask z [
+      set zone-group g
+      if g >= 0 and any? my-in-roads [set dest-id g]
+    ]
+  ])
+  set dests range (1 + max zone-groups)
+  ask roads [
+    set partner road [who] of end2 [who] of end1
+    set seg-ends cumulative-lengths geometry
+    hide-link
+  ]
+  foreach ["Flinders St" "Collins St" "Bourke St" "Lonsdale St" "La Trobe St" "King St" "Spencer St" "William St" "Queen St" "Elizabeth St" "Russell St" "Exhibition St" "Spring St"] [nm ->
     let L max-one-of roads with [street = nm] [len]
     if L != nobody [
       let pt point-along [geometry] of L ([len] of L / 2)
       create-map-labels 1 [setxy item 0 pt item 1 pt set size 0 set label nm set label-color white]
     ]
   ]
-  create-map-labels 1 [setxy 116 -98 set size 0 set label "© OpenStreetMap contributors | D = synthetic destination | N ↑" set label-color gray]
+  create-map-labels 1 [setxy 116 -98 set size 0 set label "© OpenStreetMap contributors | P = car park | N ↑" set label-color gray]
+end
+
+; A road crossing the map's edge: [junction x y street speed lanes-in lanes-out type].
+; Traffic enters on the lanes coming in and leaves on the lanes going out.
+to make-entry [details]
+  let n node item 0 details
+  let g nobody
+  create-nodes 1 [
+    init-node "gate"
+    setxy item 1 details item 2 details
+    set shape "square" set size 2 set color 3
+    set g self
+  ]
+  let ax ifelse-value abs ([xcor] of n - [xcor] of g) > abs ([ycor] of n - [ycor] of g) ["EW"] ["NS"]
+  if item 5 details > 0 [
+    make-road g n (item 3 details) ax "gate" false (item 5 details) true 0
+    ask road [who] of g [who] of n [set posted-speed item 4 details]
+  ]
+  if item 6 details > 0 [
+    make-road n g (item 3 details) ax "gate" false (item 6 details) true 0
+    ask road [who] of n [who] of g [set posted-speed item 4 details]
+  ]
+end
+
+; Public car parks from OpenStreetMap that share a junction: [junction x y name count].
+; Each car park has its own driveway, so the group gets one lane per car park, up to three.
+to make-car-park [details]
+  let n node item 0 details
+  let p nobody
+  create-nodes 1 [
+    init-node "carpark"
+    setxy item 1 details item 2 details
+    set shape "square" set size 1.5 set color sky
+    set label "P" set label-color white
+    set p self
+  ]
+  let driveways min list 3 item 4 details
+  make-road p n "Car park access" "access" "access" false driveways true 0
+  make-road n p "Car park access" "access" "access" false driveways true 0
 end
 
 to draw-osm-roads

@@ -21,10 +21,13 @@ breed [ painters painter ]
 directed-link-breed [ roads road ]   ;; one directed link = one direction of one block
 
 globals [
-  observed-weekday observed-weekend observed-signal-points observed-data-version
-  active-demand-profile active-profile-start-hour observed-signal-count
   selected-street selected-block baseline-signature baseline-summary
-  generated-total completed-total run-finished? active-network demand-seed
+  generated-total completed-total run-finished? demand-seed
+  ;; ---- real traffic (see real_traffic.nls) ----
+  data-version signal-sites count-sites weekday-counts weekend-counts zone-groups
+  weekday-trips weekend-trips weekday-scales weekend-scales
+  active-day-type run-start-s trips-hour hour-trips hour-totals
+  zone-points zone-set site-roads site-offsets site-shares site-approaches
   ;; ---- physical constants ----
   M-PER-PATCH        ;; metres per patch
   BLOCK-W            ;; centre-line distance between north-south streets (m)
@@ -38,11 +41,8 @@ globals [
   vmax               ;; speed limit (m/s)
 
   ;; ---- network configuration ----
-  ew-config ns-config carpark-config no-car-segments
-  node-grid          ;; node-grid: item col -&gt; item row -&gt; node
-  dests              ;; list of destination nodes; index = dest-id
+  dests              ;; destination groups; a node's dest-id is its group, -1 if none
   gates carparks signals
-  gate-weight-sum
 
   ;; ---- scenario state ----
   closure-applied? closure-desc
@@ -55,7 +55,7 @@ globals [
 ]
 
 nodes-own [
-  map-id
+  map-id zone-group site-id
   node-kind          ;; "grid" "gate" "carpark"
   col row            ;; grid indices, -1 for non-grid nodes
   signalised?
@@ -71,7 +71,7 @@ nodes-own [
 ]
 
 roads-own [
-  geometry posted-speed
+  geometry seg-ends posted-speed within-site?
   street axis        ;; street name, "EW" / "NS" / "access"
   road-kind          ;; "main" "little" "gate" "access"
   rank               ;; priority at unsignalised junctions (higher = priority)
@@ -106,13 +106,12 @@ to setup
   ;; not CLEAR-ALL: the baseline table must survive between runs
   clear-ticks clear-turtles clear-patches clear-drawing clear-all-plots clear-output
   if fixed-seed? [ random-seed seed ]
-  set active-network network-source
   set run-finished? false
   set generated-total 0 set completed-total 0
   set demand-seed ifelse-value fixed-seed? [seed] [random 1000000]
   if not is-string? selected-street [set selected-street "Collins St"]
   setup-constants
-  load-observed-data
+  load-real-traffic
   set gates no-turtles
   set carparks no-turtles
   set signals no-turtles
@@ -123,16 +122,10 @@ to setup
   set mouse-was-down? false
   set closure-applied? false
   set closure-desc "none"
-  setup-config
-  ifelse active-network = "Real OSM map" [
-    resize-world -120 120 -102 102
-    ask patches [set pcolor [22 29 39]]
-    build-osm-network
-  ] [
-    resize-world -30 172 -14 94
-    draw-background
-    build-network
-  ]
+  resize-world -120 120 -102 102
+  ask patches [set pcolor [22 29 39]]
+  build-osm-network
+  setup-count-sites
   if baseline-signature != scenario-signature [
     set baseline table:make
     set baseline-signature ""
@@ -144,7 +137,7 @@ to setup
   ask roads [ set base-count ifelse-value table:has-key? baseline link-key [ table:get baseline link-key ] [ 0 ] ]
   if scheduled-closure? and closure-start-min = 0 [ apply-scenario-closure ]
   update-link-colors
-  output-print "Combined Melbourne traffic simulator ready. Synthetic demand and signals."
+  output-print (word "Melbourne CBD traffic ready: " day-type " from " start-time ", shaped by SCATS counts.")
   output-print (word "Closure: " closure-desc)
 end
 
@@ -162,169 +155,14 @@ to setup-constants
   set vmax speed-limit-kmh / 3.6
 end
 
-to setup-config
-  ;; East-west streets, south (row 0) to north (row 8).
-  ;; [ name  main?  direction  trams?  lanes-per-direction  entry-weight ]
-  ;; [VERIFY] little-street directions, lane counts and entry weights.
-  set ew-config [
-    [ "Flinders St"        true  "two-way" true  2 3   ]
-    [ "Flinders Ln"        false "east"    false 1 0   ]
-    [ "Collins St"         true  "two-way" true  1 1.5 ]
-    [ "Little Collins St"  false "west"    false 1 0   ]
-    [ "Bourke St"          true  "two-way" true  1 1   ]
-    [ "Little Bourke St"   false "east"    false 1 0   ]
-    [ "Lonsdale St"        true  "two-way" false 2 2   ]
-    [ "Little Lonsdale St" false "west"    false 1 0   ]
-    [ "La Trobe St"        true  "two-way" true  2 3   ]
-  ]
-  ;; North-south streets, west (col 0) to east (col 8).
-  ;; [ name  direction  trams?  lanes-per-direction  entry-weight ]
-  ;; Swanston St is modelled as closed to general traffic (trams, bikes, pedestrians).
-  set ns-config [
-    [ "Spencer St"    "two-way" true  2 3   ]
-    [ "King St"       "two-way" false 2 3   ]
-    [ "William St"    "two-way" true  2 2.5 ]
-    [ "Queen St"      "two-way" false 1 1   ]
-    [ "Elizabeth St"  "two-way" true  1 2   ]
-    [ "Swanston St"   "no-cars" true  1 0   ]
-    [ "Russell St"    "two-way" false 2 1.5 ]
-    [ "Exhibition St" "two-way" false 2 2.5 ]
-    [ "Spring St"     "two-way" true  2 2   ]
-  ]
-  ;; Blocks with no general traffic: Bourke St Mall (Elizabeth - Swanston).
-  set no-car-segments [ [ "Bourke St" 5 ] ]
-  ;; Car parks: [ col row weight ]; attached to little-street intersections.
-  ;; [VERIFY] illustrative locations - replace with real car parks and capacities.
-  set carpark-config [
-    [ 1 1 2 ] [ 2 3 1.5 ] [ 2 5 2 ] [ 3 3 1.5 ] [ 3 7 2 ]
-    [ 4 5 1 ] [ 6 3 3 ] [ 6 7 2 ] [ 7 1 2 ] [ 7 5 2.5 ]
-  ]
-end
-
-to draw-background
-  ask patches [ set pcolor 9.4 ]
-  ask patches with [ pxcor &gt;= -1 and pxcor &lt;= 162 and pycor &gt;= -1 and pycor &lt;= 81 ] [ set pcolor 8.4 ]
-  ask patches with [ pycor &lt;= -12 ] [ set pcolor 97 ]
-  ask patch 40 -13 [ set plabel "Yarra River" set plabel-color 94 ]
-  foreach range 9 [ r -&gt;
-    ask patch -10 round (r * ROW-H / M-PER-PATCH) [
-      set plabel short-name item 0 item r ew-config
-      set plabel-color 2
-    ]
-  ]
-  foreach range 9 [ c -&gt;
-    ask patch (round (c * BLOCK-W / M-PER-PATCH) + 5) 91 [
-      set plabel item 0 item c ns-config
-      set plabel-color 2
-    ]
-  ]
-end
-
-to-report short-name [nm]
-  if nm = "Little Collins St" [ report "Lt Collins" ]
-  if nm = "Little Bourke St" [ report "Lt Bourke" ]
-  if nm = "Little Lonsdale St" [ report "Lt Lonsdale" ]
-  report nm
-end
-
 ;; ---------------------------------------------------------------------
 ;;  network construction
 ;; ---------------------------------------------------------------------
 
-to build-network
-  set node-grid []
-  foreach range 9 [ c -&gt;
-    let column []
-    foreach range 9 [ r -&gt;
-      create-nodes 1 [
-        init-node "grid"
-        setxy (c * BLOCK-W / M-PER-PATCH) (r * ROW-H / M-PER-PATCH)
-        set col c
-        set row r
-        set signalised? (r mod 2 = 0)   ;; main street x main street
-        hide-turtle
-        set column lput self column
-      ]
-    ]
-    set node-grid lput column node-grid
-  ]
-
-  ;; east-west blocks
-  foreach range 9 [ r -&gt;
-    let cfg item r ew-config
-    let nm item 0 cfg
-    let kind ifelse-value item 1 cfg [ "main" ] [ "little" ]
-    let dir item 2 cfg
-    foreach range 8 [ c -&gt;
-      let a node-at c r
-      let b node-at (c + 1) r
-      let ok? not member? (list nm (c + 1)) no-car-segments
-      if dir = "two-way" or dir = "east" [ make-road a b nm "EW" kind (item 3 cfg) (item 4 cfg) ok? (c + 1) ]
-      if dir = "two-way" or dir = "west" [ make-road b a nm "EW" kind (item 3 cfg) (item 4 cfg) ok? (c + 1) ]
-    ]
-  ]
-
-  ;; north-south blocks
-  foreach range 9 [ c -&gt;
-    let cfg item c ns-config
-    let nm item 0 cfg
-    let dir item 1 cfg
-    foreach range 8 [ r -&gt;
-      let a node-at c r
-      let b node-at c (r + 1)
-      let ok? (dir != "no-cars") and not member? (list nm (r + 1)) no-car-segments
-      if dir = "two-way" or dir = "north" or dir = "no-cars" [ make-road a b nm "NS" "main" (item 2 cfg) (item 3 cfg) ok? (r + 1) ]
-      if dir = "two-way" or dir = "south" or dir = "no-cars" [ make-road b a nm "NS" "main" (item 2 cfg) (item 3 cfg) ok? (r + 1) ]
-    ]
-  ]
-
-  ;; entry / exit gates at the edge of the grid
-  foreach range 9 [ r -&gt;
-    let cfg item r ew-config
-    if item 1 cfg and item 5 cfg &gt; 0 [
-      make-gate (node-at 0 r) -8 0 (item 0 cfg) "EW" (item 3 cfg) (item 4 cfg) (item 5 cfg)
-      make-gate (node-at 8 r) 8 0 (item 0 cfg) "EW" (item 3 cfg) (item 4 cfg) (item 5 cfg)
-    ]
-  ]
-  foreach range 9 [ c -&gt;
-    let cfg item c ns-config
-    if item 1 cfg != "no-cars" and item 4 cfg &gt; 0 [
-      make-gate (node-at c 0) 0 -8 (item 0 cfg) "NS" (item 2 cfg) (item 3 cfg) (item 4 cfg)
-      make-gate (node-at c 8) 0 8 (item 0 cfg) "NS" (item 2 cfg) (item 3 cfg) (item 4 cfg)
-    ]
-  ]
-
-  ;; car parks
-  foreach carpark-config [ cpk -&gt;
-    let n node-at (item 0 cpk) (item 1 cpk)
-    let p nobody
-    create-nodes 1 [
-      init-node "carpark"
-      setxy ([xcor] of n + 4) ([ycor] of n + 3.5)
-      set weight item 2 cpk
-      set shape "square" set size 2.4 set color 104
-      set label "P" set label-color white
-      set p self
-    ]
-    make-road p n "car park access" "access" "access" false 1 true 0
-    make-road n p "car park access" "access" "access" false 1 true 0
-  ]
-
-  set gates nodes with [ node-kind = "gate" ]
-  set carparks nodes with [ node-kind = "carpark" ]
-  set gate-weight-sum sum [ weight ] of gates
-  set dests sort (turtle-set gates carparks)
-  foreach range length dests [ k -&gt; ask item k dests [ set dest-id k ] ]
-
-  ask roads [
-    set partner road [who] of end2 [who] of end1
-    ;; draw two-way streets once: hide the westbound / southbound twin
-    if partner != nobody and link-heading &gt; 135 and link-heading &lt; 315 [ hide-link ]
-  ]
-end
-
 to init-node [kind]
   set map-id who
+  set zone-group -1
+  set site-id -1
   set node-kind kind
   set col -1 set row -1
   set signalised? false
@@ -336,15 +174,12 @@ to init-node [kind]
   set label ""
 end
 
-to-report node-at [c r]
-  report item r (item c node-grid)
-end
-
 to make-road [a b nm ax kind tr? nl ok? sg]
   ask a [
     create-road-to b [
       set geometry (list (list [xcor] of a [ycor] of a) (list [xcor] of b [ycor] of b))
       set posted-speed speed-limit-kmh
+      set within-site? false
       set street nm
       set axis ax
       set road-kind kind
@@ -366,19 +201,6 @@ to make-road [a b nm ax kind tr? nl ok? sg]
   ]
 end
 
-to make-gate [n ddx ddy nm ax tr? nl w]
-  let g nobody
-  create-nodes 1 [
-    init-node "gate"
-    setxy ([xcor] of n + ddx) ([ycor] of n + ddy)
-    set weight w
-    set shape "square" set size 2 set color 3
-    set g self
-  ]
-  make-road g n nm ax "gate" tr? nl true 0
-  make-road n g nm ax "gate" tr? nl true 0
-end
-
 to-report base-thickness  ;; link reporter
   report (ifelse-value road-kind = "main" or road-kind = "gate" [ 0.7 ] road-kind = "little" [ 0.35 ] [ 0.2 ])
 end
@@ -389,10 +211,17 @@ end
 
 to setup-signals
   set signals nodes with [ signalised? ]
-  ask signals [
-    set cycle-offset ifelse-value signal-coordination = "green wave (east-west)"
-      [ (cycle-length * 100 - round (col * BLOCK-W / vmax)) mod cycle-length ]
+  set site-offsets n-values length signal-sites [ 0 ]
+  set site-shares n-values length signal-sites [ ew-green-share / 100 ]
+  set site-approaches n-values length signal-sites [ no-links ]
+  foreach sort remove-duplicates [ site-id ] of signals [ id -&gt;
+    let members signals with [ site-id = id ]
+    let offset ifelse-value signal-coordination = "green wave (east-west)"
+      [ (cycle-length * 100 - round (mean [col] of members * BLOCK-W / vmax)) mod cycle-length ]
       [ random cycle-length ]
+    ask members [ set cycle-offset offset ]
+    set site-offsets replace-item id site-offsets offset
+    set site-approaches replace-item id site-approaches approaches-to members
   ]
   update-signals
   ask roads [
@@ -401,7 +230,6 @@ to setup-signals
     set cost-live free-tt
   ]
 end
-
 to-report green-time-for [ax]
   let g-ew (cycle-length - 2 * INTERGREEN) * ew-green-share / 100
   report ifelse-value ax = "EW" [ g-ew ] [ cycle-length - 2 * INTERGREEN - g-ew ]
@@ -409,7 +237,7 @@ end
 
 to-report compute-free-tt  ;; link reporter
   let t len / link-vmax
-  if [signalised?] of end2 and axis != "access" [
+  if [signalised?] of end2 and axis != "access" and not within-site? [
     let red-frac 1 - green-time-for axis / cycle-length
     set t t + red-frac * red-frac * cycle-length / 2   ;; uniform-arrival delay (Webster, 1st term)
   ]
@@ -428,19 +256,25 @@ to-report link-vmax  ;; link reporter
 end
 
 to update-signals
-  let g-ew green-time-for "EW"
-  let g-ns green-time-for "NS"
+  if adaptive-signals? [
+    (foreach range length site-offsets site-offsets [ [id offset] -&gt;
+      if (ticks + offset) mod cycle-length = 0 [
+        set site-shares replace-item id site-shares demand-share item id site-approaches
+      ]
+    ])
+  ]
+  let usable cycle-length - 2 * INTERGREEN
   ask signals [
+    let g-ew usable * ifelse-value adaptive-signals? [ item site-id site-shares ] [ ew-green-share / 100 ]
     let t (ticks + cycle-offset) mod cycle-length
     set green-axis (ifelse-value
       t &lt; g-ew [ "EW" ]
       t &lt; g-ew + INTERGREEN [ "none" ]
-      t &lt; g-ew + INTERGREEN + g-ns [ "NS" ]
+      t &lt; usable + INTERGREEN [ "NS" ]
       [ "none" ])
     if green-axis != "none" [ set last-green green-axis ]
   ]
 end
-
 ;; ---------------------------------------------------------------------
 ;;  routing: shortest travel time from every node to every destination
 ;; ---------------------------------------------------------------------
@@ -453,23 +287,23 @@ to setup-routing
     set dist-base n-values D [ BIG ]
   ]
   compute-distances "base"   ;; network as built, no closures: reference for delay
-  compute-distances "free"
-  compute-distances "live"
+  ask nodes [
+    set dist-free dist-base
+    set dist-live dist-base
+  ]
 end
-
 ;; mode: "base" ignores closures, "free" uses free-flow times, "live" uses current travel times
 to compute-distances [mode]
   foreach range length dests [ k -&gt;
-    let target item k dests
     ask nodes [ set tmp-dist BIG set tmp-done? false ]
-    ask target [ set tmp-dist 0 ]
-    let open-set (turtle-set target)
+    ask nodes with [ dest-id = k ] [ set tmp-dist 0 ]
+    let open-set nodes with [ dest-id = k ]
     while [ any? open-set ] [
       let u min-one-of open-set [ tmp-dist ]
       set open-set open-set with [ self != u ]
       ask u [ set tmp-done? true ]
       ;; never route THROUGH a gate or a car park
-      if u = target or [node-kind] of u = "grid" [
+      if [dest-id] of u = k or [node-kind] of u = "grid" [
         let du [tmp-dist] of u
         ask [my-in-roads] of u [
           if mode-usable? mode [
@@ -511,11 +345,11 @@ end
 ;; car reporter: best link to take at the downstream end of IN-L (nobody if IN-L ends at my destination)
 to-report choose-from [in-l]
   let n [end2] of in-l
-  if n = dest [ report nobody ]
+  if [dest-id] of n = dest [ report nobody ]
   let d dest
-  let k [dest-id] of dest
+  let k dest
   let back-node [end1] of in-l
-  let cands ([my-out-roads] of n) with [ usable? and ([node-kind] of end2 = "grid" or end2 = d) ]
+  let cands ([my-out-roads] of n) with [ usable? and ([node-kind] of end2 = "grid" or [dest-id] of end2 = d) ]
   let live? informed?
   set cands cands with [ifelse-value live? [item k [dist-live] of end2 &lt; BIG] [item k [dist-free] of end2 &lt; BIG]]
   if any? cands with [ end2 != back-node ] [ set cands cands with [ end2 != back-node ] ]   ;; no U-turns unless forced
@@ -540,11 +374,9 @@ to-report turn-type [in-l out-l]
   report ifelse-value a &gt; 0 [ "right" ] [ "left" ]
 end
 
-to-report is-hook? [in-l out-l]
-  if not hook-turns? or out-l = nobody [ report false ]
-  report [trams?] of in-l and [signalised?] of [end2] of in-l and turn-type in-l out-l = "right"
+to-report is-hook? [in-l out-l]  ;; the real map has no hook-turn locations
+  report false
 end
-
 to-report turn-penalty [in-l out-l]
   let tt turn-type in-l out-l
   if tt = "straight" [ report 0 ]
@@ -588,48 +420,28 @@ end
 ;; ---------------------------------------------------------------------
 
 to generate-demand
+  refresh-trips
+  let per-second slot-scale / 3600
   with-local-randomness [
     random-seed (demand-seed + ticks * 104729)
-    let rate effective-arrivals-per-hour / 3600
-    foreach sort gates [g -&gt; ask g [
-      repeat random-poisson (rate * weight / gate-weight-sum) [
-        set generated-total generated-total + 1
-        let d pick-dest self
-        ifelse d = nobody [set stranded-count stranded-count + 1]
-          [set gate-queue lput (list ticks d) gate-queue]
+    (foreach zone-points hour-trips hour-totals [[z trips total] -&gt;
+      if total &gt; 0 [
+        repeat random-poisson (total * per-second) [
+          set generated-total generated-total + 1
+          let d pick-group trips total
+          ifelse item d [dist-base] of z &gt;= BIG [set stranded-count stranded-count + 1]
+            [ask z [set gate-queue lput (list ticks d) gate-queue]]
+        ]
       ]
-    ]]
+    ])
   ]
-  ask gates with [not empty? gate-queue] [try-release]
+  ask zone-set with [not empty? gate-queue] [try-release]
 end
-to-report pick-dest [g]
-  repeat 5 [
-    let d ifelse-value random-float 100 &lt; through-traffic-%
-      [ weighted-pick gates with [ self != g ] ]
-      [ weighted-pick carparks ]
-    if d != nobody and item ([dest-id] of d) ([dist-base] of g) &lt; BIG [ report d ]
-  ]
-  report nobody
-end
-
-to-report weighted-pick [agset]
-  let r random-float sum [ weight ] of agset
-  let chosen nobody
-  foreach sort agset [ a -&gt;
-    if chosen = nobody [
-      set r r - [weight] of a
-      if r &lt; 0 [ set chosen a ]
-    ]
-  ]
-  if chosen = nobody [ set chosen one-of agset ]
-  report chosen
-end
-
 to try-release  ;; gate procedure
   let out one-of my-out-roads
   if out = nobody [stop]
   let waiting-dest item 1 first gate-queue
-  if item [dest-id] of waiting-dest dist-free &gt;= BIG [
+  if item waiting-dest dist-free &gt;= BIG [
     set gate-queue but-first gate-queue
     set stranded-count stranded-count + 1
     stop
@@ -655,8 +467,8 @@ to init-car [g d t0]
   set dest d
   set informed? random-float 100 &lt; informed-drivers-%
   set t-start t0
-  set ff-time item ([dest-id] of d) ([dist-base] of g)
-  if ff-time &gt;= BIG [ set ff-time item ([dest-id] of d) ([dist-free] of g) ]
+  set ff-time item d ([dist-base] of g)
+  if ff-time &gt;= BIG [ set ff-time item d ([dist-free] of g) ]
   set moved-at ticks
   set hooking nobody
   set plan-for nobody
@@ -716,7 +528,7 @@ to step-car [leader]  ;; car procedure
   ifelse pos &gt;= Llen [
     ifelse can-go? [ do-transfer (pos - Llen) ] [ hold-at-line ]
   ] [
-    place-car
+    if speed &gt; 0 or color != 15 [ place-car ]
   ]
 end
 
@@ -735,7 +547,7 @@ to-report may-pass?
   let d-end [len] of L - pos
 
   ;; traffic signals
-  if [signalised?] of n [
+  if [signalised?] of n and not [within-site?] of L and [axis] of L != "access" [
     let g [green-axis] of n
     let my-axis [axis] of L
     if g != my-axis [
@@ -745,7 +557,7 @@ to-report may-pass?
     ]
   ]
   ;; give way at unsignalised junctions
-  if not [signalised?] of n [
+  if not [signalised?] of n or [axis] of L = "access" [
     let r [rank] of L
     if any? ([my-in-roads] of n) with [ rank &gt; r and self != L and approaching-within 30 ] [ report false ]
   ]
@@ -781,7 +593,7 @@ end
 to do-transfer [ov]  ;; car procedure
   let L cur-link
   if next-link = nobody [
-    let arrived? [end2] of L = dest
+    let arrived? [dest-id] of [end2] of L = dest
     leave-current
     finish-trip arrived?
     stop
@@ -929,16 +741,32 @@ to process-hook-boxes
 end
 
 to place-car
-  let point point-along geometry-of-car pos
-  let h item 2 point
-  let off 0.35 + ([lanes] of cur-link - 1 - lane) * 0.35
-  setxy (item 0 point + off * sin (h - 90)) (item 1 point + off * cos (h - 90))
+  let L cur-link
+  let points [geometry] of L
+  let ends [seg-ends] of L
+  let d max list 0 pos
+  let index 1
+  let last-index length ends - 1
+  while [index &lt; last-index and d &gt; item index ends] [set index index + 1]
+  let a item (index - 1) points let b item index points
+  let start item (index - 1) ends
+  let f min list 1 ((d - start) / max list 0.001 (item index ends - start))
+  let ddx item 0 b - item 0 a let ddy item 1 b - item 1 a
+  let h atan ddx ddy
+  let off 0.35 + ([lanes] of L - 1 - lane) * 0.35
+  setxy (item 0 a + f * ddx + off * sin (h - 90)) (item 1 a + f * ddy + off * cos (h - 90))
   set heading h
   set color (ifelse-value speed &lt; 0.5 [15] speed &lt; vmax * 0.5 [25] [103])
 end
 
-to-report geometry-of-car
-  report [geometry] of cur-link
+to-report cumulative-lengths [points]  ;; metres from the start of a shape to each of its points
+  let total 0
+  let result [0]
+  (foreach but-last points but-first points [[a b] -&gt;
+    set total total + point-distance a b
+    set result lput total result
+  ])
+  report result
 end
 
 to-report point-along [points distance-m]
@@ -1065,7 +893,7 @@ to-report seg-distance [px py]
 end
 
 to-report scenario-signature
-  report (list observed-data-version demand-profile profile-start-hour use-observed-signals? active-network demand-veh-per-hour through-traffic-% informed-drivers-% speed-limit-kmh cycle-length ew-green-share signal-coordination hook-turns? fixed-seed? seed route-noise reroute-interval warm-up-s measure-s)
+  report (list data-version day-type start-time informed-drivers-% speed-limit-kmh cycle-length ew-green-share adaptive-signals? signal-coordination fixed-seed? seed route-noise reroute-interval warm-up-s measure-s)
 end
 
 ;; =====================================================================
@@ -1094,7 +922,7 @@ to save-baseline
 end
 
 to-report link-key  ;; link reporter
-  report (word active-network ":" [map-id] of end1 "-" [map-id] of end2)
+  report (word [map-id] of end1 "-" [map-id] of end2)
 end
 
 to update-link-colors
@@ -1127,7 +955,7 @@ to update-link-colors
         set thickness base-thickness + min list 2 (abs diff / 250)
       ])
   ]
-  if active-network = "Real OSM map" [draw-osm-roads]
+  draw-osm-roads
 end
 
 to-report link-occupancy  ;; link reporter: share of storage space in use
@@ -1170,13 +998,8 @@ to-report direction-name  ;; link reporter
 end
 
 to-report node-name [n]
-  if active-network = "Real OSM map" [report (word [node-kind] of n " " [map-id] of n)]
-  if [node-kind] of n = "grid" [
-    report (word (item 0 (item [col] of n ns-config)) " / " (item 0 (item [row] of n ew-config)))
-  ]
-  report [node-kind] of n
+  report (word [node-kind] of n " " [map-id] of n)
 end
-
 ;; ---- reporters for monitors and BehaviorSpace ----
 
 to-report mean-trip-time-min
@@ -1192,7 +1015,7 @@ to-report vehicle-hours
 end
 
 to-report queued-at-gates
-  report sum [ length gate-queue ] of gates
+  report sum [ length gate-queue ] of zone-set
 end
 
 to-report sim-clock
@@ -1209,11 +1032,14 @@ to-report street-flow [nm]
 end
 
 ; Real road geometry, directed topology and available OSM lane/speed tags.
-; Signal locations, gate demand and destination sites remain illustrative.
+; Traffic enters and leaves where real roads cross the map's edge and parks in
+; real public car parks. Traffic lights stand at the DTP signal sites.
 to build-osm-network
   file-open "data/map.txt"
   let node-data file-read
   let edge-data file-read
+  let entry-data file-read
+  let car-park-data file-read
   file-close
   foreach node-data [row-data -&gt;
     create-nodes 1 [
@@ -1247,48 +1073,77 @@ to build-osm-network
       ask L [set seg 1 + position pair keys]
     ]
   ]
-  ask nodes [
-    let names remove-duplicates [street] of my-links
-    set signalised? count link-neighbors &gt;= 3 and length names &gt;= 2 and any? my-links with [road-kind = "main"]
-  ]
-  apply-observed-signals
-  ; Twelve synthetic boundary entry/exit gates, attached to the nearest road node.
-  let chosen []
-  foreach [[-108 -65] [-108 0] [-108 65] [108 -65] [108 0] [108 65] [-70 -90] [0 -90] [70 -90] [-70 90] [0 90] [70 90]] [xy -&gt;
-    let used chosen
-    let n min-one-of nodes with [node-kind = "grid" and not member? self used] [distancexy item 0 xy item 1 xy]
-    set chosen lput n chosen
-    let dx-g ifelse-value [xcor] of n &gt; 0 [-2] [2]
-    let dy-g ifelse-value [ycor] of n &gt; 0 [-2] [2]
-    make-gate n dx-g dy-g "Boundary access" "EW" false 1 1
-  ]
-  ; Six explicitly synthetic destination sites, not claims about real car parks.
-  foreach [[-65 -45] [-30 25] [15 -35] [35 45] [65 10] [-55 55]] [xy -&gt;
-    let n min-one-of nodes with [node-kind = "grid"] [distancexy item 0 xy item 1 xy]
-    let p nobody
-    create-nodes 1 [
-      init-node "carpark"
-      setxy ([xcor] of n + 1.5) ([ycor] of n + 1.5)
-      set weight 1 set shape "square" set size 1.5 set color sky
-      set label "D" set label-color white set p self
-    ]
-    make-road p n "Destination access" "access" "access" false 1 true 0
-    make-road n p "Destination access" "access" "access" false 1 true 0
-  ]
+  ; Each DTP signal site controls one or more junctions.
+  (foreach signal-sites range length signal-sites [[junctions id] -&gt;
+    foreach junctions [i -&gt; ask node i [set signalised? true set site-id id]]
+  ])
+  ask roads [set within-site? [site-id] of end1 &gt;= 0 and [site-id] of end1 = [site-id] of end2]
+  foreach entry-data [crossing -&gt; make-entry crossing]
+  foreach car-park-data [car-park -&gt; make-car-park car-park]
   set gates nodes with [node-kind = "gate"]
   set carparks nodes with [node-kind = "carpark"]
-  set gate-weight-sum sum [weight] of gates
-  set dests sort (turtle-set gates carparks)
-  foreach range length dests [k -&gt; ask item k dests [set dest-id k]]
-  ask roads [set partner road [who] of end2 [who] of end1 hide-link]
-  foreach ["Flinders St" "Collins St" "Bourke St" "Lonsdale St" "La Trobe St" "Spencer St" "William St" "Queen St" "Elizabeth St" "Russell St" "Exhibition St" "Spring St"] [nm -&gt;
+  ; Places where trips start, in the order the trip data lists them.
+  set zone-points sort (turtle-set gates carparks)
+  set zone-set turtle-set zone-points
+  (foreach zone-points zone-groups [[z g] -&gt;
+    ask z [
+      set zone-group g
+      if g &gt;= 0 and any? my-in-roads [set dest-id g]
+    ]
+  ])
+  set dests range (1 + max zone-groups)
+  ask roads [
+    set partner road [who] of end2 [who] of end1
+    set seg-ends cumulative-lengths geometry
+    hide-link
+  ]
+  foreach ["Flinders St" "Collins St" "Bourke St" "Lonsdale St" "La Trobe St" "King St" "Spencer St" "William St" "Queen St" "Elizabeth St" "Russell St" "Exhibition St" "Spring St"] [nm -&gt;
     let L max-one-of roads with [street = nm] [len]
     if L != nobody [
       let pt point-along [geometry] of L ([len] of L / 2)
       create-map-labels 1 [setxy item 0 pt item 1 pt set size 0 set label nm set label-color white]
     ]
   ]
-  create-map-labels 1 [setxy 116 -98 set size 0 set label "© OpenStreetMap contributors | D = synthetic destination | N ↑" set label-color gray]
+  create-map-labels 1 [setxy 116 -98 set size 0 set label "© OpenStreetMap contributors | P = car park | N ↑" set label-color gray]
+end
+
+; A road crossing the map's edge: [junction x y street speed lanes-in lanes-out type].
+; Traffic enters on the lanes coming in and leaves on the lanes going out.
+to make-entry [details]
+  let n node item 0 details
+  let g nobody
+  create-nodes 1 [
+    init-node "gate"
+    setxy item 1 details item 2 details
+    set shape "square" set size 2 set color 3
+    set g self
+  ]
+  let ax ifelse-value abs ([xcor] of n - [xcor] of g) &gt; abs ([ycor] of n - [ycor] of g) ["EW"] ["NS"]
+  if item 5 details &gt; 0 [
+    make-road g n (item 3 details) ax "gate" false (item 5 details) true 0
+    ask road [who] of g [who] of n [set posted-speed item 4 details]
+  ]
+  if item 6 details &gt; 0 [
+    make-road n g (item 3 details) ax "gate" false (item 6 details) true 0
+    ask road [who] of n [who] of g [set posted-speed item 4 details]
+  ]
+end
+
+; Public car parks from OpenStreetMap that share a junction: [junction x y name count].
+; Each car park has its own driveway, so the group gets one lane per car park, up to three.
+to make-car-park [details]
+  let n node item 0 details
+  let p nobody
+  create-nodes 1 [
+    init-node "carpark"
+    setxy item 1 details item 2 details
+    set shape "square" set size 1.5 set color sky
+    set label "P" set label-color white
+    set p self
+  ]
+  let driveways min list 3 item 4 details
+  make-road p n "Car park access" "access" "access" false driveways true 0
+  make-road n p "Car park access" "access" "access" false driveways true 0
 end
 
 to draw-osm-roads
@@ -1307,43 +1162,159 @@ to draw-osm-roads
   ]
 end
 
-; Public DTP data supplies relative demand timing and conservative signal matches.
-; Absolute CBD entry demand, routes and signal phases remain assumptions.
-to load-observed-data
-  file-open "data/observed/profiles.txt"
-  set observed-weekday file-read
-  set observed-weekend file-read
-  set observed-signal-points file-read
-  set observed-data-version file-read
+; Real traffic from Victoria's public SCATS counts, prepared by
+; simulation/build/prepare-observed.py. Traffic lights stand at the DTP signal
+; sites. Trips start and end where real roads cross the map's edge and at
+; public car parks, as many as the counts show for the chosen day and time.
+; Traffic light timings are not in the data and remain assumed.
+
+to load-real-traffic
+  file-open "data/observed/demand.txt"
+  set data-version file-read
+  set signal-sites file-read
+  set count-sites file-read
+  set weekday-counts file-read
+  set weekend-counts file-read
+  set zone-groups file-read
+  set weekday-trips file-read
+  set weekend-trips file-read
+  set weekday-scales file-read
+  set weekend-scales file-read
   file-close
-  set active-demand-profile demand-profile
-  set active-profile-start-hour profile-start-hour
-  set observed-signal-count 0
+  set active-day-type day-type
+  ; The clock starts one warm-up before the chosen time, so counting starts at it.
+  set run-start-s (start-seconds - warm-up-s) mod 86400
+  set trips-hour -1
 end
 
-to apply-observed-signals
-  if use-observed-signals? [
-    foreach observed-signal-points [point -&gt;
-      let target min-one-of nodes [distancexy item 0 point item 1 point]
-      if target != nobody [
-        if [distancexy item 0 point item 1 point] of target &lt; 0.01 [
-          ask target [set signalised? true]
-          set observed-signal-count observed-signal-count + 1
-        ]
-      ]
-    ]
+; The chosen start time, such as "08:15", in seconds after midnight.
+to-report start-seconds
+  report 3600 * digits-at 0 + 60 * digits-at 3
+end
+
+; The two-digit number at position AT of start-time, such as 8 for "08".
+; (read-from-string needs the NetLogo compiler, which the web page does not load.)
+to-report digits-at [at]
+  report 10 * position (item at start-time) "0123456789" + position (item (at + 1) start-time) "0123456789"
+end
+
+; The model's time of day, in seconds after midnight.
+to-report clock-seconds
+  report (run-start-s + ticks) mod 86400
+end
+
+to-report clock-label
+  let minutes floor (clock-seconds / 60)
+  report (word two-digits floor (minutes / 60) ":" two-digits (minutes mod 60))
+end
+
+to-report two-digits [n]
+  report ifelse-value n &lt; 10 [word "0" n] [word "" n]
+end
+
+; When the hour changes, look up that hour's trips: for each place trips can
+; start, a list of [group trips-per-hour].
+to refresh-trips
+  let hour floor (clock-seconds / 3600)
+  if hour != trips-hour [
+    set trips-hour hour
+    set hour-trips item hour (ifelse-value active-day-type = "Weekday" [weekday-trips] [weekend-trips])
+    set hour-totals map [trips -&gt; sum map [pair -&gt; item 1 pair] trips] hour-trips
   ]
 end
 
-to-report observed-demand-factor
-  if active-demand-profile = "Flat (synthetic)" [report 1]
-  let index floor (((active-profile-start-hour * 3600 + ticks) mod 86400) / 900)
-  if active-demand-profile = "SCATS weekday" [report item index observed-weekday]
-  report item index observed-weekend
+; Within the hour, trips rise and fall with the 15-minute counts.
+to-report slot-scale
+  report item floor (clock-seconds / 900) (ifelse-value active-day-type = "Weekday" [weekday-scales] [weekend-scales])
 end
 
-to-report effective-arrivals-per-hour
-  report demand-veh-per-hour * observed-demand-factor
+; Trips per hour starting right now, across the whole map. Only reads data,
+; so watching it never changes the model.
+to-report trips-per-hour-now
+  let rows item floor (clock-seconds / 3600) (ifelse-value active-day-type = "Weekday" [weekday-trips] [weekend-trips])
+  report sum map [trips -&gt; sum map [pair -&gt; item 1 pair] trips] rows * slot-scale
+end
+
+; A destination group for one trip, chosen in proportion to the trips per hour.
+to-report pick-group [trips total]
+  let r random-float total
+  foreach trips [pair -&gt;
+    set r r - item 1 pair
+    if r &lt; 0 [report item 0 pair]
+  ]
+  report item 0 last trips
+end
+
+; The roads entering each counted site, from junctions outside the site.
+to setup-count-sites
+  set site-roads map [site -&gt; roads-into item 2 site] count-sites
+end
+
+to-report roads-into [junctions]
+  let members turtle-set map [i -&gt; node i] junctions
+  report (link-set [my-in-roads] of members) with [not member? end1 members]
+end
+
+; Vehicles per hour entering each counted site while counting.
+to-report site-volumes
+  let hrs measured-seconds / 3600
+  if hrs &lt;= 0 [report map [rs -&gt; 0] site-roads]
+  report map [rs -&gt; sum [win-count] of rs / hrs] site-roads
+end
+
+; The SCATS counts for the same stretch of the day as the counting, in
+; vehicles per hour: each 15 minutes weighted by how much of it was counted.
+to-report counted-volumes
+  let table ifelse-value active-day-type = "Weekday" [weekday-counts] [weekend-counts]
+  let start run-start-s + warm-up-s
+  let finish start + measured-seconds
+  if finish &lt;= start [report item (floor (start / 900) mod 96) table]
+  let totals map [v -&gt; 0] item 0 table
+  let t start
+  while [t &lt; finish] [
+    let part (min list ((floor (t / 900) + 1) * 900) finish) - t
+    let slot-counts item (floor (t / 900) mod 96) table
+    set totals (map [[a b] -&gt; a + b * part] totals slot-counts)
+    set t t + part
+  ]
+  report map [a -&gt; a / (finish - start)] totals
+end
+
+; The GEH statistic traffic engineers use to compare hourly flows: under 5 is
+; a good match.
+to-report geh [modelled counted]
+  if modelled + counted = 0 [report 0]
+  report sqrt (2 * (modelled - counted) ^ 2 / (modelled + counted))
+end
+
+; How the model compares with SCATS so far: sites compared, sites within
+; GEH 5, and total vehicles per hour entering them in the model and counted.
+to-report scats-comparison
+  let modelled site-volumes
+  let counted counted-volumes
+  let within length filter [g -&gt; g &lt; 5] (map [[m c] -&gt; geh m c] modelled counted)
+  report (list length modelled within sum modelled sum counted)
+end
+
+; The same comparison as a percentage, for the desktop monitor.
+to-report scats-match
+  if measured-seconds &lt; 60 [report "counting…"]
+  let result scats-comparison
+  report (word round (100 * item 1 result / max list 1 item 0 result) "% of " item 0 result " sites")
+end
+
+; Traffic lights. SCATS gives each approach green time by demand; with
+; adaptive-signals? on, each intersection shares its green time between
+; east-west and north-south by the cars on its approaches at the start of
+; each cycle, never giving either less than a fifth.
+to-report approaches-to [members]
+  report (link-set [my-in-roads] of members) with [not within-site? and axis != "access"]
+end
+
+to-report demand-share [approaches]
+  let ew sum [sum map length lane-cars] of approaches with [axis = "EW"]
+  let ns sum [sum map length lane-cars] of approaches with [axis = "NS"]
+  report max list 0.2 (min list 0.8 ((ew + 1) / (ew + ns + 2)))
 end
 </code>
   <widgets>
@@ -1351,27 +1322,123 @@ end
     <button x="165" y="10" width="145" height="36" forever="true" kind="Observer" disableUntilTicks="true" display="Go / pause">go</button>
     <button x="10" y="52" width="145" height="36" forever="true" kind="Observer" disableUntilTicks="true" display="Click roads">click-to-close</button>
     <button x="165" y="52" width="145" height="36" forever="false" kind="Observer" disableUntilTicks="true" display="Step 1 second">go</button>
-    <slider x="10" y="100" width="300" height="48" display="demand-veh-per-hour" variable="demand-veh-per-hour" min="0" max="12000" step="250" default="2500" direction="Horizontal" />
-    <slider x="10" y="150" width="300" height="48" display="through-traffic-%" variable="through-traffic-%" min="0" max="100" step="5" default="50" direction="Horizontal" />
-    <slider x="10" y="200" width="300" height="48" display="informed-drivers-%" variable="informed-drivers-%" min="0" max="100" step="5" default="50" direction="Horizontal" />
-    <slider x="10" y="250" width="300" height="48" display="speed-limit-kmh" variable="speed-limit-kmh" min="20" max="60" step="5" default="40" direction="Horizontal" />
-    <slider x="10" y="300" width="300" height="48" display="cycle-length" variable="cycle-length" min="40" max="150" step="5" default="80" direction="Horizontal" />
-    <slider x="10" y="350" width="300" height="48" display="ew-green-share" variable="ew-green-share" min="20" max="80" step="5" default="50" direction="Horizontal" />
-    <slider x="10" y="400" width="300" height="48" display="warm-up-s" variable="warm-up-s" min="0" max="900" step="30" default="60" direction="Horizontal" />
-    <slider x="10" y="450" width="300" height="48" display="measure-s" variable="measure-s" min="60" max="3600" step="60" default="600" direction="Horizontal" />
-    <slider x="10" y="500" width="300" height="48" display="seed" variable="seed" min="1" max="100" step="1" default="42" direction="Horizontal" />
-    <slider x="10" y="550" width="300" height="48" display="reroute-interval" variable="reroute-interval" min="10" max="300" step="10" default="60" direction="Horizontal" />
-    <slider x="10" y="600" width="300" height="48" display="route-noise" variable="route-noise" min="0" max="0.5" step="0.05" default="0.1" direction="Horizontal" />
-    <switch x="10" y="655" width="145" height="38" display="fixed-seed?" variable="fixed-seed?" on="true" />
-    <switch x="165" y="655" width="145" height="38" display="hook-turns?" variable="hook-turns?" on="false" />
-    <switch x="10" y="698" width="300" height="38" display="close-whole-street?" variable="close-whole-street?" on="true" />
-    <chooser x="10" y="742" width="300" height="58" display="signal-coordination" variable="signal-coordination" current="0">
+    <slider x="10" y="100" width="300" height="48" display="informed-drivers-%" variable="informed-drivers-%" min="0" max="100" step="5" default="50" direction="Horizontal" />
+    <slider x="10" y="150" width="300" height="48" display="speed-limit-kmh" variable="speed-limit-kmh" min="20" max="60" step="5" default="40" direction="Horizontal" />
+    <slider x="10" y="200" width="300" height="48" display="cycle-length" variable="cycle-length" min="40" max="150" step="5" default="80" direction="Horizontal" />
+    <slider x="10" y="250" width="300" height="48" display="ew-green-share" variable="ew-green-share" min="20" max="80" step="5" default="50" direction="Horizontal" />
+    <slider x="10" y="300" width="300" height="48" display="warm-up-s" variable="warm-up-s" min="0" max="900" step="30" default="600" direction="Horizontal" />
+    <slider x="10" y="350" width="300" height="48" display="measure-s" variable="measure-s" min="60" max="3600" step="60" default="600" direction="Horizontal" />
+    <slider x="10" y="400" width="300" height="48" display="seed" variable="seed" min="1" max="100" step="1" default="42" direction="Horizontal" />
+    <slider x="10" y="450" width="300" height="48" display="reroute-interval" variable="reroute-interval" min="10" max="300" step="10" default="60" direction="Horizontal" />
+    <slider x="10" y="500" width="300" height="48" display="route-noise" variable="route-noise" min="0" max="0.5" step="0.05" default="0.1" direction="Horizontal" />
+    <switch x="10" y="555" width="145" height="38" display="fixed-seed?" variable="fixed-seed?" on="true" />
+    <switch x="165" y="555" width="145" height="38" display="adaptive-signals?" variable="adaptive-signals?" on="true" />
+    <switch x="10" y="598" width="300" height="38" display="close-whole-street?" variable="close-whole-street?" on="true" />
+    <chooser x="10" y="642" width="300" height="58" display="signal-coordination" variable="signal-coordination" current="0">
       <choice type="string" value="random offsets" />
       <choice type="string" value="green wave (east-west)" />
     </chooser>
-    <chooser x="330" y="10" width="290" height="58" display="network-source" variable="network-source" current="0">
-      <choice type="string" value="Real OSM map" />
-      <choice type="string" value="Schematic Hoddle grid" />
+    <chooser x="330" y="10" width="140" height="58" display="day-type" variable="day-type" current="0">
+      <choice type="string" value="Weekday" />
+      <choice type="string" value="Weekend" />
+    </chooser>
+    <chooser x="480" y="10" width="140" height="58" display="start-time" variable="start-time" current="32">
+      <choice type="string" value="00:00" />
+      <choice type="string" value="00:15" />
+      <choice type="string" value="00:30" />
+      <choice type="string" value="00:45" />
+      <choice type="string" value="01:00" />
+      <choice type="string" value="01:15" />
+      <choice type="string" value="01:30" />
+      <choice type="string" value="01:45" />
+      <choice type="string" value="02:00" />
+      <choice type="string" value="02:15" />
+      <choice type="string" value="02:30" />
+      <choice type="string" value="02:45" />
+      <choice type="string" value="03:00" />
+      <choice type="string" value="03:15" />
+      <choice type="string" value="03:30" />
+      <choice type="string" value="03:45" />
+      <choice type="string" value="04:00" />
+      <choice type="string" value="04:15" />
+      <choice type="string" value="04:30" />
+      <choice type="string" value="04:45" />
+      <choice type="string" value="05:00" />
+      <choice type="string" value="05:15" />
+      <choice type="string" value="05:30" />
+      <choice type="string" value="05:45" />
+      <choice type="string" value="06:00" />
+      <choice type="string" value="06:15" />
+      <choice type="string" value="06:30" />
+      <choice type="string" value="06:45" />
+      <choice type="string" value="07:00" />
+      <choice type="string" value="07:15" />
+      <choice type="string" value="07:30" />
+      <choice type="string" value="07:45" />
+      <choice type="string" value="08:00" />
+      <choice type="string" value="08:15" />
+      <choice type="string" value="08:30" />
+      <choice type="string" value="08:45" />
+      <choice type="string" value="09:00" />
+      <choice type="string" value="09:15" />
+      <choice type="string" value="09:30" />
+      <choice type="string" value="09:45" />
+      <choice type="string" value="10:00" />
+      <choice type="string" value="10:15" />
+      <choice type="string" value="10:30" />
+      <choice type="string" value="10:45" />
+      <choice type="string" value="11:00" />
+      <choice type="string" value="11:15" />
+      <choice type="string" value="11:30" />
+      <choice type="string" value="11:45" />
+      <choice type="string" value="12:00" />
+      <choice type="string" value="12:15" />
+      <choice type="string" value="12:30" />
+      <choice type="string" value="12:45" />
+      <choice type="string" value="13:00" />
+      <choice type="string" value="13:15" />
+      <choice type="string" value="13:30" />
+      <choice type="string" value="13:45" />
+      <choice type="string" value="14:00" />
+      <choice type="string" value="14:15" />
+      <choice type="string" value="14:30" />
+      <choice type="string" value="14:45" />
+      <choice type="string" value="15:00" />
+      <choice type="string" value="15:15" />
+      <choice type="string" value="15:30" />
+      <choice type="string" value="15:45" />
+      <choice type="string" value="16:00" />
+      <choice type="string" value="16:15" />
+      <choice type="string" value="16:30" />
+      <choice type="string" value="16:45" />
+      <choice type="string" value="17:00" />
+      <choice type="string" value="17:15" />
+      <choice type="string" value="17:30" />
+      <choice type="string" value="17:45" />
+      <choice type="string" value="18:00" />
+      <choice type="string" value="18:15" />
+      <choice type="string" value="18:30" />
+      <choice type="string" value="18:45" />
+      <choice type="string" value="19:00" />
+      <choice type="string" value="19:15" />
+      <choice type="string" value="19:30" />
+      <choice type="string" value="19:45" />
+      <choice type="string" value="20:00" />
+      <choice type="string" value="20:15" />
+      <choice type="string" value="20:30" />
+      <choice type="string" value="20:45" />
+      <choice type="string" value="21:00" />
+      <choice type="string" value="21:15" />
+      <choice type="string" value="21:30" />
+      <choice type="string" value="21:45" />
+      <choice type="string" value="22:00" />
+      <choice type="string" value="22:15" />
+      <choice type="string" value="22:30" />
+      <choice type="string" value="22:45" />
+      <choice type="string" value="23:00" />
+      <choice type="string" value="23:15" />
+      <choice type="string" value="23:30" />
+      <choice type="string" value="23:45" />
     </chooser>
     <chooser x="630" y="10" width="270" height="58" display="view-mode" variable="view-mode" current="0">
       <choice type="string" value="congestion" />
@@ -1394,44 +1461,40 @@ end
     <switch x="330" y="812" width="220" height="38" display="scheduled-closure?" variable="scheduled-closure?" on="false" />
     <slider x="565" y="806" width="235" height="48" display="closure-start-min" variable="closure-start-min" min="0" max="60" step="1" default="2" direction="Horizontal" />
     <monitor x="1070" y="140" width="225" height="52" display="Cars" precision="1" fontSize="11">count cars</monitor>
-    <monitor x="1070" y="197" width="225" height="52" display="Waiting at gates" precision="1" fontSize="11">queued-at-gates</monitor>
+    <monitor x="1070" y="197" width="225" height="52" display="Waiting to enter" precision="1" fontSize="11">queued-at-gates</monitor>
     <monitor x="1070" y="254" width="225" height="52" display="Completed" precision="1" fontSize="11">trips-done</monitor>
     <monitor x="1070" y="311" width="225" height="52" display="Mean trip / min" precision="1" fontSize="11">mean-trip-time-min</monitor>
     <monitor x="1070" y="368" width="225" height="52" display="Stranded" precision="1" fontSize="11">stranded-count</monitor>
     <monitor x="1070" y="425" width="225" height="52" display="Elapsed / sec" precision="1" fontSize="11">ticks</monitor>
     <monitor x="330" y="124" width="730" height="52" display="Selected extent" precision="1" fontSize="11">selection-label</monitor>
     <monitor x="1070" y="486" width="225" height="52" display="Closures" precision="1" fontSize="11">closure-desc</monitor>
+    <monitor x="10" y="710" width="145" height="52" display="Time of day" precision="1" fontSize="11">clock-label</monitor>
+    <monitor x="165" y="710" width="145" height="52" display="Trips per hour now" precision="1" fontSize="11">round trips-per-hour-now</monitor>
+    <monitor x="10" y="767" width="300" height="52" display="SCATS match (GEH &lt; 5)" precision="1" fontSize="11">scats-match</monitor>
     <output x="1070" y="546" width="225" height="252" fontSize="11" />
     <note x="815" y="806" width="480" height="65" fontSize="11" markdown="false" textColorLight="-16777216" textColorDark="-1" backgroundLight="0" backgroundDark="0">Red thick = closed | Magenta = lane reduced
-D = synthetic destination | Signals/demand are illustrative
-Choose a map, then Setup. Closures can be changed live.</note>
-    <chooser x="10" y="888" width="300" height="58" display="demand-profile" variable="demand-profile" current="0">
-      <choice type="string" value="Flat (synthetic)" />
-      <choice type="string" value="SCATS weekday" />
-      <choice type="string" value="SCATS weekend" />
-    </chooser>
-    <slider x="330" y="888" width="300" height="48" display="profile-start-hour" variable="profile-start-hour" min="0" max="23" step="1" default="8" direction="Horizontal" />
-    <switch x="650" y="888" width="300" height="38" display="use-observed-signals?" variable="use-observed-signals?" on="false" />
+P = car park | Grey squares = roads into the map
+Choose a day and time, then Setup. Closures can be changed live.</note>
   </widgets>
   <info>## COMBINED MELBOURNE TRAFFIC LAB
-Combines the supplied Hoddle Grid lane-based traffic engine with our cached real OpenStreetMap map, polyline rendering and reliable street/map selection. Both source models are preserved in originals/.
+Combines the supplied Hoddle Grid lane-based traffic engine with our cached real OpenStreetMap map of the Melbourne CBD and real traffic from Victoria's public SCATS counts. Both source models are preserved in originals/.
 
 ## QUICK START
-Leave network-source = Real OSM map. Click Setup, then Go / pause. Click Choose street (Collins St is the initial selection) and Apply closure, or enable Click roads and click a road. Closed directions are red; reduced lanes magenta. Reopen selected or Reopen all restores capacity, including lanes. Change network-source and press Setup to use the original schematic grid. Geometry, topology, ordinary OSM one-way tags and available numeric speed/lane tags are real; traffic demand, signals and destination sites are synthetic. Hook turns are an optional schematic-only heuristic, off by default; no real hook-turn locations are claimed.
+Choose day-type (Weekday or Weekend) and start-time, click Setup, then Go / pause. The clock starts one warm-up before the start time, so counting begins at it. Click Choose street (Collins St is the initial selection) and Apply closure, or enable Click roads and click a road. Closed directions are red; reduced lanes magenta. Reopen selected or Reopen all restores capacity, including lanes.
 
-All closures accumulate. Choose section narrows the scope; section 0 means whole street. In OSM mode section numbers identify collapsed geometry chains between topology/attribute changes, not city block numbers. Clicking chooses the nearest polyline, not its straight chord. East / north applies to links with heading in [315,360) or [0,135). A lane reduction on a one-lane road fully closes that direction. Existing vehicles drain out; new vehicles avoid closed directions. Closed lanes drain; lanes do not merge mid-link.
+All closures accumulate. Choose section narrows the scope; section 0 means whole street. Section numbers identify collapsed geometry chains between topology/attribute changes, not city block numbers. Clicking chooses the nearest polyline, not its straight chord. East / north applies to links with heading in [315,360) or [0,135). A lane reduction on a one-lane road fully closes that direction. Existing vehicles drain out; new vehicles avoid closed directions. Closed lanes drain; lanes do not merge mid-link.
+
+## REAL DATA
+Streets, one-way rules and available lane and speed tags come from OpenStreetMap, including King St and Wurundjeri Way. Traffic lights stand only at the DTP signalised intersections matched to the map. Trips start and end where real roads cross the edge of the map and at OpenStreetMap public car parks; P marks a car park. For each hour of an average weekday or weekend day in August 2026, the number of trips between those places was estimated so that the model's routes reproduce the SCATS counts at the intersections whose detectors cover every approach lane. Within the hour, trips follow the 15-minute counts. The SCATS match monitor shows the share of those intersections where the simulated traffic is within GEH 5 of the counts for the same stretch of the day. See docs/data-and-limitations.md and data/observed/summary.json. Data © Department of Transport and Planning, Victoria, CC BY 4.0.
 
 ## BASELINE
-Run with no closures, wait through warm-up plus at least 60 seconds of measurement, Save baseline, then Setup and apply closures. The baseline survives Setup only with matching configuration; changing network or demand/signal/measurement settings clears it. Change-vs-baseline is grey until a baseline is saved. Demand generation uses an independent tick-seeded random stream, so baseline and closure runs receive the same arrivals and OD requests with the same seed. Travel-time averages include trips completed in the measurement window, even if they started in warm-up. Always compare waiting, stranded, active and completed counts together. CSV is written beside the model as combined-link-results.csv.
-
-## PUBLIC DATA
-Optional SCATS weekday/weekend profiles supply relative time-of-day demand from August 2026 CBD detector observations. The demand slider is an assumed peak entry scale when a profile is selected, not measured CBD arrivals. Start hour is AEST; profiles repeat daily. Optional matched DTP intersection sites supplement inferred signals; phase timings stay synthetic. Press Setup after changing profile, start hour or signal locations. See docs/data-and-limitations.md and data/observed/summary.json. Data © Department of Transport and Planning, Victoria, CC BY 4.0.
+Run with no closures, wait through warm-up plus at least 60 seconds of measurement, Save baseline, then Setup and apply closures. The baseline survives Setup only with matching configuration; changing the day, time or signal/measurement settings clears it. Change-vs-baseline is grey until a baseline is saved. Demand generation uses an independent tick-seeded random stream, so baseline and closure runs receive the same arrivals and trips with the same seed. Travel-time averages include trips completed in the measurement window, even if they started in warm-up. Always compare waiting, stranded, active and completed counts together. CSV is written beside the model as combined-link-results.csv.
 
 ## LIMITS
-This is an exploratory traffic simulation, not a calibrated forecast or safety assessment. No calibrated absolute entry counts, turn restrictions, time-dependent access, real parking capacities, trams, buses or pedestrians. Signals are inferred/synthetic and turn conflicts simplified. Geometry-chain compression retains all OSM shape points; movement carries overshoot to the next link but advances at most one link per second. Destination gates D are illustrative, not real car parks. Continuous congestion-based route choice may produce loops; road closures can strand trips. Green-wave offsets in OSM mode are an approximation. Setup is required after changing controls that affect speed, signal plans, random seed, demand comparison or network source.
+This is an exploratory traffic simulation, not a forecast or safety assessment. SCATS counts do not say which way vehicles travel, so the trip pattern is one of many that reproduce the counts. Traffic light timings are not published in the data. With adaptive-signals? on (the default), each intersection splits its green time between east-west and north-south by the cars waiting at the start of every cycle, as SCATS adapts to demand; cycle-length and signal-coordination remain assumed, and ew-green-share applies only when adaptive-signals? is off. There are no turn restrictions, time-dependent access, parking capacities, trams, buses, cyclists or pedestrians, and OpenStreetMap lane counts can be lower than the real ones. Movement carries overshoot to the next link but advances at most one link per second. Continuous congestion-based route choice may produce loops; road closures can strand trips. Setup is required after changing the day, time, speed, signal plans or random seed.
 
 ## CREDITS
-Hoddle Grid Traffic prototype supplied by the user's groupmate; its Info tab credits Wilensky (2003), NetLogo Traffic Grid. Original files are preserved. Real-map data © OpenStreetMap contributors, https://www.openstreetmap.org/copyright ; ODbL https://opendatacommons.org/licenses/odbl/1-0/ . Public extract downloaded 2026-09-29. Runtime is offline.
+Hoddle Grid Traffic prototype supplied by the user's groupmate; its Info tab credits Wilensky (2003), NetLogo Traffic Grid. Original files are preserved. Real-map data © OpenStreetMap contributors, https://www.openstreetmap.org/copyright ; ODbL https://opendatacommons.org/licenses/odbl/1-0/ . Public extract downloaded 2026-09-29. Traffic data © Department of Transport and Planning, Victoria, CC BY 4.0. Runtime is offline.
 </info>
   <turtleShapes>
     <shape name="default" rotatable="true" editableColorIndex="0">

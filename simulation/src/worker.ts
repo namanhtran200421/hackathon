@@ -12,11 +12,23 @@
  */
 
 import { createTrafficSim, type TrafficSim } from "./createTrafficSim";
-import type { ModelScope } from "./modelScope";
+import { installNobody, type ModelConfig, type ModelScope } from "./modelScope";
 import type { PageMessage, RunReason, WorkerMessage } from "./protocol";
-import { ENGINE_FILES, errorText, prepareWorker } from "./workerSetup";
 
-declare const self: DedicatedWorkerGlobalScope;
+declare const self: DedicatedWorkerGlobalScope & { window?: unknown; modelConfig?: ModelConfig };
+
+// The NetLogo Web engine was written for web pages and expects `window`.
+self.window = self;
+
+// NetLogo Web warns that `display` is not implemented every time a road
+// closes. The page redraws the map by itself, so hide just that warning.
+const originalWarn = console.warn.bind(console);
+console.warn = function (...details: unknown[]) {
+  if (String(details[0]).includes("has not yet been implemented")) {
+    return;
+  }
+  originalWarn(...details);
+};
 
 /** Send a message to the page. Number arrays are moved, not copied. */
 function post(message: WorkerMessage, transfer?: Transferable[]): void {
@@ -35,18 +47,39 @@ function sendPrintedLines(): void {
   post({ type: "output", lines: lines });
 }
 
-prepareWorker({
-  print: function (text) {
-    printed.push(text);
+// How the model prints and shows pop-up messages (for example when Save
+// baseline is refused).
+self.modelConfig = {
+  output: {
+    write: function (text) {
+      printed.push(String(text));
+    },
+    clear: function () {
+      printed = [];
+      post({ type: "output-clear" });
+    },
   },
-  clearOutput: function () {
-    printed = [];
-    post({ type: "output-clear" });
+  print: {
+    write: function (text) {
+      printed.push(String(text));
+    },
   },
-  notify: function (message) {
-    post({ type: "notice", message: message });
+  dialog: {
+    notify: function (message) {
+      post({ type: "notice", message: String(message) });
+    },
+    confirm: function (message) {
+      post({ type: "notice", message: String(message) });
+      return true;
+    },
+    yesOrNo: function () {
+      return true;
+    },
+    input: function () {
+      return "";
+    },
   },
-});
+};
 
 let simulation: TrafficSim | null = null;
 let running = false;
@@ -84,6 +117,7 @@ function sendFrame(): void {
     const styles = sim.styles();
     message.styles = styles;
     message.stylesView = sim.settings()["view-mode"];
+    message.sites = sim.siteVolumes();
     transfer.push(styles.buffer);
     roadsChanged = false;
     lastColourUpdate = colourUpdate;
@@ -180,7 +214,8 @@ function start(message: PageMessage & { type: "init" }): void {
     return;
   }
   post({ type: "status", phase: "loading", message: "Loading the simulator…" });
-  importScripts(...ENGINE_FILES);
+  installNobody(self);
+  importScripts("tortoise-engine.js", "model.js", "reporters.js");
   const sim = createTrafficSim(self as unknown as ModelScope);
   simulation = sim;
   Object.entries(message.settings).forEach(function (entry) {
@@ -267,8 +302,12 @@ self.onmessage = function (event: MessageEvent<PageMessage>) {
     if (running) {
       setRunning(false, "error");
     }
+    let text = String(error);
+    if (error instanceof Error) {
+      text = error.message;
+    }
     // Without a model, the engine itself failed to load.
-    post({ type: "error", message: errorText(error), fatal: simulation === null });
+    post({ type: "error", message: text, fatal: simulation === null });
   } finally {
     sendPrintedLines();
   }

@@ -5,7 +5,13 @@
  * they live in this plain object instead of React state.
  */
 
-import { CAR_FIELDS, DEFAULT_SETTINGS, type ViewMode, type World } from "@traffic-lab/simulation";
+import {
+  CAR_FIELDS,
+  DEFAULT_SETTINGS,
+  type SiteVolume,
+  type ViewMode,
+  type World,
+} from "@traffic-lab/simulation";
 
 export interface RenderStore {
   world: World | null;
@@ -15,6 +21,8 @@ export interface RenderStore {
   /** The map view the road colours were made for. */
   stylesView: ViewMode;
   stylesVersion: number;
+  /** Traffic entering each counted intersection, updated with the road colours. */
+  sites: SiteVolume[] | null;
   /** The newest car positions. */
   cars: Float32Array;
   /** Where the cars were drawn when the newest positions arrived. */
@@ -37,6 +45,7 @@ export function emptyStore(): RenderStore {
     styles: null,
     stylesView: DEFAULT_SETTINGS["view-mode"],
     stylesVersion: 0,
+    sites: null,
     cars: new Float32Array(0),
     from: new Float32Array(0),
     fromIndex: new Map(),

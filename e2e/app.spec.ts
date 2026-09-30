@@ -7,7 +7,6 @@
 import fs from "node:fs";
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { FEATURES } from "../frontend/src/app/features";
 
 function statusLine(page: Page) {
   return page.locator(".feedback [role=status]");
@@ -40,13 +39,33 @@ async function runUntil(page: Page, seconds: number): Promise<void> {
   await expect(page.getByRole("button", { name: "Start", exact: true })).toBeVisible();
 }
 
-/** Jump to a part of the page with the links in the header. */
-async function goTo(page: Page, name: "Simulator" | "Results"): Promise<void> {
-  await page.getByRole("navigation", { name: "Page sections" }).getByRole("link", { name: name }).click();
-}
-
 async function useMaxSpeed(page: Page): Promise<void> {
   await page.getByRole("slider", { name: "Simulation speed" }).fill("7");
+}
+
+async function restart(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Restart" }).click();
+  await expect(statusLine(page)).toContainText("Ready", { timeout: 60000 });
+}
+
+/** Start at a time of day with a one-minute warm-up, so counting starts quickly. */
+async function useShortWarmUp(page: Page, startTime: string): Promise<void> {
+  await page.locator("#start-time").selectOption(startTime);
+  const counting = page.locator("details", { hasText: "Counting" });
+  if (
+    !(await counting.evaluate(function (element) {
+      return (element as HTMLDetailsElement).open;
+    }))
+  ) {
+    await page.locator("summary", { hasText: "Counting" }).click();
+  }
+  await page.getByRole("slider", { name: "Warm-up time" }).fill("60");
+  await restart(page);
+}
+
+/** Light 3 am traffic, for tests where the time of day does not matter. */
+async function useQuietNight(page: Page): Promise<void> {
+  await useShortWarmUp(page, "03:00");
 }
 
 async function checkAccessibility(page: Page, area?: string): Promise<void> {
@@ -130,36 +149,31 @@ test("start, pause, step, closures and closing roads by clicking", async functio
 
 test("baseline, change view, results and CSV download", async function ({ page }) {
   await openReady(page);
+  await useShortWarmUp(page, "08:00");
   await useMaxSpeed(page);
   await runUntil(page, 125);
-  const results = page.locator("#run-results");
-  await expect(results).toContainText("Every road was open.");
+  await expect(page.locator("#results")).toContainText("Summary");
+  await expect(page.locator("#results")).toContainText("Compared with the SCATS counts");
+  await expect(page.locator(".counts-table")).toContainText("GEH");
 
   await page.getByRole("button", { name: "Save baseline" }).click();
+  await expect(page.locator("#results")).toContainText("Baseline compared with this run");
+  await restart(page);
   await expect(page.locator(".results-link")).toBeVisible();
-  await expect(results).toContainText("Same as normal traffic");
-  await page.getByRole("button", { name: "Restart" }).click();
-  await expect(statusLine(page)).toContainText("Ready", { timeout: 60000 });
 
   await page.getByRole("button", { name: "Close this street" }).click();
   await runUntil(page, 125);
   await page.getByRole("combobox", { name: "View" }).selectOption("change vs baseline");
   await expect(page.locator(".map-legend")).toContainText("More traffic");
 
-  // The link in "Compare with normal traffic" goes to the results below.
-  await page.getByRole("link", { name: "See the comparison under Results, below." }).click();
-  await expect(results).toContainText("Closed: Collins St");
-  await expect(results).toContainText("compared with normal traffic");
-  await expect(results.locator(".chart-grid svg")).toHaveCount(2);
-
-  // Every number is one click away.
-  await results.getByText("See all the numbers").click();
-  await expect(results).toContainText("Normal traffic (baseline) compared with your run");
+  const results = page.locator("#results");
+  await expect(results).toContainText("Baseline compared with this run");
   await expect(results.locator("tbody").first()).toContainText("Trips finished");
   await expect(results).toContainText("Both runs are compared at");
   await expect(results.locator(".chart svg")).toHaveCount(3);
-  await expect(results.locator(".streets-table")).toContainText("Collins St");
-  await expect(results.locator(".streets-table")).toContainText("closed");
+  await results.getByRole("button", { name: /Show all \d+ streets/ }).click();
+  const collins = results.locator(".streets-table tbody tr", { hasText: /^Collins St/ });
+  await expect(collins).toContainText("closed");
   await checkAccessibility(page, "#results");
 
   const download = page.waitForEvent("download");
@@ -175,24 +189,26 @@ test("baseline, change view, results and CSV download", async function ({ page }
 
 test("a baseline is saved once and reused across settings and reloads", async function ({ page }) {
   await openReady(page);
+  await useQuietNight(page);
   await useMaxSpeed(page);
   await runUntil(page, 125);
   await page.getByRole("button", { name: "Save baseline" }).click();
-  await expect(page.locator(".baseline-meta")).toContainText("Baseline:");
+  await expect(page.locator(".baseline-meta")).toContainText("Weekday (Monday to Friday) from 3:00 am");
 
-  await page.getByRole("slider", { name: "Cars arriving per hour" }).fill("4000");
-  await page.getByRole("button", { name: "Restart" }).click();
-  await expect(statusLine(page)).toContainText("Ready", { timeout: 60000 });
+  await page.locator("#day-type").selectOption("Weekend");
+  await restart(page);
   await expect(page.locator(".baseline-diff")).toContainText(
-    "Cars arriving per hour: 2,500 cars/hour → 4,000 cars/hour",
+    "Day: Weekday (Monday to Friday) → Weekend (Saturday and Sunday)",
   );
 
   await page.reload();
   await expect(statusLine(page)).toContainText("Ready", { timeout: 60000 });
   await expect(page.locator(".baseline-meta")).toContainText("Baseline:");
   await expect(page.getByRole("button", { name: "Replace baseline" })).toBeVisible();
+  await useQuietNight(page);
+  await useMaxSpeed(page);
   await runUntil(page, 90);
-  await expect(page.locator("#run-results")).toContainText("compared with normal traffic");
+  await expect(page.locator("#results")).toContainText("Baseline compared with this run");
 
   await page.getByRole("button", { name: "Clear baseline" }).click();
   await expect(page.getByRole("button", { name: "Save baseline" })).toBeVisible();
@@ -206,6 +222,7 @@ test("the run stops at the end of the counting time unless it keeps running", as
   await page.locator("summary", { hasText: "Counting" }).click();
   await page.getByRole("slider", { name: "Warm-up time" }).fill("0");
   await page.getByRole("slider", { name: "Counting time" }).fill("60");
+  await restart(page);
   await useMaxSpeed(page);
   await page.getByRole("button", { name: "Start", exact: true }).click();
   await expect(statusLine(page)).toContainText("The counting time is over", { timeout: 60000 });
@@ -223,8 +240,7 @@ test("quick guide, phone layout, keyboard and accessibility", async function ({ 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openReady(page);
 
-  // On phones the guide is opened from the introduction; the header only has the page links.
-  await page.locator(".hero").getByRole("button", { name: "Quick guide" }).click();
+  await page.getByRole("button", { name: "Quick guide" }).first().click();
   const guide = page.getByRole("dialog", { name: "Run your first scenario" });
   await expect(guide).toBeVisible();
   await expect(guide).toContainText("Where each NetLogo control is");
@@ -233,81 +249,16 @@ test("quick guide, phone layout, keyboard and accessibility", async function ({ 
 
   await page.getByRole("combobox", { name: "Street", exact: true }).selectOption("Bourke St");
   await expect(page.locator(".monitors-inline")).toContainText("Bourke St");
-  await page.getByLabel(/Road map/).selectOption("Schematic Hoddle grid");
+  await page.locator("#day-type").selectOption("Weekend");
   await expect(page.locator(".setup-button.needed")).toBeVisible();
-  await page.getByRole("button", { name: "Restart" }).click();
-  await expect(statusLine(page)).toContainText("Ready", { timeout: 60000 });
-  await expect(page.locator(".map-subtitle")).toHaveText("Simple street grid");
+  await restart(page);
+  await expect(page.locator(".map-subtitle")).toHaveText("Weekend · 7:50 am");
 
   const fitsScreen = await page.evaluate(function () {
     return document.documentElement.scrollWidth <= window.innerWidth;
   });
   expect(fitsScreen).toBe(true);
   await checkAccessibility(page);
-});
-
-test("the simulator hands its closure to the works planner, which finds a time and where traffic goes", async function ({
-  page,
-}) {
-  test.skip(!FEATURES.worksPlanner, "The works planner is switched off in frontend/src/app/features.ts.");
-  test.setTimeout(300000);
-  await openReady(page);
-  await page.getByRole("button", { name: "Close this street" }).click();
-  await expect(page.locator(".closure-list")).toContainText("Collins St");
-  await expect(page.locator("#run-results")).toContainText("Nothing yet");
-
-  // The simulator's button fills in the planner with the closure on the map.
-  await page.getByRole("button", { name: "Find the best time for this closure" }).click();
-  await expect(page.locator(".from-map")).toContainText("Filled in from the closure on the simulator");
-  await expect(page.getByRole("combobox", { name: "Street for the works" })).toHaveValue("Collins St");
-  await expect(page.getByRole("combobox", { name: "Street for the works" })).toBeFocused();
-
-  await page.getByRole("combobox", { name: "When can the works happen?" }).selectOption("night");
-  await page.getByRole("button", { name: "Find the best plan" }).click();
-  await expect(page.getByRole("progressbar", { name: "Search progress" })).toBeVisible();
-
-  // The simulator still works while the planner searches in the background.
-  await goTo(page, "Simulator");
-  await page.getByRole("button", { name: "Step 1 second" }).click();
-  await goTo(page, "Results");
-
-  const answer = page.locator(".recommendation");
-  await expect(answer).toBeVisible({ timeout: 240000 });
-  await expect(answer).toContainText("Close Collins St (whole street) on");
-  await expect(answer).toContainText("hours in total");
-  await expect(answer.locator(".impact-badge")).toBeVisible();
-  await expect(page.locator(".settings-used")).toContainText("Uses the simulator");
-  await expect(page.locator(".day-chart svg")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Where the traffic goes" })).toBeVisible();
-  await expect(page.locator(".options-table tbody tr")).not.toHaveCount(0);
-  await expect(page.locator(".chart-ruled-out")).toHaveCount(1);
-  await checkAccessibility(page, "#results");
-
-  // Searching again with the same works is instant: every test is remembered.
-  await page.getByRole("radio", { name: /Least traffic disruption/ }).check();
-  await expect(page.getByText(/Quick check \(already tested\)/)).toBeVisible();
-  await page.getByRole("button", { name: "Find the best plan" }).click();
-  await expect(answer).toBeVisible({ timeout: 20000 });
-
-  // Changing the simulator's city makes the plan out of date, and the results say so.
-  await page.getByRole("slider", { name: "Cars arriving per hour" }).fill("4000");
-  await expect(page.locator(".settings-used")).toContainText("have changed since this search");
-  await page.getByRole("slider", { name: "Cars arriving per hour" }).fill("2500");
-  await expect(page.locator(".settings-used")).not.toContainText("have changed");
-
-  await page.getByRole("button", { name: "Show it on the map" }).click();
-  await expect(statusLine(page)).toContainText("Set up the recommended plan", { timeout: 60000 });
-  await expect(page.getByLabel("Traffic demand profile")).toHaveValue(/SCATS/);
-  await expect(page.locator(".closure-list")).toContainText("Collins St");
-});
-
-test("the works planner stays hidden while it is switched off", async function ({ page }) {
-  test.skip(FEATURES.worksPlanner, "The works planner is switched on.");
-  await openReady(page);
-  await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Best time to do the works" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /Find the best time/ })).toHaveCount(0);
-  await expect(page.locator(".works-form")).toHaveCount(0);
 });
 
 test("a simulator that fails to load offers Try again", async function ({ page }) {
@@ -322,17 +273,18 @@ test("a simulator that fails to load offers Try again", async function ({ page }
   await expect(statusLine(page)).toContainText("Ready", { timeout: 60000 });
 });
 
-test("observed public data controls apply on restart", async function ({ page, request }) {
+test("the real traffic follows the chosen day and time", async function ({ page, request }) {
   await openReady(page);
   const response = await request.get("/sim/observed-data.json");
   expect(response.ok()).toBe(true);
   const data = await response.json();
-  await page.getByLabel("Traffic demand profile").selectOption("SCATS weekday");
-  await page.locator('label[for="observed-signals"]').click();
-  await expect(page.getByLabel("Use matched DTP signal locations")).toBeChecked();
-  await page.getByRole("button", { name: "Restart" }).click();
-  await expect(page.getByLabel("Active demand rate")).toContainText(
-    String(Math.round(2500 * data.factors.weekday[32])).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " cars/hour",
-  );
-  await expect(page.getByLabel("Active demand rate")).toContainText("80 matched signals applied");
+  expect(data.countedSites).toBeGreaterThan(0);
+
+  await expect(page.getByLabel("Time in the model")).toHaveText("7:50 am");
+  await page.locator("#day-type").selectOption("Weekend");
+  await page.locator("#start-time").selectOption("13:00");
+  await restart(page);
+  await expect(page.getByLabel("Time in the model")).toHaveText("12:50 pm");
+  await expect(page.getByLabel("Trips starting now")).toContainText("trips an hour");
+  await expect(page.getByLabel("Match with the SCATS counts")).toContainText("after the warm-up");
 });

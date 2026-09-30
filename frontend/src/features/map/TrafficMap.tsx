@@ -262,7 +262,7 @@ export default function TrafficMap(props: TrafficMapProps) {
       });
       layer.setLineDash([]);
 
-      // Entry gates (grey) and destinations (black).
+      // Roads into the map (grey) and car parks (black).
       world.nodes.forEach(function (node) {
         let half = pixels(Math.max(4, pixelsPerPatch * 0.9));
         layer.fillStyle = palette.destination;

@@ -21,31 +21,34 @@ ORIGINAL_MODEL = NETLOGO_FOLDER / "originals" / "Hoddle_Grid_Traffic.nlogox"
 
 
 INFO = """## COMBINED MELBOURNE TRAFFIC LAB
-Combines the supplied Hoddle Grid lane-based traffic engine with our cached real OpenStreetMap map, polyline rendering and reliable street/map selection. Both source models are preserved in originals/.
+Combines the supplied Hoddle Grid lane-based traffic engine with our cached real OpenStreetMap map of the Melbourne CBD and real traffic from Victoria's public SCATS counts. Both source models are preserved in originals/.
 
 ## QUICK START
-Leave network-source = Real OSM map. Click Setup, then Go / pause. Click Choose street (Collins St is the initial selection) and Apply closure, or enable Click roads and click a road. Closed directions are red; reduced lanes magenta. Reopen selected or Reopen all restores capacity, including lanes. Change network-source and press Setup to use the original schematic grid. Geometry, topology, ordinary OSM one-way tags and available numeric speed/lane tags are real; traffic demand, signals and destination sites are synthetic. Hook turns are an optional schematic-only heuristic, off by default; no real hook-turn locations are claimed.
+Choose day-type (Weekday or Weekend) and start-time, click Setup, then Go / pause. The clock starts one warm-up before the start time, so counting begins at it. Click Choose street (Collins St is the initial selection) and Apply closure, or enable Click roads and click a road. Closed directions are red; reduced lanes magenta. Reopen selected or Reopen all restores capacity, including lanes.
 
-All closures accumulate. Choose section narrows the scope; section 0 means whole street. In OSM mode section numbers identify collapsed geometry chains between topology/attribute changes, not city block numbers. Clicking chooses the nearest polyline, not its straight chord. East / north applies to links with heading in [315,360) or [0,135). A lane reduction on a one-lane road fully closes that direction. Existing vehicles drain out; new vehicles avoid closed directions. Closed lanes drain; lanes do not merge mid-link.
+All closures accumulate. Choose section narrows the scope; section 0 means whole street. Section numbers identify collapsed geometry chains between topology/attribute changes, not city block numbers. Clicking chooses the nearest polyline, not its straight chord. East / north applies to links with heading in [315,360) or [0,135). A lane reduction on a one-lane road fully closes that direction. Existing vehicles drain out; new vehicles avoid closed directions. Closed lanes drain; lanes do not merge mid-link.
+
+## REAL DATA
+Streets, one-way rules and available lane and speed tags come from OpenStreetMap, including King St and Wurundjeri Way. Traffic lights stand only at the DTP signalised intersections matched to the map. Trips start and end where real roads cross the edge of the map and at OpenStreetMap public car parks; P marks a car park. For each hour of an average weekday or weekend day in August 2026, the number of trips between those places was estimated so that the model's routes reproduce the SCATS counts at the intersections whose detectors cover every approach lane. Within the hour, trips follow the 15-minute counts. The SCATS match monitor shows the share of those intersections where the simulated traffic is within GEH 5 of the counts for the same stretch of the day. See docs/data-and-limitations.md and data/observed/summary.json. Data © Department of Transport and Planning, Victoria, CC BY 4.0.
 
 ## BASELINE
-Run with no closures, wait through warm-up plus at least 60 seconds of measurement, Save baseline, then Setup and apply closures. The baseline survives Setup only with matching configuration; changing network or demand/signal/measurement settings clears it. Change-vs-baseline is grey until a baseline is saved. Demand generation uses an independent tick-seeded random stream, so baseline and closure runs receive the same arrivals and OD requests with the same seed. Travel-time averages include trips completed in the measurement window, even if they started in warm-up. Always compare waiting, stranded, active and completed counts together. CSV is written beside the model as combined-link-results.csv.
-
-## PUBLIC DATA
-Optional SCATS weekday/weekend profiles supply relative time-of-day demand from August 2026 CBD detector observations. The demand slider is an assumed peak entry scale when a profile is selected, not measured CBD arrivals. Start hour is AEST; profiles repeat daily. Optional matched DTP intersection sites supplement inferred signals; phase timings stay synthetic. Press Setup after changing profile, start hour or signal locations. See docs/data-and-limitations.md and data/observed/summary.json. Data © Department of Transport and Planning, Victoria, CC BY 4.0.
+Run with no closures, wait through warm-up plus at least 60 seconds of measurement, Save baseline, then Setup and apply closures. The baseline survives Setup only with matching configuration; changing the day, time or signal/measurement settings clears it. Change-vs-baseline is grey until a baseline is saved. Demand generation uses an independent tick-seeded random stream, so baseline and closure runs receive the same arrivals and trips with the same seed. Travel-time averages include trips completed in the measurement window, even if they started in warm-up. Always compare waiting, stranded, active and completed counts together. CSV is written beside the model as combined-link-results.csv.
 
 ## LIMITS
-This is an exploratory traffic simulation, not a calibrated forecast or safety assessment. No calibrated absolute entry counts, turn restrictions, time-dependent access, real parking capacities, trams, buses or pedestrians. Signals are inferred/synthetic and turn conflicts simplified. Geometry-chain compression retains all OSM shape points; movement carries overshoot to the next link but advances at most one link per second. Destination gates D are illustrative, not real car parks. Continuous congestion-based route choice may produce loops; road closures can strand trips. Green-wave offsets in OSM mode are an approximation. Setup is required after changing controls that affect speed, signal plans, random seed, demand comparison or network source.
+This is an exploratory traffic simulation, not a forecast or safety assessment. SCATS counts do not say which way vehicles travel, so the trip pattern is one of many that reproduce the counts. Traffic light timings are not published in the data. With adaptive-signals? on (the default), each intersection splits its green time between east-west and north-south by the cars waiting at the start of every cycle, as SCATS adapts to demand; cycle-length and signal-coordination remain assumed, and ew-green-share applies only when adaptive-signals? is off. There are no turn restrictions, time-dependent access, parking capacities, trams, buses, cyclists or pedestrians, and OpenStreetMap lane counts can be lower than the real ones. Movement carries overshoot to the next link but advances at most one link per second. Continuous congestion-based route choice may produce loops; road closures can strand trips. Setup is required after changing the day, time, speed, signal plans or random seed.
 
 ## CREDITS
-Hoddle Grid Traffic prototype supplied by the user's groupmate; its Info tab credits Wilensky (2003), NetLogo Traffic Grid. Original files are preserved. Real-map data © OpenStreetMap contributors, https://www.openstreetmap.org/copyright ; ODbL https://opendatacommons.org/licenses/odbl/1-0/ . Public extract downloaded 2026-09-29. Runtime is offline.
+Hoddle Grid Traffic prototype supplied by the user's groupmate; its Info tab credits Wilensky (2003), NetLogo Traffic Grid. Original files are preserved. Real-map data © OpenStreetMap contributors, https://www.openstreetmap.org/copyright ; ODbL https://opendatacommons.org/licenses/odbl/1-0/ . Public extract downloaded 2026-09-29. Traffic data © Department of Transport and Planning, Victoria, CC BY 4.0. Runtime is offline.
 """
 
 LEGEND = (
     "Red thick = closed | Magenta = lane reduced\n"
-    "D = synthetic destination | Signals/demand are illustrative\n"
-    "Choose a map, then Setup. Closures can be changed live."
+    "P = car park | Grey squares = roads into the map\n"
+    "Choose a day and time, then Setup. Closures can be changed live."
 )
+
+# Every quarter-hour of the day, as the start-time chooser offers them.
+START_TIMES = ["%02d:%02d" % (minutes // 60, minutes % 60) for minutes in range(0, 24 * 60, 15)]
 
 
 class Interface:
@@ -97,8 +100,10 @@ class Interface:
     def switch(self, variable, x, y, width, on):
         self.add("switch", x=x, y=y, width=width, height=38, display=variable, variable=variable, on=str(on).lower())
 
-    def chooser(self, variable, choices, x, y, width):
-        widget = self.add("chooser", x=x, y=y, width=width, height=58, display=variable, variable=variable, current=0)
+    def chooser(self, variable, choices, x, y, width, current=0):
+        widget = self.add(
+            "chooser", x=x, y=y, width=width, height=58, display=variable, variable=variable, current=current
+        )
         for value in choices:
             ElementTree.SubElement(widget, "choice", type="string", value=value)
 
@@ -116,27 +121,26 @@ def build_interface(ui):
 
     # Scenario sliders down the left side.
     sliders = [
-        ("demand-veh-per-hour", 100, 2500, 0, 12000, 250),
-        ("through-traffic-%", 150, 50, 0, 100, 5),
-        ("informed-drivers-%", 200, 50, 0, 100, 5),
-        ("speed-limit-kmh", 250, 40, 20, 60, 5),
-        ("cycle-length", 300, 80, 40, 150, 5),
-        ("ew-green-share", 350, 50, 20, 80, 5),
-        ("warm-up-s", 400, 60, 0, 900, 30),
-        ("measure-s", 450, 600, 60, 3600, 60),
-        ("seed", 500, 42, 1, 100, 1),
-        ("reroute-interval", 550, 60, 10, 300, 10),
-        ("route-noise", 600, 0.1, 0, 0.5, 0.05),
+        ("informed-drivers-%", 100, 50, 0, 100, 5),
+        ("speed-limit-kmh", 150, 40, 20, 60, 5),
+        ("cycle-length", 200, 80, 40, 150, 5),
+        ("ew-green-share", 250, 50, 20, 80, 5),
+        ("warm-up-s", 300, 600, 0, 900, 30),
+        ("measure-s", 350, 600, 60, 3600, 60),
+        ("seed", 400, 42, 1, 100, 1),
+        ("reroute-interval", 450, 60, 10, 300, 10),
+        ("route-noise", 500, 0.1, 0, 0.5, 0.05),
     ]
     for variable, y, default, low, high, step in sliders:
         ui.slider(variable, 10, y, 300, default, low, high, step)
 
-    ui.switch("fixed-seed?", 10, 655, 145, True)
-    ui.switch("hook-turns?", 165, 655, 145, False)
-    ui.switch("close-whole-street?", 10, 698, 300, True)
+    ui.switch("fixed-seed?", 10, 555, 145, True)
+    ui.switch("adaptive-signals?", 165, 555, 145, True)
+    ui.switch("close-whole-street?", 10, 598, 300, True)
 
-    ui.chooser("signal-coordination", ["random offsets", "green wave (east-west)"], 10, 742, 300)
-    ui.chooser("network-source", ["Real OSM map", "Schematic Hoddle grid"], 330, 10, 290)
+    ui.chooser("signal-coordination", ["random offsets", "green wave (east-west)"], 10, 642, 300)
+    ui.chooser("day-type", ["Weekday", "Weekend"], 330, 10, 140)
+    ui.chooser("start-time", START_TIMES, 480, 10, 140, START_TIMES.index("08:00"))
     ui.chooser("view-mode", ["congestion", "volume", "change vs baseline"], 630, 10, 270)
 
     ui.button("Save baseline", "save-baseline", 915, 20, 180)
@@ -181,7 +185,7 @@ def build_interface(ui):
     # Monitors down the right side.
     monitors = [
         ("Cars", "count cars"),
-        ("Waiting at gates", "queued-at-gates"),
+        ("Waiting to enter", "queued-at-gates"),
         ("Completed", "trips-done"),
         ("Mean trip / min", "mean-trip-time-min"),
         ("Stranded", "stranded-count"),
@@ -191,6 +195,11 @@ def build_interface(ui):
         ui.monitor(title, expression, 1070, 140 + index * 57, 225)
     ui.monitor("Selected extent", "selection-label", 330, 124, 730)
     ui.monitor("Closures", "closure-desc", 1070, 486, 225)
+
+    # The real traffic, under the settings on the left.
+    ui.monitor("Time of day", "clock-label", 10, 710, 145)
+    ui.monitor("Trips per hour now", "round trips-per-hour-now", 165, 710, 145)
+    ui.monitor("SCATS match (GEH < 5)", "scats-match", 10, 767, 300)
 
     ui.add("output", x=1070, y=546, width=225, height=252, fontSize=11)
 
@@ -217,14 +226,6 @@ def main():
     ElementTree.SubElement(model, "code").text = SOURCE_CODE.read_text()
     interface = Interface(model)
     build_interface(interface)
-    profile = interface.add("chooser", x=10, y=888, width=300, height=58,
-                            display="demand-profile", variable="demand-profile", current=0)
-    for name in ["Flat (synthetic)", "SCATS weekday", "SCATS weekend"]:
-        ElementTree.SubElement(profile, "choice", type="string", value=name)
-    interface.add("slider", x=330, y=888, width=300, height=48, display="profile-start-hour",
-                  variable="profile-start-hour", min=0, max=23, step=1, default=8, direction="Horizontal")
-    interface.add("switch", x=650, y=888, width=300, height=38, display="use-observed-signals?",
-                  variable="use-observed-signals?", on="false")
     ElementTree.SubElement(model, "info").text = INFO
     for name in ["turtleShapes", "linkShapes"]:
         model.append(original.find(name))

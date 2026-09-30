@@ -12,8 +12,8 @@ export default function Hero({ onOpenGuide }: { onOpenGuide: () => void }) {
           Close a street in Melbourne&rsquo;s CBD and watch the traffic find another way.
         </h1>
         <p>
-          A live traffic simulation of Melbourne&rsquo;s city centre on real streets. Choose how busy it is,
-          close a road, and compare the result with normal traffic.
+          A live traffic simulation of Melbourne&rsquo;s city centre on real streets, with traffic from real
+          SCATS counts. Choose a day and a time, close a road, and compare the result with normal traffic.
         </p>
         <div className="hero-actions">
           <a className="button dark" href="#workbench">

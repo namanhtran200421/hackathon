@@ -13,8 +13,19 @@
 import type { ModelScope, ReporterName } from "./modelScope";
 import type { ButtonName } from "./protocol";
 import { CAR_FIELDS, STYLE } from "./packing";
-import { checkSetting, DEFAULT_SETTINGS, FOREVER, type NetworkName, type Settings } from "./settings";
-import type { BaselineSummary, MapLabel, MapNode, Metrics, ModelBaseline, RoadInfo, World } from "./types";
+import { checkSetting, DEFAULT_SETTINGS, FOREVER, type Settings } from "./settings";
+import type {
+  BaselineSummary,
+  CountSite,
+  MapLabel,
+  MapNode,
+  Metrics,
+  ModelBaseline,
+  RoadInfo,
+  ScatsComparison,
+  SiteVolume,
+  World,
+} from "./types";
 
 const CSV_HEADER =
   "street,direction,block,from,to,lanes,lanes_open,closed,veh_per_hour,baseline_veh_per_hour,change_veh_per_hour,mean_travel_time_s";
@@ -45,39 +56,17 @@ function flag(value: unknown): number {
   return 0;
 }
 
-/** Street name labels for the simple grid, placed like the desktop view. */
-function schematicLabels(roads: RoadInfo[]): MapLabel[] {
-  const boxes = new Map<string, { minX: number; maxX: number; minY: number; maxY: number }>();
-  roads.forEach(function (road) {
-    if (road.kind !== "main" && road.kind !== "little") {
-      return;
-    }
-    let box = boxes.get(road.street);
-    if (!box) {
-      box = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
-      boxes.set(road.street, box);
-    }
-    const area = box;
-    road.geometry.forEach(function (point) {
-      area.minX = Math.min(area.minX, point[0]);
-      area.maxX = Math.max(area.maxX, point[0]);
-      area.minY = Math.min(area.minY, point[1]);
-      area.maxY = Math.max(area.maxY, point[1]);
-    });
-  });
-
-  const labels: MapLabel[] = [];
-  boxes.forEach(function (box, name) {
-    const runsEastWest = box.maxX - box.minX >= box.maxY - box.minY;
-    if (runsEastWest) {
-      // East-west streets are named at their west end.
-      labels.push({ x: box.minX + 1, y: (box.minY + box.maxY) / 2, text: name, align: "left" });
-    } else {
-      // North-south streets are named at their north end.
-      labels.push({ x: (box.minX + box.maxX) / 2, y: box.maxY, text: name, align: "center" });
-    }
-  });
-  return labels;
+/** The model's (list sites within-geh-5 modelled counted), or zeros before counting. */
+function toScatsComparison(value: unknown): ScatsComparison {
+  if (!Array.isArray(value) || value.length !== 4) {
+    return { sites: 0, withinGeh5: 0, modelled: 0, counted: 0 };
+  }
+  return {
+    sites: numberOr(value[0], 0),
+    withinGeh5: numberOr(value[1], 0),
+    modelled: numberOr(value[2], 0),
+    counted: numberOr(value[3], 0),
+  };
 }
 
 function toBaselineSummary(summary: unknown): BaselineSummary | null {
@@ -152,10 +141,11 @@ export function createTrafficSim(scope: ModelScope) {
       selectedBlock: Number(m[19]) || 0,
       warmUp: m[20] as number,
       measure: m[21] as number,
-      demandFactor: m[22] as number,
-      effectiveArrivalsPerHour: m[23] as number,
-      observedSignalCount: m[24] as number,
-      observedDataVersion: m[25] as string,
+      clock: m[22] as number,
+      tripsPerHour: m[23] as number,
+      scats: toScatsComparison(m[24]),
+      dataVersion: String(m[25]),
+      dayType: String(m[26]),
     };
   }
 
@@ -191,7 +181,7 @@ export function createTrafficSim(scope: ModelScope) {
     return packed;
   }
 
-  /** The road layout, gates, labels and street list. Changes only on Setup. */
+  /** The road layout, entry points, car parks, labels, counted sites and street list. Changes only on Setup. */
   function describeWorld(): World {
     const roads = (ask("roads") as unknown[][]).map(function (road, index): RoadInfo {
       const points = road[4] as number[][];
@@ -215,16 +205,17 @@ export function createTrafficSim(scope: ModelScope) {
       return { x: node[0] as number, y: node[1] as number, kind: String(node[2]), label: String(node[3]) };
     });
 
-    let labels = (ask("labels") as unknown[][])
+    const labels = (ask("labels") as unknown[][])
       .map(function (label): MapLabel {
         return { x: label[0] as number, y: label[1] as number, text: String(label[2]) };
       })
       .filter(function (label) {
         return label.text !== "" && !label.text.startsWith("©");
       });
-    if (labels.length === 0) {
-      labels = schematicLabels(roads);
-    }
+
+    const sites = (ask("sites") as unknown[][]).map(function (site): CountSite {
+      return { id: site[0] as number, name: String(site[1]), x: site[2] as number, y: site[3] as number };
+    });
 
     // The same list the desktop Choose street dialog offers.
     const names = new Set<string>();
@@ -236,10 +227,10 @@ export function createTrafficSim(scope: ModelScope) {
 
     const bounds = ask("bounds") as number[];
     world = {
-      network: observer.getGlobal("network-source") as NetworkName,
       roads: roads,
       nodes: nodes,
       labels: labels,
+      sites: sites,
       streets: Array.from(names).sort(),
       bounds: { minX: bounds[0], maxX: bounds[1], minY: bounds[2], maxY: bounds[3] },
     };
@@ -324,6 +315,14 @@ export function createTrafficSim(scope: ModelScope) {
     refreshColors: function (): void {
       read(function () {
         return procedures.callCommand("update-link-colors");
+      });
+    },
+
+    /** Vehicles per hour entering each counted site, in the order of world.sites. */
+    siteVolumes: function (): SiteVolume[] {
+      const parts = ask("siteVolumes") as number[][];
+      return parts[0].map(function (modelled, index): SiteVolume {
+        return { modelled: modelled, counted: parts[1][index] };
       });
     },
 

@@ -1,26 +1,23 @@
 /**
- * The whole page: header, introduction, the simulator, Results (what the run
- * showed and the works planner), and footer.
- *
- * The live simulation and the works planner are started here, so a planner
- * search keeps running in the background while you use the simulator.
+ * The whole page: header, introduction, the simulator (settings, map, figures,
+ * comparison, log and results) and footer.
  */
 
 import { useEffect, useState } from "react";
 import Hero from "../components/layout/Hero";
 import SiteFooter from "../components/layout/SiteFooter";
 import SiteHeader from "../components/layout/SiteHeader";
+import ComparePanel from "../features/baseline/ComparePanel";
 import { differences } from "../features/baseline/differences";
+import Figures from "../features/figures/Figures";
 import QuickGuide from "../features/guide/QuickGuide";
-import { closureToPlan } from "../features/planner/request";
-import type { Plan, WorksClosure, WorksRequest } from "../features/planner/types";
-import { usePlanner } from "../features/planner/usePlanner";
-import { closedWindow, whenText } from "../features/planner/wording";
+import SimulationLog from "../features/log/SimulationLog";
+import MapPanel from "../features/map/MapPanel";
+import Results from "../features/results/Results";
+import SettingsPanel from "../features/settings/SettingsPanel";
 import type { ResultsSnapshot, Selection } from "../features/simulation/types";
 import { useTrafficSim } from "../features/simulation/useTrafficSim";
-import { FEATURES } from "./features";
-import ResultsSection from "./ResultsSection";
-import Workbench from "./Workbench";
+import StatusLine from "./StatusLine";
 
 /** Save text as a file on the user's computer. */
 function downloadFile(text: string, fileName: string): void {
@@ -34,31 +31,13 @@ function downloadFile(text: string, fileName: string): void {
   }, 1000);
 }
 
-/** Scroll a part of the page into view, at its top. */
-function scrollToId(id: string): void {
-  const element = document.getElementById(id);
-  if (element) {
-    element.scrollIntoView({ block: "start" });
-  }
-}
-
 export default function App() {
   const sim = useTrafficSim();
-  const planner = usePlanner(sim.settings);
   const metrics = sim.metrics;
   const [guideOpen, setGuideOpen] = useState(false);
   const [clickMode, setClickMode] = useState(false);
   const [pendingChoice, setPendingChoice] = useState<Selection | null>(null);
   const [snapshot, setSnapshot] = useState<ResultsSnapshot | null>(null);
-
-  // Opening the page at an address such as "#results": the browser tries to
-  // scroll before the page is drawn, so scroll once it is.
-  useEffect(function () {
-    const id = window.location.hash.slice(1);
-    if (id) {
-      scrollToId(id);
-    }
-  }, []);
 
   // The chosen street comes from the model. Right after the user picks one,
   // show their choice until the model confirms it.
@@ -102,6 +81,7 @@ export default function App() {
   // Results use a copy taken whenever the traffic pauses or stops, so the
   // tables and charts stay still while the traffic moves.
   const styles = sim.store.current.styles;
+  const sites = sim.store.current.sites;
   useEffect(
     function () {
       if (sim.running || !metrics || !sim.world || !styles) {
@@ -111,9 +91,19 @@ export default function App() {
         setSnapshot(null);
         return;
       }
-      setSnapshot({ metrics: metrics, history: sim.history, styles: styles.slice(), world: sim.world });
+      let siteCopy = null;
+      if (sites) {
+        siteCopy = sites.slice();
+      }
+      setSnapshot({
+        metrics: metrics,
+        history: sim.history,
+        styles: styles.slice(),
+        world: sim.world,
+        sites: siteCopy,
+      });
     },
-    [sim.running, metrics, sim.world, styles, sim.history],
+    [sim.running, metrics, sim.world, styles, sites, sim.history],
   );
 
   let settingDifferences: ReturnType<typeof differences> = [];
@@ -127,67 +117,6 @@ export default function App() {
     sim.setStatus("Downloaded the road numbers as combined-link-results.csv.");
   }
 
-  /**
-   * Set the simulator up to show a planned closure: the same street and kind
-   * of closure, traffic following that time of day, and the works in place
-   * from the start. Then scroll up to the map.
-   */
-  function tryInSimulator(plan: Plan, request: WorksRequest): void {
-    sim.pause();
-    let profile: "SCATS weekday" | "SCATS weekend" = "SCATS weekday";
-    if (plan.dayType === "weekend") {
-      profile = "SCATS weekend";
-    }
-    sim.set("demand-profile", profile);
-    sim.set("profile-start-hour", plan.start);
-    sim.set("closure-type", request.closureType);
-    sim.set("scheduled-closure?", true);
-    sim.set("closure-start-min", 0);
-    choose(request.street, request.section);
-    sim.restart(
-      "Set up the recommended plan: " +
-        whenText(plan) +
-        ", " +
-        closedWindow(plan) +
-        ", with traffic for that time of day and the works in place from the start. Press Start to watch.",
-    );
-    scrollToId("workbench");
-  }
-
-  /**
-   * Hand a closure to the works planner: fill in its form, scroll to it and
-   * put the keyboard focus on it.
-   */
-  function planClosure(closure: WorksClosure): void {
-    planner.planClosure(closure);
-    scrollToId("plan");
-    setTimeout(function () {
-      const street = document.getElementById("works-street");
-      if (street) {
-        street.focus({ preventScroll: true });
-      }
-    }, 50);
-  }
-
-  /** The simulator's "Find the best time for this closure" button: whatever is closed on the map now. */
-  function planMapClosure(): void {
-    planClosure(
-      closureToPlan(
-        sim.world,
-        sim.store.current.styles,
-        selection.street,
-        selection.section,
-        sim.settings["closure-type"],
-      ),
-    );
-  }
-
-  // The planner buttons only show while the works planner is switched on.
-  let mapPlanButton: (() => void) | null = null;
-  if (FEATURES.worksPlanner) {
-    mapPlanButton = planMapClosure;
-  }
-
   function openGuide(): void {
     setGuideOpen(true);
   }
@@ -199,25 +128,42 @@ export default function App() {
       </a>
       <SiteHeader onOpenGuide={openGuide} />
       <Hero onOpenGuide={openGuide} />
-      <Workbench
-        sim={sim}
-        selection={selection}
-        onChoose={choose}
-        clickMode={clickMode}
-        onSetClickMode={setClickMode}
-        differences={settingDifferences}
-        onPlanClosure={mapPlanButton}
-      />
-      <ResultsSection
-        sim={sim}
-        planner={planner}
-        selection={selection}
-        snapshot={snapshot}
-        differences={settingDifferences}
-        onTryInSimulator={tryInSimulator}
-        onPlanClosure={planClosure}
-        onDownload={downloadCsv}
-      />
+
+      <main id="workbench" className="container">
+        <div className="workbench">
+          <SettingsPanel
+            sim={sim}
+            selection={selection}
+            onChoose={choose}
+            clickMode={clickMode}
+            onToggleClickMode={function () {
+              setClickMode(!clickMode);
+            }}
+          />
+
+          <section className="results" aria-label="Simulator">
+            <MapPanel
+              sim={sim}
+              selection={selection}
+              onChoose={choose}
+              clickMode={clickMode}
+              onStopClickMode={function () {
+                setClickMode(false);
+              }}
+            />
+            <Figures metrics={metrics} />
+            <ComparePanel sim={sim} differences={settingDifferences} onDownload={downloadCsv} />
+            <SimulationLog lines={sim.log} />
+            <StatusLine sim={sim} />
+            <Results
+              snapshot={snapshot}
+              baseline={sim.baseline}
+              running={sim.running}
+              differences={settingDifferences}
+            />
+          </section>
+        </div>
+      </main>
 
       <SiteFooter onOpenGuide={openGuide} />
       <QuickGuide
