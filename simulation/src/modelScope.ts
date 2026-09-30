@@ -33,7 +33,9 @@ export type ReporterName =
   | "bounds"
   | "csv"
   | "baseline"
-  | "conservation";
+  | "conservation"
+  | "sites"
+  | "siteVolumes";
 
 /** How the model prints text and shows messages (NetLogo Web's "modelConfig"). */
 export interface ModelConfig {

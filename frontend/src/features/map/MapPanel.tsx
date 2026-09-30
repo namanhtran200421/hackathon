@@ -5,7 +5,7 @@
 
 import { Map as MapIcon, MousePointerClick } from "lucide-react";
 import type { Metrics, ViewMode } from "@traffic-lab/simulation";
-import { clock, whole } from "../../lib/format";
+import { clock, timeOfDay, whole } from "../../lib/format";
 import { choiceOptions } from "../settings/labels";
 import { speedLabel } from "../simulation/speeds";
 import type { Selection } from "../simulation/types";
@@ -35,7 +35,17 @@ function statusLabel(sim: TrafficSimulation): string {
 function describeMap(view: ViewMode, metrics: Metrics | null): string {
   let text = "Traffic map of Melbourne, " + view + " view.";
   if (metrics) {
-    text = text + " " + whole(metrics.cars) + " cars on the road after " + clock(metrics.ticks) + ".";
+    text =
+      text +
+      " " +
+      metrics.dayType +
+      ", " +
+      timeOfDay(metrics.clock) +
+      ": " +
+      whole(metrics.cars) +
+      " cars on the road after " +
+      clock(metrics.ticks) +
+      ".";
     if (metrics.closureDesc !== "none" && metrics.closureDesc !== "0 closed directions; 0 reduced lanes") {
       text = text + " Closed: " + metrics.closureDesc + ".";
     } else {
@@ -68,8 +78,8 @@ export default function MapPanel({ sim, selection, onChoose, clickMode, onStopCl
   }
 
   let mapName = "Real Melbourne streets";
-  if (sim.world && sim.world.network === "Schematic Hoddle grid") {
-    mapName = "Simple street grid";
+  if (metrics) {
+    mapName = metrics.dayType + " · " + timeOfDay(metrics.clock);
   }
 
   let worldVersion = 0;

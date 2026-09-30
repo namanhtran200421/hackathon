@@ -1,5 +1,5 @@
 {
-  "version": "dtp-cbd-aug2026-v1",
+  "version": "dtp-cbd-aug2026-v2",
   "retrieved": "2026-09-30",
   "timezone": "Australia/Melbourne (AEST, UTC+10 in August)",
   "periodStart": "2026-08-01",
@@ -8,9 +8,6 @@
   "licence": "CC BY 4.0",
   "countsUrl": "https://opendata.transport.vic.gov.au/dataset/traffic-signal-volume-data",
   "signalsUrl": "https://opendata.transport.vic.gov.au/dataset/victorian-traffic-signals",
-  "inventorySitesInBounds": 153,
-  "cohortSites": 138,
-  "cohortDetectors": 1293,
   "days": {
     "weekday": 20,
     "weekend": 10
@@ -22,851 +19,2532 @@
     "quality_passed": 39943,
     "archive_sha256": "5aad32104a4d51bfba26e2adf6e7816c429cb90a4212f3c496410b752209378c"
   },
-  "matchedSignalSites": 80,
-  "matchedNodes": 80,
-  "method": "Same detector cohort; at least 80% valid days in each day group. Mean each detector across days, then mean across detectors. Divide both profiles by their shared maximum 15-minute mean. Counts are detector activations, not unique CBD arrivals.",
+  "inventorySitesInBounds": 153,
+  "intersectionSitesInBounds": 119,
+  "matchedSignalSites": 107,
+  "signalJunctions": 317,
+  "countedSites": 64,
+  "entryPoints": 96,
+  "carParks": 110,
+  "tripEndGroups": 27,
+  "routes": 4089,
+  "method": "Signals: DTP intersection sites matched to map junctions within 45 m that share at least two street names; all junctions of one site share one controller and junctions without a matched site have no signals. Counts: for each matched site whose detectors all have valid days on at least half of the weekdays and weekend days, each detector's 15-minute counts are averaged over its valid days, added across the site and converted to vehicles per hour. Only sites with at least one detector for every lane approaching them in the map are used, because other sites count only some approaches. Trips start at real roads crossing the map's edge and at OpenStreetMap public car parks, and end at the nearest place in a destination group (a 4 x 4 grid square; edge crossings and car parks separately). Routes follow the model's own route choice at its default settings, sampled 8 times per trip. For every hour, trips between every place and every group are scaled by the multiplicative (EM) update for counts, first as a pattern (trips starting at each place, pull of each group) and then pair by pair, until the routed traffic entering each counted site matches the SCATS counts as closely as possible. Trips are rounded to whole trips per hour. No main road crossing the edge sends more than 900 trips an hour per lane, no residential street more than 300 per lane, and no car park more than 300 per driveway lane (one lane per grouped car park, up to three). Within the hour, trips follow the 15-minute count totals.",
   "filters": "96 intervals, zero alarms, non-negative integer values, <=900 activations per interval, non-zero daily total matching supplied sum; conflicting duplicates excluded. Missing/zero-total days are excluded, not filled with zeros.",
-  "limitations": "No detector-direction mapping or OD estimation. Peak entry scale is user-assumed. Timing remains synthetic. Signal matches supplement inferred junctions; unmapped sites do not prove absence. Month includes events/weather and has not been classified as incident-free.",
-  "factors": {
+  "limitations": "SCATS counts do not say which way vehicles travel or turn, so the trip pattern is one of many that reproduce the counts, not a measured origin-destination survey. Traffic light timings are not published in this data and remain assumed. Pedestrian crossings and unmatched sites have no signals. OpenStreetMap lane counts can be lower than the real ones. The month includes events and weather and has not been classified as incident-free.",
+  "fit": {
     "weekday": [
-      0.26584195,
-      0.23792514,
-      0.21235798,
-      0.19065567,
-      0.17387498,
-      0.15645254,
-      0.14833454,
-      0.13964972,
-      0.13471395,
-      0.12263929,
-      0.11578152,
-      0.11062279,
-      0.1085735,
-      0.10989525,
-      0.10942717,
-      0.11044833,
-      0.11879712,
-      0.12130451,
-      0.12818372,
-      0.14118323,
-      0.16526881,
-      0.21786786,
-      0.29628321,
-      0.37891781,
-      0.41523279,
-      0.49408109,
-      0.60192492,
-      0.66127704,
-      0.69077378,
-      0.7648462,
-      0.85845533,
-      0.91545436,
-      0.94298005,
-      0.96678159,
-      0.96670173,
-      0.95412805,
-      0.92560069,
-      0.90102952,
-      0.87369609,
-      0.85174586,
-      0.81823424,
-      0.80462535,
-      0.80031229,
-      0.79497315,
-      0.7913048,
-      0.78743924,
-      0.79564927,
-      0.80316382,
-      0.80376586,
-      0.80682748,
-      0.80722936,
-      0.8042151,
-      0.79382783,
-      0.79590789,
-      0.80195767,
-      0.80356722,
-      0.81669791,
-      0.83084455,
-      0.84832406,
-      0.84690337,
-      0.86126859,
-      0.86704327,
-      0.87046264,
-      0.87728036,
-      0.90406978,
-      0.93556304,
-      0.94128226,
-      0.96300747,
-      0.98095793,
-      1.0,
-      0.97598578,
-      0.9601178,
-      0.93366518,
-      0.90998425,
-      0.86404201,
-      0.81691156,
-      0.76096293,
-      0.7261538,
-      0.68464445,
-      0.6583518,
-      0.63685854,
-      0.63168586,
-      0.6267692,
-      0.62855599,
-      0.63011881,
-      0.62438673,
-      0.6092456,
-      0.58734709,
-      0.5776011,
-      0.56073607,
-      0.51668236,
-      0.48392743,
-      0.45512751,
-      0.41687186,
-      0.37761532,
-      0.34146519
+      {
+        "sites": 64,
+        "withinGeh5": 55,
+        "counted": 34622,
+        "routed": 33394,
+        "trips": 8695
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 59,
+        "counted": 30891,
+        "routed": 29795,
+        "trips": 7758
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 60,
+        "counted": 27531,
+        "routed": 26554,
+        "trips": 6914
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 60,
+        "counted": 24585,
+        "routed": 23713,
+        "trips": 6174
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 59,
+        "counted": 22576,
+        "routed": 21647,
+        "trips": 5625
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 62,
+        "counted": 20192,
+        "routed": 19361,
+        "trips": 5031
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 61,
+        "counted": 18576,
+        "routed": 17812,
+        "trips": 4628
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 61,
+        "counted": 17448,
+        "routed": 16730,
+        "trips": 4347
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 62,
+        "counted": 16702,
+        "routed": 16081,
+        "trips": 4129
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 62,
+        "counted": 15144,
+        "routed": 14581,
+        "trips": 3744
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 62,
+        "counted": 14288,
+        "routed": 13757,
+        "trips": 3532
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 61,
+        "counted": 13606,
+        "routed": 13100,
+        "trips": 3363
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 62,
+        "counted": 13283,
+        "routed": 12812,
+        "trips": 3316
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 62,
+        "counted": 13409,
+        "routed": 12935,
+        "trips": 3348
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 61,
+        "counted": 13598,
+        "routed": 13116,
+        "trips": 3395
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 61,
+        "counted": 13861,
+        "routed": 13370,
+        "trips": 3461
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 61,
+        "counted": 14817,
+        "routed": 14378,
+        "trips": 3810
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 62,
+        "counted": 15024,
+        "routed": 14579,
+        "trips": 3863
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 61,
+        "counted": 15849,
+        "routed": 15379,
+        "trips": 4075
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 60,
+        "counted": 17162,
+        "routed": 16654,
+        "trips": 4413
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 60,
+        "counted": 19576,
+        "routed": 19344,
+        "trips": 4978
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 59,
+        "counted": 25228,
+        "routed": 24929,
+        "trips": 6416
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 58,
+        "counted": 34133,
+        "routed": 33729,
+        "trips": 8680
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 57,
+        "counted": 45261,
+        "routed": 44724,
+        "trips": 11510
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 50125,
+        "routed": 49663,
+        "trips": 12332
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 55,
+        "counted": 60443,
+        "routed": 59886,
+        "trips": 14870
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 75363,
+        "routed": 74668,
+        "trips": 18541
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 84359,
+        "routed": 83582,
+        "trips": 20754
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 88592,
+        "routed": 87884,
+        "trips": 20639
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 98587,
+        "routed": 97799,
+        "trips": 22968
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 111385,
+        "routed": 110495,
+        "trips": 25949
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 119690,
+        "routed": 118733,
+        "trips": 27884
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 123129,
+        "routed": 121589,
+        "trips": 27856
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 126731,
+        "routed": 125146,
+        "trips": 28671
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 126754,
+        "routed": 125169,
+        "trips": 28676
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 125551,
+        "routed": 123981,
+        "trips": 28404
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 121866,
+        "routed": 120695,
+        "trips": 27551
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 117884,
+        "routed": 116751,
+        "trips": 26651
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 113883,
+        "routed": 112789,
+        "trips": 25746
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 110812,
+        "routed": 109747,
+        "trips": 25052
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 105983,
+        "routed": 105041,
+        "trips": 24083
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 103843,
+        "routed": 102920,
+        "trips": 23597
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 103206,
+        "routed": 102288,
+        "trips": 23452
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 102764,
+        "routed": 101850,
+        "trips": 23352
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 101902,
+        "routed": 101065,
+        "trips": 23129
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 101400,
+        "routed": 100567,
+        "trips": 23015
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 102593,
+        "routed": 101750,
+        "trips": 23285
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 103429,
+        "routed": 102579,
+        "trips": 23475
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 103470,
+        "routed": 102489,
+        "trips": 23512
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 104151,
+        "routed": 103163,
+        "trips": 23666
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 103876,
+        "routed": 102891,
+        "trips": 23604
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 103712,
+        "routed": 102729,
+        "trips": 23567
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 102501,
+        "routed": 101597,
+        "trips": 23370
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 102858,
+        "routed": 101951,
+        "trips": 23451
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 103077,
+        "routed": 102168,
+        "trips": 23501
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 103418,
+        "routed": 102506,
+        "trips": 23579
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 105356,
+        "routed": 104360,
+        "trips": 24065
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 107381,
+        "routed": 106366,
+        "trips": 24527
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 109945,
+        "routed": 108906,
+        "trips": 25113
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 109884,
+        "routed": 108846,
+        "trips": 25099
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 111627,
+        "routed": 110486,
+        "trips": 25794
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 112389,
+        "routed": 111240,
+        "trips": 25970
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 113081,
+        "routed": 111925,
+        "trips": 26130
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 114339,
+        "routed": 113171,
+        "trips": 26421
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 47,
+        "counted": 118410,
+        "routed": 117131,
+        "trips": 26831
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 47,
+        "counted": 122521,
+        "routed": 121197,
+        "trips": 27763
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 48,
+        "counted": 122961,
+        "routed": 121633,
+        "trips": 27862
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 125967,
+        "routed": 124606,
+        "trips": 28544
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 48,
+        "counted": 128555,
+        "routed": 127263,
+        "trips": 29186
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 131171,
+        "routed": 129853,
+        "trips": 29780
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 127475,
+        "routed": 126194,
+        "trips": 28940
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 125104,
+        "routed": 123847,
+        "trips": 28402
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 121649,
+        "routed": 120508,
+        "trips": 27979
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 47,
+        "counted": 118300,
+        "routed": 117190,
+        "trips": 27209
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 48,
+        "counted": 112009,
+        "routed": 110958,
+        "trips": 25762
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 105483,
+        "routed": 104493,
+        "trips": 24261
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 98324,
+        "routed": 97435,
+        "trips": 22472
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 93252,
+        "routed": 92408,
+        "trips": 21313
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 88614,
+        "routed": 87812,
+        "trips": 20253
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 85311,
+        "routed": 84540,
+        "trips": 19498
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 82651,
+        "routed": 81967,
+        "trips": 18693
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 81625,
+        "routed": 80950,
+        "trips": 18461
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 81396,
+        "routed": 80723,
+        "trips": 18410
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 81742,
+        "routed": 81066,
+        "trips": 18488
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 82310,
+        "routed": 81496,
+        "trips": 18594
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 81514,
+        "routed": 80708,
+        "trips": 18415
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 79320,
+        "routed": 78536,
+        "trips": 17919
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 76173,
+        "routed": 75420,
+        "trips": 17208
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 75195,
+        "routed": 74219,
+        "trips": 17012
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 73406,
+        "routed": 72454,
+        "trips": 16607
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 67819,
+        "routed": 66939,
+        "trips": 15343
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 63126,
+        "routed": 62306,
+        "trips": 14281
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 59550,
+        "routed": 59111,
+        "trips": 13548
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 55,
+        "counted": 54444,
+        "routed": 54042,
+        "trips": 12386
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 56,
+        "counted": 49471,
+        "routed": 49106,
+        "trips": 11255
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 44478,
+        "routed": 44150,
+        "trips": 10119
+      }
     ],
     "weekend": [
-      0.56702792,
-      0.53727241,
-      0.50121047,
-      0.47320646,
-      0.44427059,
-      0.41569916,
-      0.39385382,
-      0.37355786,
-      0.36136807,
-      0.3412621,
-      0.32208755,
-      0.30011782,
-      0.28876557,
-      0.28405346,
-      0.26606899,
-      0.25469319,
-      0.25194788,
-      0.23142819,
-      0.22075324,
-      0.21168712,
-      0.2067705,
-      0.21073008,
-      0.22321585,
-      0.23663298,
-      0.24444259,
-      0.26632912,
-      0.30545405,
-      0.32202723,
-      0.30147566,
-      0.31573603,
-      0.34985341,
-      0.3712753,
-      0.35857629,
-      0.3915198,
-      0.43749232,
-      0.48888345,
-      0.49647955,
-      0.54598607,
-      0.60051552,
-      0.65813175,
-      0.65551807,
-      0.67192323,
-      0.69182572,
-      0.72744721,
-      0.7384494,
-      0.75135179,
-      0.77371951,
-      0.80437066,
-      0.81682772,
-      0.82832732,
-      0.83427737,
-      0.83282367,
-      0.83273843,
-      0.82796673,
-      0.82092729,
-      0.81540336,
-      0.81311958,
-      0.81639405,
-      0.83032534,
-      0.8230128,
-      0.82217422,
-      0.83352818,
-      0.83415474,
-      0.81666399,
-      0.81622576,
-      0.81602147,
-      0.8231824,
-      0.81656388,
-      0.80753091,
-      0.8136062,
-      0.81345021,
-      0.8053027,
-      0.80429908,
-      0.80212672,
-      0.78377537,
-      0.76259882,
-      0.75362101,
-      0.74109391,
-      0.7153517,
-      0.70429734,
-      0.67405902,
-      0.66947179,
-      0.66113858,
-      0.65311592,
-      0.65394206,
-      0.6584427,
-      0.64159918,
-      0.62514767,
-      0.61811592,
-      0.60921439,
-      0.5898389,
-      0.57434141,
-      0.55467956,
-      0.53067103,
-      0.48866275,
-      0.45435981
+      {
+        "sites": 64,
+        "withinGeh5": 55,
+        "counted": 73803,
+        "routed": 72606,
+        "trips": 18682
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 55,
+        "counted": 69658,
+        "routed": 68529,
+        "trips": 17633
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 54,
+        "counted": 65046,
+        "routed": 63992,
+        "trips": 16465
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 55,
+        "counted": 61296,
+        "routed": 60302,
+        "trips": 15516
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 55,
+        "counted": 57696,
+        "routed": 56688,
+        "trips": 14324
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 56,
+        "counted": 53885,
+        "routed": 52944,
+        "trips": 13378
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 58,
+        "counted": 50800,
+        "routed": 49913,
+        "trips": 12612
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 57,
+        "counted": 48715,
+        "routed": 47864,
+        "trips": 12094
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 58,
+        "counted": 46966,
+        "routed": 46290,
+        "trips": 11398
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 58,
+        "counted": 44473,
+        "routed": 43833,
+        "trips": 10793
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 56,
+        "counted": 42165,
+        "routed": 41559,
+        "trips": 10233
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 58,
+        "counted": 39062,
+        "routed": 38500,
+        "trips": 9480
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 60,
+        "counted": 37932,
+        "routed": 37483,
+        "trips": 8949
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 57,
+        "counted": 36919,
+        "routed": 36482,
+        "trips": 8710
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 58,
+        "counted": 34978,
+        "routed": 34564,
+        "trips": 8252
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 57,
+        "counted": 33304,
+        "routed": 32910,
+        "trips": 7857
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 58,
+        "counted": 32931,
+        "routed": 32501,
+        "trips": 7800
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 60,
+        "counted": 29752,
+        "routed": 29364,
+        "trips": 7047
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 58,
+        "counted": 28634,
+        "routed": 28260,
+        "trips": 6782
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 57,
+        "counted": 27371,
+        "routed": 27014,
+        "trips": 6483
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 56,
+        "counted": 26649,
+        "routed": 26347,
+        "trips": 6210
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 59,
+        "counted": 26827,
+        "routed": 26522,
+        "trips": 6251
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 56,
+        "counted": 28101,
+        "routed": 27782,
+        "trips": 6548
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 58,
+        "counted": 29491,
+        "routed": 29156,
+        "trips": 6872
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 57,
+        "counted": 30735,
+        "routed": 30399,
+        "trips": 7230
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 57,
+        "counted": 32881,
+        "routed": 32522,
+        "trips": 7735
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 55,
+        "counted": 37773,
+        "routed": 37360,
+        "trips": 8886
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 58,
+        "counted": 40301,
+        "routed": 39861,
+        "trips": 9481
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 58,
+        "counted": 37989,
+        "routed": 37662,
+        "trips": 8772
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 56,
+        "counted": 39679,
+        "routed": 39338,
+        "trips": 9163
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 55,
+        "counted": 43654,
+        "routed": 43279,
+        "trips": 10081
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 54,
+        "counted": 46390,
+        "routed": 45991,
+        "trips": 10712
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 55,
+        "counted": 44472,
+        "routed": 44131,
+        "trips": 10267
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 54,
+        "counted": 48780,
+        "routed": 48406,
+        "trips": 11262
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 54,
+        "counted": 54616,
+        "routed": 54197,
+        "trips": 12609
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 55,
+        "counted": 61393,
+        "routed": 60922,
+        "trips": 14174
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 55,
+        "counted": 62188,
+        "routed": 61746,
+        "trips": 14212
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 55,
+        "counted": 68407,
+        "routed": 67921,
+        "trips": 15634
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 55,
+        "counted": 75474,
+        "routed": 74938,
+        "trips": 17248
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 55,
+        "counted": 83776,
+        "routed": 83181,
+        "trips": 19146
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 54,
+        "counted": 83216,
+        "routed": 82533,
+        "trips": 19216
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 54,
+        "counted": 84913,
+        "routed": 84217,
+        "trips": 19608
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 87360,
+        "routed": 86643,
+        "trips": 20173
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 92722,
+        "routed": 91961,
+        "trips": 21411
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 94572,
+        "routed": 93520,
+        "trips": 21644
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 95929,
+        "routed": 94861,
+        "trips": 21955
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 98649,
+        "routed": 97551,
+        "trips": 22577
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 102869,
+        "routed": 101724,
+        "trips": 23543
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 104807,
+        "routed": 103705,
+        "trips": 24001
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 106399,
+        "routed": 105280,
+        "trips": 24365
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 48,
+        "counted": 106923,
+        "routed": 105799,
+        "trips": 24485
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 106749,
+        "routed": 105627,
+        "trips": 24445
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 48,
+        "counted": 107626,
+        "routed": 106502,
+        "trips": 24459
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 106863,
+        "routed": 105747,
+        "trips": 24285
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 105743,
+        "routed": 104639,
+        "trips": 24031
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 104913,
+        "routed": 103817,
+        "trips": 23842
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 104822,
+        "routed": 103552,
+        "trips": 24304
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 104869,
+        "routed": 103599,
+        "trips": 24315
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 107306,
+        "routed": 106007,
+        "trips": 24880
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 106011,
+        "routed": 104727,
+        "trips": 24580
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 47,
+        "counted": 106501,
+        "routed": 105170,
+        "trips": 24842
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 107843,
+        "routed": 106495,
+        "trips": 25155
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 48,
+        "counted": 108186,
+        "routed": 106834,
+        "trips": 25235
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 106035,
+        "routed": 104710,
+        "trips": 24733
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 48,
+        "counted": 105862,
+        "routed": 104529,
+        "trips": 24794
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 105721,
+        "routed": 104389,
+        "trips": 24761
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 47,
+        "counted": 106644,
+        "routed": 105301,
+        "trips": 24977
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 105494,
+        "routed": 104166,
+        "trips": 24708
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 48,
+        "counted": 103917,
+        "routed": 102629,
+        "trips": 24707
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 104566,
+        "routed": 103270,
+        "trips": 24861
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 47,
+        "counted": 104873,
+        "routed": 103574,
+        "trips": 24934
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 48,
+        "counted": 103329,
+        "routed": 102049,
+        "trips": 24567
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 46,
+        "counted": 103629,
+        "routed": 102337,
+        "trips": 24847
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 103544,
+        "routed": 102253,
+        "trips": 24826
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 101587,
+        "routed": 100319,
+        "trips": 24357
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 98224,
+        "routed": 96999,
+        "trips": 23551
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 47,
+        "counted": 97267,
+        "routed": 96159,
+        "trips": 23313
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 95487,
+        "routed": 94398,
+        "trips": 22886
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 92909,
+        "routed": 91850,
+        "trips": 22269
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 90636,
+        "routed": 89604,
+        "trips": 21724
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 87509,
+        "routed": 86402,
+        "trips": 21006
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 86783,
+        "routed": 85685,
+        "trips": 20832
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 86102,
+        "routed": 85012,
+        "trips": 20669
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 84620,
+        "routed": 83549,
+        "trips": 20313
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 85348,
+        "routed": 84419,
+        "trips": 20570
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 50,
+        "counted": 85544,
+        "routed": 84613,
+        "trips": 20617
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 82979,
+        "routed": 82075,
+        "trips": 19999
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 49,
+        "counted": 81652,
+        "routed": 80763,
+        "trips": 19679
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 80586,
+        "routed": 79827,
+        "trips": 19485
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 79477,
+        "routed": 78727,
+        "trips": 19216
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 76519,
+        "routed": 75798,
+        "trips": 18501
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 75199,
+        "routed": 74490,
+        "trips": 18182
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 72728,
+        "routed": 72079,
+        "trips": 17246
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 53,
+        "counted": 68867,
+        "routed": 68253,
+        "trips": 16331
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 51,
+        "counted": 62834,
+        "routed": 62273,
+        "trips": 14900
+      },
+      {
+        "sites": 64,
+        "withinGeh5": 52,
+        "counted": 58544,
+        "routed": 58021,
+        "trips": 13883
+      }
     ]
   },
-  "signalMatches": [
+  "sites": [
     {
       "site": "1036",
       "name": "QUEENSBERRY/DRUMMOND",
-      "node": 170,
-      "x": 37.669668,
-      "y": 99.034725,
-      "distanceMetres": 8.84
+      "junctions": 3,
+      "detectors": 8,
+      "approachLanes": 6,
+      "counted": true,
+      "distanceMetres": 7.07
     },
     {
       "site": "1059",
       "name": "FRANKLIN/PEEL/WILLIAM",
-      "node": 627,
-      "x": -70.062733,
-      "y": 48.564463,
+      "junctions": 2,
+      "detectors": 12,
+      "approachLanes": 5,
+      "counted": false,
       "distanceMetres": 6.29
+    },
+    {
+      "site": "1076",
+      "name": "GEORGIANA/WURUNDJERI",
+      "junctions": 2,
+      "detectors": 10,
+      "approachLanes": 5,
+      "counted": false,
+      "distanceMetres": 15.45
     },
     {
       "site": "2024",
       "name": "SPRING / FLINDERS LANE",
-      "node": 210,
-      "x": 95.425605,
-      "y": -3.45426,
+      "junctions": 1,
+      "detectors": 6,
+      "approachLanes": 2,
+      "counted": true,
       "distanceMetres": 5.27
     },
     {
       "site": "2835",
       "name": "SPENCER/LITTLE COLLINS",
-      "node": 279,
-      "x": -85.334102,
-      "y": -45.06011,
+      "junctions": 2,
+      "detectors": 7,
+      "approachLanes": 4,
+      "counted": false,
       "distanceMetres": 9.72
     },
     {
       "site": "2900",
       "name": "SPENCER/LITTLE BOURKE",
-      "node": 595,
-      "x": -94.668412,
-      "y": -23.767933,
+      "junctions": 2,
+      "detectors": 3,
+      "approachLanes": 5,
+      "counted": false,
       "distanceMetres": 5.34
     },
     {
       "site": "2901",
       "name": "SPRING/LONSDALE",
-      "node": 97,
-      "x": 75.61372,
-      "y": 50.638355,
+      "junctions": 4,
+      "detectors": 12,
+      "approachLanes": 6,
+      "counted": true,
       "distanceMetres": 6.41
     },
     {
       "site": "2902",
       "name": "EXHIBITION/LONSDALE",
-      "node": 141,
-      "x": 53.816073,
-      "y": 42.523127,
+      "junctions": 4,
+      "detectors": 15,
+      "approachLanes": 7,
+      "counted": true,
       "distanceMetres": 6.73
     },
     {
       "site": "2903",
       "name": "RUSSELL/LONSDALE",
-      "node": 142,
-      "x": 32.15298,
-      "y": 34.442408,
+      "junctions": 4,
+      "detectors": 15,
+      "approachLanes": 6,
+      "counted": true,
       "distanceMetres": 8.19
     },
     {
       "site": "2904",
       "name": "SWANSTON/LONSDALE",
-      "node": 613,
-      "x": 11.041292,
-      "y": 26.623291,
+      "junctions": 2,
+      "detectors": 14,
+      "approachLanes": 8,
+      "counted": true,
       "distanceMetres": 5.67
     },
     {
       "site": "2906",
       "name": "ELIZABETH/LONSDALE",
-      "node": 411,
-      "x": -11.324469,
-      "y": 18.455743,
+      "junctions": 4,
+      "detectors": 7,
+      "approachLanes": 6,
+      "counted": true,
       "distanceMetres": 7.76
     },
     {
       "site": "2907",
       "name": "QUEEN/LONSDALE",
-      "node": 266,
-      "x": -32.963818,
-      "y": 10.5164,
+      "junctions": 4,
+      "detectors": 13,
+      "approachLanes": 8,
+      "counted": true,
       "distanceMetres": 6.59
     },
     {
       "site": "2908",
       "name": "WILLIAM/LONSDALE",
-      "node": 355,
-      "x": -54.828301,
-      "y": 2.541436,
+      "junctions": 4,
+      "detectors": 13,
+      "approachLanes": 6,
+      "counted": true,
       "distanceMetres": 8.35
+    },
+    {
+      "site": "2909",
+      "name": "KING/LONSDALE",
+      "junctions": 4,
+      "detectors": 14,
+      "approachLanes": 10,
+      "counted": true,
+      "distanceMetres": 6.75
     },
     {
       "site": "2910",
       "name": "SPENCER/LONSDALE",
-      "node": 222,
-      "x": -97.339253,
-      "y": -12.91312,
+      "junctions": 4,
+      "detectors": 16,
+      "approachLanes": 6,
+      "counted": true,
       "distanceMetres": 8.37
     },
     {
       "site": "2911",
       "name": "EXHIBITION/LITTLE LONSDALE",
-      "node": 7,
-      "x": 49.592152,
-      "y": 54.136029,
+      "junctions": 2,
+      "detectors": 1,
+      "approachLanes": 5,
+      "counted": false,
       "distanceMetres": 5.0
     },
     {
       "site": "2912",
       "name": "RUSSELL/LITTLE LONSDALE",
-      "node": 6,
-      "x": 28.003811,
-      "y": 45.994084,
+      "junctions": 2,
+      "detectors": 8,
+      "approachLanes": 5,
+      "counted": true,
       "distanceMetres": 5.91
     },
     {
       "site": "2913",
       "name": "SWANSTON/LITTLE LONSDALE",
-      "node": 556,
-      "x": 6.856066,
-      "y": 38.133779,
+      "junctions": 1,
+      "detectors": 4,
+      "approachLanes": 3,
+      "counted": true,
       "distanceMetres": 0.13
     },
     {
       "site": "2914",
       "name": "ELIZABETH/LITTLE LONSDALE",
-      "node": 393,
-      "x": -15.436702,
-      "y": 29.790345,
+      "junctions": 2,
+      "detectors": 6,
+      "approachLanes": 3,
+      "counted": false,
       "distanceMetres": 6.3
     },
     {
       "site": "2915",
       "name": "QUEEN/LITTLE LONSDALE",
-      "node": 268,
-      "x": -37.051426,
-      "y": 21.830965,
+      "junctions": 2,
+      "detectors": 2,
+      "approachLanes": 5,
+      "counted": false,
       "distanceMetres": 5.17
     },
     {
       "site": "2916",
       "name": "WILLIAM/LITTLE LONSDALE",
-      "node": 360,
-      "x": -57.507057,
-      "y": 14.336903,
+      "junctions": 2,
+      "detectors": 9,
+      "approachLanes": 3,
+      "counted": true,
       "distanceMetres": 7.1
+    },
+    {
+      "site": "2917",
+      "name": "KING/LITTLE LONSDALE",
+      "junctions": 2,
+      "detectors": 1,
+      "approachLanes": 7,
+      "counted": false,
+      "distanceMetres": 6.04
+    },
+    {
+      "site": "2918",
+      "name": "VICTORIA/LATROBE",
+      "junctions": 3,
+      "detectors": 21,
+      "approachLanes": 8,
+      "counted": true,
+      "distanceMetres": 14.68
+    },
+    {
+      "site": "2919",
+      "name": "EXHIBITION/LATROBE",
+      "junctions": 4,
+      "detectors": 14,
+      "approachLanes": 8,
+      "counted": true,
+      "distanceMetres": 7.97
+    },
+    {
+      "site": "2920",
+      "name": "RUSSELL/LATROBE",
+      "junctions": 4,
+      "detectors": 18,
+      "approachLanes": 8,
+      "counted": true,
+      "distanceMetres": 7.67
+    },
+    {
+      "site": "2921",
+      "name": "SWANSTON/LATROBE",
+      "junctions": 4,
+      "detectors": 22,
+      "approachLanes": 4,
+      "counted": false,
+      "distanceMetres": 8.07
+    },
+    {
+      "site": "2922",
+      "name": "ELIZABETH/LATROBE",
+      "junctions": 4,
+      "detectors": 17,
+      "approachLanes": 6,
+      "counted": true,
+      "distanceMetres": 8.94
+    },
+    {
+      "site": "2923",
+      "name": "QUEEN/LATROBE",
+      "junctions": 4,
+      "detectors": 10,
+      "approachLanes": 7,
+      "counted": true,
+      "distanceMetres": 7.14
+    },
+    {
+      "site": "2924",
+      "name": "WILLIAM/LATROBE",
+      "junctions": 4,
+      "detectors": 20,
+      "approachLanes": 6,
+      "counted": false,
+      "distanceMetres": 6.61
+    },
+    {
+      "site": "2925",
+      "name": "KING/LATROBE",
+      "junctions": 4,
+      "detectors": 16,
+      "approachLanes": 10,
+      "counted": true,
+      "distanceMetres": 8.25
+    },
+    {
+      "site": "2926",
+      "name": "SPENCER/LATROBE",
+      "junctions": 4,
+      "detectors": 21,
+      "approachLanes": 8,
+      "counted": false,
+      "distanceMetres": 22.38
+    },
+    {
+      "site": "2929",
+      "name": "KING ST/FLINDERS ST",
+      "junctions": 2,
+      "detectors": 21,
+      "approachLanes": 8,
+      "counted": false,
+      "distanceMetres": 14.05
+    },
+    {
+      "site": "2931",
+      "name": "FLINDERS/WELLINGTON STH",
+      "junctions": 2,
+      "detectors": 4,
+      "approachLanes": 3,
+      "counted": true,
+      "distanceMetres": 25.42
     },
     {
       "site": "2932",
       "name": "WELLINGTON/SPRING/FLINDERS",
-      "node": 209,
-      "x": 99.19222,
-      "y": -13.557663,
+      "junctions": 3,
+      "detectors": 14,
+      "approachLanes": 7,
+      "counted": false,
       "distanceMetres": 11.14
     },
     {
       "site": "3410",
       "name": "FLINDERS LANE/MARKET",
-      "node": 679,
-      "x": -24.561707,
-      "y": -47.800808,
+      "junctions": 3,
+      "detectors": 7,
+      "approachLanes": 4,
+      "counted": true,
       "distanceMetres": 6.7
+    },
+    {
+      "site": "4370",
+      "name": "WURUNDJERI/BATMANS HILL DR",
+      "junctions": 1,
+      "detectors": 16,
+      "approachLanes": 7,
+      "counted": true,
+      "distanceMetres": 24.61
     },
     {
       "site": "4388",
       "name": "ELIZABETH/VICTORIA",
-      "node": 589,
-      "x": -34.787764,
-      "y": 86.713827,
+      "junctions": 6,
+      "detectors": 17,
+      "approachLanes": 12,
+      "counted": true,
       "distanceMetres": 9.85
     },
     {
       "site": "4389",
       "name": "VICTORIA/SWANSTON",
-      "node": 318,
-      "x": -4.725198,
-      "y": 81.12111,
+      "junctions": 4,
+      "detectors": 16,
+      "approachLanes": 8,
+      "counted": true,
       "distanceMetres": 8.48
     },
     {
       "site": "4400",
       "name": "RATHDOWNE/QUEENSBERRY",
-      "node": 242,
-      "x": 50.398593,
-      "y": 97.305925,
+      "junctions": 4,
+      "detectors": 14,
+      "approachLanes": 4,
+      "counted": true,
       "distanceMetres": 4.16
     },
     {
       "site": "4402",
       "name": "VICTORIA/BOUVERIE",
-      "node": 246,
-      "x": -17.725868,
-      "y": 82.844344,
+      "junctions": 4,
+      "detectors": 13,
+      "approachLanes": 8,
+      "counted": false,
       "distanceMetres": 8.93
     },
     {
       "site": "4403",
       "name": "VICTORIA/CARDIGAN/FRANKLIN",
-      "node": 232,
-      "x": 7.209598,
-      "y": 79.518102,
+      "junctions": 4,
+      "detectors": 12,
+      "approachLanes": 9,
+      "counted": true,
       "distanceMetres": 6.48
     },
     {
       "site": "4404",
       "name": "VICTORIA/LYGON",
-      "node": 240,
-      "x": 21.284937,
-      "y": 77.624549,
+      "junctions": 3,
+      "detectors": 16,
+      "approachLanes": 13,
+      "counted": true,
       "distanceMetres": 8.41
     },
     {
       "site": "4405",
       "name": "VICTORIA/RATHDOWNE",
-      "node": 18,
-      "x": 47.565058,
-      "y": 75.126528,
+      "junctions": 2,
+      "detectors": 15,
+      "approachLanes": 8,
+      "counted": true,
       "distanceMetres": 7.27
+    },
+    {
+      "site": "4406",
+      "name": "Victoria Pde and Nicholson St",
+      "junctions": 4,
+      "detectors": 27,
+      "approachLanes": 10,
+      "counted": false,
+      "distanceMetres": 7.69
     },
     {
       "site": "4419",
       "name": "NICHOLSON/GERTRUDE",
-      "node": 415,
-      "x": 89.8412,
-      "y": 96.011274,
+      "junctions": 1,
+      "detectors": 17,
+      "approachLanes": 4,
+      "counted": false,
       "distanceMetres": 8.46
+    },
+    {
+      "site": "4437",
+      "name": "WURUNDJERI/BOURKE",
+      "junctions": 3,
+      "detectors": 11,
+      "approachLanes": 10,
+      "counted": true,
+      "distanceMetres": 3.95
+    },
+    {
+      "site": "4441",
+      "name": "VICTORIA/BRUNSWICK/GISBORNE",
+      "junctions": 1,
+      "detectors": 29,
+      "approachLanes": 4,
+      "counted": false,
+      "distanceMetres": 3.76
     },
     {
       "site": "4444",
       "name": "ALBERT/NICHOLSON/LONSDALE",
-      "node": 131,
-      "x": 83.905022,
-      "y": 52.142288,
+      "junctions": 4,
+      "detectors": 12,
+      "approachLanes": 8,
+      "counted": true,
       "distanceMetres": 10.01
     },
     {
       "site": "4445",
       "name": "ALBERT/GISBORNE",
-      "node": 374,
-      "x": 107.426359,
-      "y": 49.030894,
+      "junctions": 4,
+      "detectors": 14,
+      "approachLanes": 7,
+      "counted": true,
       "distanceMetres": 8.55
+    },
+    {
+      "site": "4503",
+      "name": "VICTORIA/LEVESON",
+      "junctions": 2,
+      "detectors": 8,
+      "approachLanes": 3,
+      "counted": true,
+      "distanceMetres": 7.55
     },
     {
       "site": "4504",
       "name": "VICTORIA/CHETWYND",
-      "node": 602,
-      "x": -99.776164,
-      "y": 95.688446,
+      "junctions": 4,
+      "detectors": 10,
+      "approachLanes": 5,
+      "counted": true,
       "distanceMetres": 7.35
     },
     {
       "site": "4505",
       "name": "VICTORIA/WILLIAM/HOWARD",
-      "node": 598,
-      "x": -86.854643,
-      "y": 92.759616,
+      "junctions": 4,
+      "detectors": 12,
+      "approachLanes": 5,
+      "counted": true,
       "distanceMetres": 7.15
     },
     {
       "site": "4506",
       "name": "VICTORIA/PEEL",
-      "node": 183,
-      "x": -65.031493,
-      "y": 90.94844,
+      "junctions": 4,
+      "detectors": 16,
+      "approachLanes": 7,
+      "counted": true,
       "distanceMetres": 11.67
     },
     {
       "site": "4510",
       "name": "ELIZABETH/THERRY",
-      "node": 410,
-      "x": -32.429122,
-      "y": 76.45235,
+      "junctions": 2,
+      "detectors": 7,
+      "approachLanes": 6,
+      "counted": true,
       "distanceMetres": 6.64
     },
     {
       "site": "4511",
       "name": "ELIZABETH/FRANKLIN",
-      "node": 395,
-      "x": -27.900038,
-      "y": 63.995642,
+      "junctions": 4,
+      "detectors": 4,
+      "approachLanes": 7,
+      "counted": false,
       "distanceMetres": 8.81
     },
     {
       "site": "4512",
       "name": "ELIZABETH/A'BECKETT",
-      "node": 610,
-      "x": -23.822103,
-      "y": 52.799076,
+      "junctions": 2,
+      "detectors": 4,
+      "approachLanes": 4,
+      "counted": true,
       "distanceMetres": 6.71
     },
     {
       "site": "4514",
       "name": "KING/ROSSLYN/CHETWYND",
-      "node": 692,
-      "x": -101.323967,
-      "y": 67.525599,
-      "distanceMetres": 36.21
+      "junctions": 6,
+      "detectors": 10,
+      "approachLanes": 10,
+      "counted": true,
+      "distanceMetres": 6.99
+    },
+    {
+      "site": "4517",
+      "name": "KING/DUDLEY",
+      "junctions": 2,
+      "detectors": 15,
+      "approachLanes": 10,
+      "counted": true,
+      "distanceMetres": 5.72
     },
     {
       "site": "4523",
-      "name": "SWANSTON/FRANKLIN ",
-      "node": 320,
-      "x": -6.629172,
-      "y": 73.374352,
+      "name": "SWANSTON/FRANKLIN",
+      "junctions": 2,
+      "detectors": 10,
+      "approachLanes": 5,
+      "counted": false,
       "distanceMetres": 10.22
+    },
+    {
+      "site": "4526",
+      "name": "WURUNDJERI/FLINDERS",
+      "junctions": 2,
+      "detectors": 15,
+      "approachLanes": 10,
+      "counted": true,
+      "distanceMetres": 7.48
     },
     {
       "site": "4556",
       "name": "QUEEN/A'BECKETT",
-      "node": 271,
-      "x": -45.34009,
-      "y": 44.849715,
+      "junctions": 2,
+      "detectors": 10,
+      "approachLanes": 10,
+      "counted": true,
       "distanceMetres": 4.87
     },
     {
       "site": "4560",
       "name": "EXHIBITION/FLINDERS",
-      "node": 122,
-      "x": 77.851879,
-      "y": -23.114485,
+      "junctions": 4,
+      "detectors": 14,
+      "approachLanes": 7,
+      "counted": true,
       "distanceMetres": 7.83
     },
     {
       "site": "4561",
       "name": "RUSSELL/FLINDERS",
-      "node": 239,
-      "x": 55.734118,
-      "y": -29.960665,
+      "junctions": 4,
+      "detectors": 22,
+      "approachLanes": 5,
+      "counted": true,
       "distanceMetres": 7.6
+    },
+    {
+      "site": "4562",
+      "name": "SWANSTON/FLINDERS",
+      "junctions": 2,
+      "detectors": 15,
+      "approachLanes": 4,
+      "counted": false,
+      "distanceMetres": 10.1
     },
     {
       "site": "4563",
       "name": "ELIZABETH/FLINDERS",
-      "node": 274,
-      "x": 12.000754,
-      "y": -46.031933,
+      "junctions": 1,
+      "detectors": 8,
+      "approachLanes": 2,
+      "counted": true,
       "distanceMetres": 10.09
     },
     {
       "site": "4564",
       "name": "QUEEN/FLINDERS",
-      "node": 238,
-      "x": -9.683446,
-      "y": -54.061445,
+      "junctions": 4,
+      "detectors": 13,
+      "approachLanes": 5,
+      "counted": true,
       "distanceMetres": 8.31
     },
     {
       "site": "4565",
       "name": "FLINDERS/MARKET",
-      "node": 137,
-      "x": -21.904058,
-      "y": -58.52315,
+      "junctions": 3,
+      "detectors": 18,
+      "approachLanes": 6,
+      "counted": false,
       "distanceMetres": 8.47
     },
     {
       "site": "4566",
       "name": "WILLIAM/FLINDERS",
-      "node": 479,
-      "x": -30.422254,
-      "y": -63.14961,
+      "junctions": 6,
+      "detectors": 18,
+      "approachLanes": 11,
+      "counted": true,
       "distanceMetres": 6.87
     },
     {
       "site": "4567",
       "name": "SPENCER/FLINDERS",
-      "node": 213,
-      "x": -74.627874,
-      "y": -80.062457,
+      "junctions": 4,
+      "detectors": 19,
+      "approachLanes": 10,
+      "counted": false,
       "distanceMetres": 11.67
     },
     {
       "site": "4568",
       "name": "EXHIBITION/FLINDERS LANE",
-      "node": 697,
-      "x": 73.552327,
-      "y": -11.599544,
+      "junctions": 2,
+      "detectors": 1,
+      "approachLanes": 5,
+      "counted": false,
       "distanceMetres": 5.76
     },
     {
       "site": "4569",
       "name": "RUSSELL/FLINDERS LANE",
-      "node": 15,
-      "x": 51.77051,
-      "y": -19.659112,
+      "junctions": 2,
+      "detectors": 3,
+      "approachLanes": 5,
+      "counted": false,
       "distanceMetres": 5.99
     },
     {
       "site": "4570",
       "name": "SWANSTON/FLINDERS LANE",
-      "node": 241,
-      "x": 30.69312,
-      "y": -27.49604,
+      "junctions": 1,
+      "detectors": 7,
+      "approachLanes": 2,
+      "counted": true,
       "distanceMetres": 1.67
     },
     {
       "site": "4571",
       "name": "ELIZABETH/FLINDERS LANE",
-      "node": 391,
-      "x": 8.371331,
-      "y": -35.753758,
+      "junctions": 2,
+      "detectors": 6,
+      "approachLanes": 3,
+      "counted": true,
       "distanceMetres": 6.27
     },
     {
       "site": "4572",
       "name": "QUEEN/FLINDERS LANE",
-      "node": 147,
-      "x": -13.351564,
-      "y": -43.747647,
+      "junctions": 2,
+      "detectors": 5,
+      "approachLanes": 3,
+      "counted": false,
       "distanceMetres": 4.71
     },
     {
       "site": "4573",
       "name": "WILLIAM/FLINDERS LANE",
-      "node": 583,
-      "x": -35.055991,
-      "y": -51.79163,
+      "junctions": 4,
+      "detectors": 8,
+      "approachLanes": 5,
+      "counted": true,
       "distanceMetres": 5.44
+    },
+    {
+      "site": "4574",
+      "name": "KING/FLINDERS LANE",
+      "junctions": 2,
+      "detectors": 6,
+      "approachLanes": 8,
+      "counted": false,
+      "distanceMetres": 6.88
     },
     {
       "site": "4575",
       "name": "SPRING/COLLINS",
-      "node": 202,
-      "x": 91.446167,
-      "y": 7.474025,
+      "junctions": 4,
+      "detectors": 17,
+      "approachLanes": 4,
+      "counted": false,
       "distanceMetres": 5.01
     },
     {
       "site": "4576",
       "name": "COLLINS/EXHIBITION",
-      "node": 700,
-      "x": 69.7734,
-      "y": -1.20003,
+      "junctions": 4,
+      "detectors": 7,
+      "approachLanes": 4,
+      "counted": true,
       "distanceMetres": 7.59
     },
     {
       "site": "4577",
       "name": "RUSSELL/COLLINS",
-      "node": 614,
-      "x": 47.910675,
-      "y": -9.209504,
+      "junctions": 4,
+      "detectors": 8,
+      "approachLanes": 6,
+      "counted": true,
       "distanceMetres": 7.96
     },
     {
       "site": "4578",
       "name": "SWANSTON/COLLINS",
-      "node": 326,
-      "x": 26.533398,
-      "y": -15.868666,
+      "junctions": 1,
+      "detectors": 6,
+      "approachLanes": 2,
+      "counted": true,
       "distanceMetres": 7.78
     },
     {
       "site": "4580",
       "name": "ELIZABETH/COLLINS",
-      "node": 388,
-      "x": 4.602077,
-      "y": -25.344224,
+      "junctions": 4,
+      "detectors": 10,
+      "approachLanes": 4,
+      "counted": true,
       "distanceMetres": 7.63
     },
     {
       "site": "4581",
       "name": "QUEEN/COLLINS",
-      "node": 298,
-      "x": -17.137527,
-      "y": -33.158888,
+      "junctions": 4,
+      "detectors": 5,
+      "approachLanes": 5,
+      "counted": true,
       "distanceMetres": 5.86
     },
     {
       "site": "4583",
       "name": "WILLIAM/COLLINS",
-      "node": 356,
-      "x": -39.091713,
-      "y": -41.336456,
+      "junctions": 4,
+      "detectors": 8,
+      "approachLanes": 4,
+      "counted": true,
       "distanceMetres": 9.25
+    },
+    {
+      "site": "4584",
+      "name": "KING/COLLINS",
+      "junctions": 4,
+      "detectors": 13,
+      "approachLanes": 8,
+      "counted": true,
+      "distanceMetres": 7.49
     },
     {
       "site": "4585",
       "name": "SPENCER/COLLINS",
-      "node": 276,
-      "x": -83.22434,
-      "y": -56.120865,
-      "distanceMetres": 10.38
+      "junctions": 4,
+      "detectors": 16,
+      "approachLanes": 5,
+      "counted": false,
+      "distanceMetres": 10.24
     },
     {
       "site": "4586",
       "name": "EXHIBITION/LITTLE COLLINS",
-      "node": 16,
-      "x": 65.534529,
-      "y": 10.177988,
+      "junctions": 2,
+      "detectors": 2,
+      "approachLanes": 3,
+      "counted": false,
       "distanceMetres": 6.27
     },
     {
       "site": "4587",
       "name": "RUSSELL/LITTLE COLLINS",
-      "node": 17,
-      "x": 43.760627,
-      "y": 2.123986,
+      "junctions": 2,
+      "detectors": 4,
+      "approachLanes": 5,
+      "counted": false,
       "distanceMetres": 7.09
     },
     {
       "site": "4588",
       "name": "SWANSTON/LITTLE COLLINS",
-      "node": 327,
-      "x": 22.725449,
-      "y": -5.613868,
+      "junctions": 1,
+      "detectors": 2,
+      "approachLanes": 4,
+      "counted": false,
       "distanceMetres": 0.79
     },
     {
       "site": "4589",
       "name": "ELIZABETH/LITTLE COLLINS",
-      "node": 389,
-      "x": 0.456426,
-      "y": -13.845982,
+      "junctions": 2,
+      "detectors": 7,
+      "approachLanes": 3,
+      "counted": true,
       "distanceMetres": 5.52
     },
     {
       "site": "4590",
       "name": "QUEEN/LITTLE COLLINS",
-      "node": 270,
-      "x": -21.307802,
-      "y": -21.87438,
+      "junctions": 2,
+      "detectors": 2,
+      "approachLanes": 5,
+      "counted": false,
       "distanceMetres": 5.29
     },
     {
       "site": "4591",
       "name": "WILLIAM/LITTLE COLLINS",
-      "node": 2,
-      "x": -41.927887,
-      "y": -29.376235,
+      "junctions": 2,
+      "detectors": 11,
+      "approachLanes": 3,
+      "counted": false,
       "distanceMetres": 6.93
+    },
+    {
+      "site": "4592",
+      "name": "KING/LITTLE COLLINS",
+      "junctions": 2,
+      "detectors": 2,
+      "approachLanes": 8,
+      "counted": false,
+      "distanceMetres": 6.01
     },
     {
       "site": "4593",
       "name": "SPRING/BOURKE",
-      "node": 377,
-      "x": 83.829391,
-      "y": 28.618146,
+      "junctions": 3,
+      "detectors": 12,
+      "approachLanes": 6,
+      "counted": false,
       "distanceMetres": 7.8
     },
     {
       "site": "4594",
       "name": "BOURKE/EXHIBITION",
-      "node": 329,
-      "x": 61.614013,
-      "y": 20.633162,
+      "junctions": 4,
+      "detectors": 3,
+      "approachLanes": 6,
+      "counted": false,
       "distanceMetres": 8.35
     },
     {
       "site": "4595",
       "name": "RUSSELL/BOURKE",
-      "node": 331,
-      "x": 39.957076,
-      "y": 12.689367,
+      "junctions": 4,
+      "detectors": 9,
+      "approachLanes": 7,
+      "counted": true,
       "distanceMetres": 7.81
     },
     {
       "site": "4597",
       "name": "ELIZABETH/BOURKE",
-      "node": 390,
-      "x": -3.326898,
-      "y": -3.524391,
+      "junctions": 4,
+      "detectors": 10,
+      "approachLanes": 4,
+      "counted": true,
       "distanceMetres": 8.31
     },
     {
       "site": "4599",
       "name": "QUEEN/BOURKE",
-      "node": 291,
-      "x": -25.223041,
-      "y": -11.286735,
+      "junctions": 4,
+      "detectors": 12,
+      "approachLanes": 9,
+      "counted": false,
       "distanceMetres": 7.12
     },
     {
       "site": "4600",
       "name": "WILLIAM/BOURKE",
-      "node": 358,
-      "x": -46.891411,
-      "y": -19.645754,
+      "junctions": 4,
+      "detectors": 14,
+      "approachLanes": 6,
+      "counted": true,
       "distanceMetres": 9.94
+    },
+    {
+      "site": "4601",
+      "name": "KING/BOURKE",
+      "junctions": 4,
+      "detectors": 13,
+      "approachLanes": 10,
+      "counted": true,
+      "distanceMetres": 7.33
     },
     {
       "site": "4602",
       "name": "SPENCER/BOURKE",
-      "node": 282,
-      "x": -89.643327,
-      "y": -33.616414,
+      "junctions": 3,
+      "detectors": 19,
+      "approachLanes": 7,
+      "counted": false,
       "distanceMetres": 9.95
     },
     {
       "site": "4603",
       "name": "EXHIBITION/LITTLE BOURKE",
-      "node": 13,
-      "x": 57.831568,
-      "y": 32.082424,
+      "junctions": 2,
+      "detectors": 2,
+      "approachLanes": 3,
+      "counted": false,
       "distanceMetres": 3.22
     },
     {
       "site": "4604",
       "name": "RUSSELL/LITTLE BOURKE",
-      "node": 14,
-      "x": 35.987311,
-      "y": 24.188723,
+      "junctions": 2,
+      "detectors": 1,
+      "approachLanes": 5,
+      "counted": false,
       "distanceMetres": 5.29
     },
     {
       "site": "4605",
       "name": "SWANSTON/LITTLE BOURKE",
-      "node": 323,
-      "x": 14.810545,
-      "y": 16.263852,
+      "junctions": 1,
+      "detectors": 5,
+      "approachLanes": 3,
+      "counted": true,
       "distanceMetres": 0.69
     },
     {
       "site": "4606",
       "name": "ELIZABETH/LITTLE BOURKE",
-      "node": 396,
-      "x": -7.509485,
-      "y": 7.984984,
+      "junctions": 2,
+      "detectors": 6,
+      "approachLanes": 3,
+      "counted": true,
       "distanceMetres": 5.65
     },
     {
       "site": "4607",
       "name": "QUEEN/LITTLE BOURKE",
-      "node": 261,
-      "x": -29.289543,
-      "y": 0.050094,
+      "junctions": 2,
+      "detectors": 1,
+      "approachLanes": 5,
+      "counted": false,
       "distanceMetres": 6.01
     },
     {
       "site": "4608",
       "name": "WILLIAM/LITTLE BOURKE",
-      "node": 359,
-      "x": -51.029147,
-      "y": -7.869211,
+      "junctions": 2,
+      "detectors": 11,
+      "approachLanes": 4,
+      "counted": false,
       "distanceMetres": 5.91
+    },
+    {
+      "site": "4609",
+      "name": "KING/LITTLE BOURKE",
+      "junctions": 2,
+      "detectors": 1,
+      "approachLanes": 8,
+      "counted": false,
+      "distanceMetres": 4.63
     }
   ],
+  "dailyTotals": {
+    "weekday": [
+      34620,
+      30891,
+      27532,
+      24582,
+      22576,
+      20192,
+      18574,
+      17445,
+      16702,
+      15146,
+      14289,
+      13607,
+      13286,
+      13408,
+      13596,
+      13859,
+      14819,
+      15025,
+      15848,
+      17167,
+      19575,
+      25226,
+      34134,
+      45260,
+      50124,
+      60443,
+      75360,
+      84360,
+      88589,
+      98588,
+      111383,
+      119689,
+      123129,
+      126729,
+      126759,
+      125551,
+      121868,
+      117882,
+      113882,
+      110815,
+      105981,
+      103842,
+      103204,
+      102762,
+      101898,
+      101401,
+      102592,
+      103431,
+      103473,
+      104152,
+      103876,
+      103711,
+      102499,
+      102860,
+      103077,
+      103419,
+      105358,
+      107383,
+      109948,
+      109884,
+      111631,
+      112384,
+      113084,
+      114340,
+      118409,
+      122524,
+      122960,
+      125967,
+      128553,
+      131172,
+      127478,
+      125100,
+      121648,
+      118300,
+      112008,
+      105487,
+      98324,
+      93252,
+      88614,
+      85310,
+      82654,
+      81624,
+      81398,
+      81743,
+      82308,
+      81517,
+      79318,
+      76169,
+      75195,
+      73406,
+      67820,
+      63128,
+      59549,
+      54438,
+      49471,
+      44478
+    ],
+    "weekend": [
+      73801,
+      69656,
+      65046,
+      61296,
+      57694,
+      53885,
+      50800,
+      48718,
+      46969,
+      44476,
+      42164,
+      39064,
+      37930,
+      36919,
+      34981,
+      33307,
+      32929,
+      29751,
+      28637,
+      27374,
+      26651,
+      26828,
+      28101,
+      29488,
+      30736,
+      32876,
+      37772,
+      40302,
+      37990,
+      39679,
+      43658,
+      46389,
+      44472,
+      48780,
+      54615,
+      61395,
+      62191,
+      68405,
+      75477,
+      83775,
+      83214,
+      84910,
+      87361,
+      92720,
+      94569,
+      95927,
+      98648,
+      102867,
+      104807,
+      106401,
+      106922,
+      106750,
+      107625,
+      106866,
+      105742,
+      104912,
+      104826,
+      104866,
+      107308,
+      106011,
+      106501,
+      107845,
+      108184,
+      106038,
+      105860,
+      105719,
+      106647,
+      105495,
+      103916,
+      104568,
+      104877,
+      103330,
+      103629,
+      103544,
+      101583,
+      98222,
+      97263,
+      95488,
+      92907,
+      90635,
+      87513,
+      86782,
+      86101,
+      84621,
+      85351,
+      85542,
+      82981,
+      81652,
+      80584,
+      79475,
+      76519,
+      75198,
+      72728,
+      68868,
+      62835,
+      58543
+    ]
+  },
   "signalsSha256": "e5fd0df86f223db345ffbdeb21db188e2240f4eb7409e4998ea5fde0a8a766af",
-  "retainedSha256": "d87d7ce3e69c655eba5b29fa56f320ab28eaf48434ae0d5261f831f1fdb80539"
+  "retainedSha256": "d87d7ce3e69c655eba5b29fa56f320ab28eaf48434ae0d5261f831f1fdb80539",
+  "demandSha256": "d3796228e955d160bfa82a3024f6f95f627fb76e763bf2e1980dd8a21dd4f1d6"
 }

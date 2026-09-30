@@ -6,26 +6,27 @@
 import { Footprints, Pause, Play, RotateCcw } from "lucide-react";
 import type { Metrics } from "@traffic-lab/simulation";
 import { Toggle } from "../../components/form";
-import { clock } from "../../lib/format";
+import { clock, timeOfDay } from "../../lib/format";
 import { SPEEDS, speedLabel } from "../simulation/speeds";
 import type { TrafficSimulation } from "../simulation/useTrafficSim";
 
-/** Where the run is: warming up, counting, or done. */
+/** The time of day in the model, then where the run is: warming up, counting, or done. */
 function phaseText(metrics: Metrics | null, keepRunning: boolean): string {
   if (!metrics) {
     return "";
   }
+  const now = timeOfDay(metrics.clock) + " · ";
   if (metrics.ticks < metrics.warmUp) {
-    return "Warm-up · " + clock(metrics.warmUp - metrics.ticks) + " left";
+    return now + "Warm-up · " + clock(metrics.warmUp - metrics.ticks) + " left";
   }
   if (keepRunning) {
-    return "Counting until you pause";
+    return now + "Counting until you pause";
   }
   const end = metrics.warmUp + metrics.measure;
   if (metrics.finished || metrics.ticks >= end) {
-    return "Counting finished";
+    return now + "Counting finished";
   }
-  return "Counting · " + clock(end - metrics.ticks) + " left";
+  return now + "Counting · " + clock(end - metrics.ticks) + " left";
 }
 
 function StartPauseButton({ sim, ready }: { sim: TrafficSimulation; ready: boolean }) {
@@ -73,14 +74,7 @@ export default function RunBar({ sim }: { sim: TrafficSimulation }) {
   return (
     <div className="run-bar">
       <div className="run-buttons">
-        <button
-          className={restartClass}
-          disabled={!ready}
-          onClick={function () {
-            sim.restart();
-          }}
-          title={restartTitle}
-        >
+        <button className={restartClass} disabled={!ready} onClick={sim.restart} title={restartTitle}>
           <RotateCcw size={16} /> Restart
           {sim.restartNeeded && <span className="needed-dot" aria-label="(changes waiting)" />}
         </button>

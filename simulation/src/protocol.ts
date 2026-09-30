@@ -1,11 +1,9 @@
 /**
- * The messages the web page and the background workers send each other: the
- * live simulator's worker, and the planner's batch workers.
+ * The messages the web page and the background worker send each other.
  */
 
-import type { Scenario, ScenarioResult } from "./scenario";
 import type { SettingName, Settings, ViewMode } from "./settings";
-import type { Metrics, ModelBaseline, World } from "./types";
+import type { Metrics, ModelBaseline, SiteVolume, World } from "./types";
 
 /** Desktop buttons the page may press. Setup and Go have their own messages. */
 export type ButtonName =
@@ -43,6 +41,8 @@ export type WorkerMessage =
       /** Every road's look, sent when it changes. */
       styles?: Float32Array;
       stylesView?: ViewMode;
+      /** Traffic entering each counted intersection, sent with the road looks. */
+      sites?: SiteVolume[];
     }
   | { type: "running"; running: boolean; reason: RunReason | null }
   | { type: "output"; lines: string[] }
@@ -51,14 +51,3 @@ export type WorkerMessage =
   | { type: "baseline"; saved: ModelBaseline | null }
   | { type: "csv"; text: string; ticks: number }
   | { type: "error"; message: string; fatal: boolean };
-
-/** Messages from the page to a planner batch worker. */
-export type BatchRequest = { type: "run"; id: number; scenario: Scenario };
-
-/** Messages from a planner batch worker to the page. */
-export type BatchReply =
-  | { type: "ready" }
-  | { type: "progress"; id: number; done: number; total: number }
-  | { type: "result"; id: number; result: ScenarioResult; seconds: number }
-  /** id is null when the engine itself failed to load. */
-  | { type: "error"; id: number | null; message: string };

@@ -14,7 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Metrics } from "@traffic-lab/simulation";
-import { clock, oneDp, whole } from "../../lib/format";
+import { clock, oneDp, timeOfDay, whole } from "../../lib/format";
 
 interface Tile {
   icon: LucideIcon;
@@ -27,11 +27,16 @@ function tilesFor(metrics: Metrics | null): Tile[] {
   if (!metrics) {
     return [
       { icon: Car, label: "Cars on the road", value: "—", note: "Driving in the city now" },
-      { icon: Hourglass, label: "Cars waiting to enter", value: "—", note: "Queued at the edge of the city" },
+      {
+        icon: Hourglass,
+        label: "Cars waiting to enter",
+        value: "—",
+        note: "At the edge of the map or in car parks",
+      },
       { icon: FlagTriangleRight, label: "Trips finished", value: "—", note: "Finished while counting" },
       { icon: Timer, label: "Average trip time", value: "—", note: "Waiting for finished trips" },
-      { icon: Ban, label: "Cars with no route", value: "—", note: "No way to their destination" },
-      { icon: Clock, label: "Time simulated", value: "—", note: "Minutes and seconds of traffic" },
+      { icon: Ban, label: "Cars with no route", value: "—", note: "No way to where they are going" },
+      { icon: Clock, label: "Time in the model", value: "—", note: "Minutes and seconds of traffic" },
       { icon: TrafficCone, label: "Average delay", value: "—", note: "Extra time compared with empty roads" },
       { icon: Gauge, label: "Hours spent driving", value: "—", note: "All cars together" },
     ];
@@ -52,7 +57,7 @@ function tilesFor(metrics: Metrics | null): Tile[] {
       icon: Hourglass,
       label: "Cars waiting to enter",
       value: whole(metrics.waiting),
-      note: "Queued at the edge of the city",
+      note: "At the edge of the map or in car parks",
     },
     {
       icon: FlagTriangleRight,
@@ -65,13 +70,13 @@ function tilesFor(metrics: Metrics | null): Tile[] {
       icon: Ban,
       label: "Cars with no route",
       value: whole(metrics.stranded),
-      note: "No way to their destination",
+      note: "No way to where they are going",
     },
     {
       icon: Clock,
-      label: "Time simulated",
-      value: clock(metrics.ticks),
-      note: whole(metrics.ticks) + " seconds of traffic",
+      label: "Time in the model",
+      value: timeOfDay(metrics.clock),
+      note: clock(metrics.ticks) + " of traffic so far",
     },
     { icon: TrafficCone, label: "Average delay", value: delay, note: "Extra time compared with empty roads" },
     {

@@ -2,7 +2,7 @@
 
 Close a street in Melbourne's CBD and watch the traffic find another way.
 
-Melbourne Traffic Lab is a traffic simulation of Melbourne's city centre. It runs in your web browser: the streets come from OpenStreetMap, cars arrive at the edges of the city, drive to their destinations, wait at traffic lights and look for detours when a road is closed. You can close any street, watch what happens, and compare the result with normal traffic.
+Melbourne Traffic Lab is a traffic simulation of Melbourne's city centre. It runs in your web browser on real data: the streets and car parks come from OpenStreetMap, the traffic lights stand where Victoria's Department of Transport and Planning (DTP) lists them, and the traffic itself comes from the SCATS counts at the city's traffic lights. Choose a weekday or weekend and a time of day, and cars enter where real roads cross into the city, drive to where they are going, wait at traffic lights and look for detours when a road is closed. You can close any street, watch what happens, and compare the result with normal traffic at that time.
 
 The simulation is a NetLogo model that our team built. The same model runs on the desktop in NetLogo and on the web page.
 
@@ -17,16 +17,17 @@ npm run dev
 
 Then open http://localhost:3000.
 
-The road map is ready when the page loads. Press **Start** to set the traffic moving. The **Quick guide** button at the top of the page explains everything else in a few short steps. **Results**, below the simulator, shows what your run did and finds the best time to do the works.
+The road map is ready when the page loads, set to a weekday from 8 am. Press **Start** to set the traffic moving. The **Quick guide** button at the top of the page explains everything else in seven short steps.
 
 ## What you can do
 
-- **Change the traffic.** Set how many cars arrive each hour, how many are just passing through, and how many drivers use live traffic information to avoid jams.
+- **Choose the day and time.** Pick a weekday or a weekend day and any quarter-hour to start counting. The number of trips, and where they start and end, follow the real SCATS counts for that time, and change as the clock moves on.
+- **See how real it is.** The page shows how closely the simulated traffic matches the SCATS counts at the counted intersections, and the results list every one of them.
+- **Change how drivers behave.** Set how many drivers use live traffic information to avoid jams, and how the traffic lights are timed.
 - **Close streets.** Pick a street and close it in both directions, in one direction, or by one lane. You can also click roads on the map to close and reopen them. Closures work while the traffic is moving.
 - **Watch it live.** The map shows every car. Colour the roads by traffic jams, by traffic volume, or by the change from normal traffic. Zoom in with the + button, or hold Ctrl and scroll.
 - **Run as long as you like.** The simulation normally stops after its counting time. Turn on **Keep running** to let it go until you press Pause.
-- **Compare with normal traffic.** Record a baseline once, with every road open. Every later run is compared with it under Results: the key numbers, charts over time and the streets that got busier, with every number one click away. The baseline is kept in your browser, so it survives a reload.
-- **Plan road works.** Under Results, describe the works and your limits, and the planner recommends when to close the road and over how many shifts. See [Planning road works](#planning-road-works) below.
+- **Compare with normal traffic.** Record a baseline once, with every road open. Every later run is compared with it: a summary table, charts over time, and the streets that changed most. The baseline is kept in your browser, so it survives a reload.
 - **Download the numbers.** Download CSV saves the traffic on every road in the same format as the desktop model.
 
 Every button, slider and switch from the desktop NetLogo model has a matching control on the page.
@@ -39,34 +40,6 @@ The project has two parts, both written in TypeScript:
 
 1. **The simulation** (`simulation/`). The NetLogo model, the map data and the tools that build it, plus the code that runs the model in the browser. The page runs the same model as desktop NetLogo, using NetLogo Web (the engine behind netlogoweb.org).
 2. **The front end** (`frontend/`). A React page built with Vite. The model runs in a background worker inside the browser, so the page stays smooth. The map is drawn on a canvas that refreshes 60 times a second and slides each car between its positions.
-
-## Planning road works
-
-> **Hidden for now.** The works planner is switched off, so the page shows only the simulator and the run results. To bring it back, set `worksPlanner` to `true` in `frontend/src/app/features.ts`. Everything below describes it when it is switched on.
-
-The works planner answers the question councils and contractors start with: when should we close this road so that traffic suffers least, and where will the traffic go?
-
-The simulator and the planner work as one flow:
-
-1. **Try a closure in the simulator.** Close a street, run it against your baseline and watch the detours happen.
-2. **Press "Find the best time for this closure".** The button sits under Road closures and under the map. It takes you to the planner under Results with its form filled in: the street closed on the map, closed the same way, using the simulator's settings (road map, cars per hour, drivers, traffic lights).
-3. **Read what happened.** "What happened in your run", at the top of Results, sums up your run: what was closed, how it compared with the baseline, and the streets that got busier. These are the same numbers as the CSV download. One run is one traffic level and one traffic pattern, so it shows _where_ the traffic goes but not _when_ to close the road.
-4. **Find the best plan.** The planner tests the same closure at every time of day (below), then says when to close the road, over how many shifts, and where the detour traffic goes at that time.
-5. **Show it on the map.** This sets the recommended plan up on the map, so you can see it and show others.
-
-The planner says which simulator settings it used. If you change them afterwards, it warns that the plan is out of date until you search again.
-
-You describe the works: the street and which part, how it is closed, how many hours of work are needed, the longest shift the crew can work, and how long setting up and packing away takes. You can limit the works to nights or daytime, and to weekdays or weekends, and say what matters most: least disruption, a balance, or the fewest shifts.
-
-The planner then works in three stages, all in background workers in your browser:
-
-1. **Test the works at four traffic levels**, from quiet (15% of the busiest time) to the busiest time. Each test runs the city twice with exactly the same cars, once with the works and once with every road open, so the difference is caused by the works alone. Every test is repeated with different random traffic (3 rounds for a quick check, 8 for a careful one). This repetition is a Monte Carlo simulation, and it is where the ranges in the report come from.
-2. **Rank every plan the limits allow.** How busy each quarter hour of the day is comes from the public traffic signal counts (see [Observed traffic data](#observed-traffic-data)), separately for weekdays and weekends, so each quarter hour's extra delay can be read off the tested levels. Every start hour, kind of day and number of shifts is added up and ranked. Setting-up time counts as closed time, so many tiny shifts are not free.
-3. **Double-check the best plans** by re-testing their busiest hour directly, with that hour's real traffic pattern.
-
-The report gives the recommended plan in one sentence, the likely extra time stuck in traffic (in hours, all drivers added together, with the lowest and highest over the rounds of testing), what it saves compared with a daytime closure, a 24-hour chart of the best and worst times, where the traffic goes (which streets take the detour traffic at the plan's busiest hour, from the double-check tests), other good options, what could go wrong (running late, queues at the edge of the city, trips that cannot get through, close calls) and how the numbers were worked out. **Show it on the map** sets the plan up in the simulator, and Results print or save as a PDF.
-
-Test results are remembered in your browser, so repeating a search or changing only the limits or priority is instant. A quick check takes about a minute on a typical laptop.
 
 ## Project layout
 
@@ -82,7 +55,6 @@ frontend/                   The web page (React + Vite)
     figures/                    the yellow number tiles
     baseline/                   saving and comparing with normal traffic
     results/                    results tables and charts
-    planner/                    the works planner, under Results
     log/                        the simulation log
     guide/                      the quick guide
   src/lib/                    Number and time formatting
@@ -91,8 +63,7 @@ frontend/                   The web page (React + Vite)
   test/                       Front-end tests
 simulation/                 Everything about the traffic model
   src/                        Settings, data types, messages, and the code
-                              that controls the model in the browser and Node,
-                              including the planner's background test runs
+                              that controls the model in the browser and Node
   runtime/                    Files the browser loads from /sim
   build/                      Turns the NetLogo model into JavaScript
   netlogo/                    The desktop NetLogo model, its code, map data,
@@ -122,6 +93,7 @@ Run these from the project folder.
 | `npm run model:web`     | Rebuild the browser model after changing the NetLogo model     |
 | `npm run model:desktop` | Rebuild the desktop model file from its code                   |
 | `npm run model:map`     | Rebuild the road map from the OpenStreetMap data               |
+| `npm run model:data`    | Rebuild the real traffic from the SCATS counts and the map     |
 
 The first time you run the browser tests, install a test browser with `npx playwright install chromium`. The model commands need Python 3; they do not need an internet connection.
 
@@ -145,12 +117,14 @@ The code is TypeScript, written to be easy to read:
 
 ## Limits
 
-This is a model for exploring ideas, not a traffic forecast or a safety assessment. The streets are real. Optional SCATS profiles provide observed time-of-day patterns, while absolute arrival rates, destinations and traffic light timings remain assumed. There are no trams, buses, bikes or pedestrians. Results from the web page and from desktop NetLogo may differ slightly because the two use different random number generators; compare runs within the same one.
+This is a model for exploring ideas, not a traffic forecast or a safety assessment. The streets, car parks, traffic light locations and traffic counts are real. The SCATS counts do not say which way each car travels, so where trips go is the pattern that best reproduces the counts, not a survey of real journeys. Traffic light timings are not published, so each light shares its green time by demand, as SCATS does, on an assumed cycle. The simulated traffic matches the counts closely in total but not at every intersection; the page shows how closely. There are no trams, buses, bikes or pedestrians. Results from the web page and from desktop NetLogo may differ slightly because the two use different random number generators; compare runs within the same one.
 
 ## Credits
 
-The traffic model builds on our groupmate's Hoddle Grid prototype, which credits Wilensky's NetLogo Traffic Grid (2003). The web page runs it with NetLogo Web (Tortoise) by Uri Wilensky and contributors, under the GPL (see `simulation/runtime/LICENSE.md` and https://github.com/NetLogo/Tortoise). Map data © OpenStreetMap contributors, available under the Open Database Licence: https://www.openstreetmap.org/copyright.
+The traffic model builds on our groupmate's Hoddle Grid prototype, which credits Wilensky's NetLogo Traffic Grid (2003). The web page runs it with NetLogo Web (Tortoise) by Uri Wilensky and contributors, under the GPL (see `simulation/runtime/LICENSE.md` and https://github.com/NetLogo/Tortoise). Map data © OpenStreetMap contributors, available under the Open Database Licence: https://www.openstreetmap.org/copyright. Traffic signal locations and SCATS traffic volumes © Department of Transport and Planning, Victoria, under CC BY 4.0: https://opendata.transport.vic.gov.au/dataset/traffic-signal-volume-data.
 
-## Observed traffic data
+## Real traffic data
 
-Select **SCATS weekday** or **SCATS weekend** and restart to use August 2026 Melbourne CBD detector patterns. The arrival slider sets an assumed peak, not a measured boundary flow. Matched DTP signal locations are optional; timings remain synthetic. See [data requirements, provenance and model limitations](docs/data-and-limitations.md). Rebuild retained data with `npm run model:data`, then `npm run model:desktop` and `npm run model:web`.
+The traffic comes from the SCATS counts for August 2026: every 15 minutes of an average weekday and an average weekend day, at the signalised intersections on the map. `npm run model:data` turns them into the model's traffic: it matches the DTP signal sites to the map, adds up each intersection's detectors, and then works out how many trips an hour go from each real entry point and car park to each part of the city, so that the model's own route choice reproduces the counts. See [how the data is used, and its limits](docs/data-and-limitations.md).
+
+To rebuild everything after changing the map or the data, run `npm run model:map`, `npm run model:data`, `npm run model:desktop` and `npm run model:web`, in that order.
